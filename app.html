@@ -75,7 +75,12 @@
   <h1>Dashboard</h1>
   <p class="lead">What moved, what it did to your margins, and what needs attention.</p>
 
-  <div class="stat-grid" id="dashCards"></div>
+  <div class="stat-grid" id="dashCards">
+    <div class="sk-card"><div class="sk sk-num"></div><div class="sk sk-line w60"></div></div>
+    <div class="sk-card"><div class="sk sk-num"></div><div class="sk sk-line w60"></div></div>
+    <div class="sk-card"><div class="sk sk-num"></div><div class="sk sk-line w60"></div></div>
+    <div class="sk-card"><div class="sk sk-num"></div><div class="sk sk-line w60"></div></div>
+  </div>
 
   <div class="btn-row">
     <button class="btn small" id="qaAddInvoice" type="button">Add an invoice</button>
@@ -86,13 +91,23 @@
   <div class="dash-grid">
     <div>
       <h2>Biggest price moves</h2>
-      <div id="dashMovers"></div>
+      <div id="dashMovers">
+        <div class="sk-row"><div class="sk sk-line w60" style="flex:1"></div><div class="sk sk-line w40" style="width:74px"></div></div>
+        <div class="sk-row"><div class="sk sk-line w60" style="flex:1"></div><div class="sk sk-line w40" style="width:74px"></div></div>
+        <div class="sk-row"><div class="sk sk-line w60" style="flex:1"></div><div class="sk sk-line w40" style="width:74px"></div></div>
+      </div>
       <h2 class="mt-lg">Margin alerts</h2>
-      <div id="dashAlerts"></div>
+      <div id="dashAlerts">
+        <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-line w80"></div></div>
+      </div>
     </div>
     <div>
       <h2>Recent activity</h2>
-      <div id="dashActivity"></div>
+      <div id="dashActivity">
+        <div class="sk sk-line w80"></div>
+        <div class="sk sk-line w60"></div>
+        <div class="sk sk-line w80"></div>
+      </div>
     </div>
   </div>
 
@@ -106,7 +121,11 @@
 
   <h2 class="mt-lg">Recipes at the latest prices</h2>
   <p class="small">Ingredient cost only.</p>
-  <div id="dashRecipes"></div>
+  <div id="dashRecipes">
+    <div class="sk-row"><div class="sk sk-line w40" style="flex:1"></div><div class="sk sk-line w40" style="width:64px"></div><div class="sk sk-line w40" style="width:64px"></div></div>
+    <div class="sk-row"><div class="sk sk-line w40" style="flex:1"></div><div class="sk sk-line w40" style="width:64px"></div><div class="sk sk-line w40" style="width:64px"></div></div>
+    <div class="sk-row"><div class="sk sk-line w40" style="flex:1"></div><div class="sk sk-line w40" style="width:64px"></div><div class="sk sk-line w40" style="width:64px"></div></div>
+  </div>
 </section>
 
 <!-- ================= Invoices ================= -->
@@ -118,7 +137,10 @@
     <button class="btn small ghost" id="exportInvoicesBtn" type="button">Export invoices CSV</button>
   </div>
 
-  <div id="invoiceList" class="mt-md"></div>
+  <div id="invoiceList" class="mt-md">
+    <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-line w80"></div><div class="sk sk-line w60"></div></div>
+    <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-line w80"></div><div class="sk sk-line w60"></div></div>
+  </div>
 
   <h2 class="mt-lg">Add an invoice</h2>
   <div class="intake-tabs" role="tablist" aria-label="Ways to add an invoice">
@@ -137,12 +159,18 @@
     </div>
     <p class="small" id="pasteAiNote"></p>
     <p class="small" id="pasteStatus"></p>
+    <div id="pasteSkeleton" hidden>
+      <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-line w80"></div><div class="sk sk-line w60"></div><div class="sk sk-line w80"></div></div>
+    </div>
   </div>
 
   <div class="intake-panel" id="panel-upload" hidden>
     <p>Upload a photo or PDF of an invoice, or a text file. Photos and PDFs need AI on; text files work without it.</p>
     <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.txt,.csv">
     <p class="small" id="uploadStatus"></p>
+    <div id="uploadSkeleton" hidden>
+      <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-line w80"></div><div class="sk sk-line w60"></div><div class="sk sk-line w80"></div></div>
+    </div>
     <p class="small">In guest demo mode, uploaded files are read in your browser and never sent anywhere.</p>
   </div>
 
@@ -202,7 +230,10 @@
   <div class="btn-row">
     <button class="btn small ghost" id="exportPricesBtn" type="button">Export price history CSV</button>
   </div>
-  <div id="priceCards" class="mt-md"></div>
+  <div id="priceCards" class="mt-md">
+    <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-num"></div><div class="sk sk-line w80"></div></div>
+    <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-num"></div><div class="sk sk-line w80"></div></div>
+  </div>
 </section>
 
 <!-- ================= Recipes ================= -->
@@ -213,7 +244,11 @@
     <button class="btn small" id="addRecipeBtn" type="button">Add a recipe</button>
     <button class="btn small ghost" id="exportRecipesBtn" type="button">Export recipes CSV</button>
   </div>
-  <div id="recipeList" class="mt-md"></div>
+  <div id="recipeList" class="mt-md">
+    <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-line w80"></div><div class="sk sk-line w60"></div></div>
+    <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-line w80"></div><div class="sk sk-line w60"></div></div>
+    <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-line w80"></div><div class="sk sk-line w60"></div></div>
+  </div>
 
   <div class="editor-panel" id="recipeEditor" hidden>
     <h2 id="recipeEditorTitle">Add a recipe</h2>
@@ -252,13 +287,20 @@
 <section class="view" id="view-alerts" hidden>
   <h1>Alerts</h1>
   <p class="lead">Recipes below target, and ingredients that moved 5% or more since the last invoice.</p>
-  <div id="alertFeed"></div>
+  <div id="alertFeed">
+    <div class="sk-card"><div class="sk sk-line w60"></div><div class="sk sk-line w80"></div></div>
+    <div class="sk-card"><div class="sk sk-line w60"></div><div class="sk sk-line w80"></div></div>
+  </div>
   <h2 class="mt-lg">Biggest movers</h2>
   <p class="small">Change from the first price on record to the latest price.</p>
-  <div id="moversTable"></div>
+  <div id="moversTable">
+    <div class="sk-card"><div class="sk sk-line w80"></div><div class="sk sk-line w80"></div><div class="sk sk-line w80"></div></div>
+  </div>
   <h2 class="mt-lg">Margin targets</h2>
   <p class="small">Green is at or above target, amber is within 5 points below, red is more than 5 below.</p>
-  <div id="targetsTable"></div>
+  <div id="targetsTable">
+    <div class="sk-card"><div class="sk sk-line w80"></div><div class="sk sk-line w80"></div><div class="sk sk-line w80"></div></div>
+  </div>
 </section>
 
 </main>

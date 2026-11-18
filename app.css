@@ -52,9 +52,13 @@
   align-items: center;
   gap: 7px;
   font-family: var(--sans);
+  transition: transform var(--d-press) var(--ease-spring),
+    color var(--d-fast) var(--ease-out),
+    border-color var(--d-fast) var(--ease-out);
 }
 .tab-btn svg { width: 19px; height: 19px; flex-shrink: 0; }
 .tab-btn:hover { color: var(--accent); }
+.tab-btn:active { transform: scale(0.96); }
 .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
 .count-badge {
   display: inline-block;
@@ -93,6 +97,11 @@
   gap: 12px;
   align-items: flex-start;
   justify-content: space-between;
+  animation: notice-in var(--d-med) var(--ease-out);
+}
+@keyframes notice-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .notice[hidden] { display: none; }
 .notice-info { background: #eef2f7; border: 1px solid #cdd8e4; color: var(--ink-soft); }
@@ -130,6 +139,52 @@
 .app-main h2:first-of-type { margin-top: 0; }
 .view[hidden] { display: none; }
 .view .lead { font-size: 16px; margin-bottom: 20px; }
+
+/* ---------- view entrances ---------- */
+/* When a tab is tapped, the new view's cards cascade in, 60ms apart.
+   app.js adds .view-enter on view switch and removes it after the
+   animation, so re-renders do not replay it and hover transforms
+   keep working. The stagger index is capped at 5 in the render code
+   so long lists do not take forever to settle. */
+@keyframes view-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.view-enter .stagger-item {
+  animation: view-in var(--d-med) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+/* ---------- card hover lift (pointer devices only) ---------- */
+@media (hover: hover) and (pointer: fine) {
+  .stat-card, .recipe-card, .price-card, .invoice-card, .dash-recipe-row,
+  .mover-list li, .alert-item {
+    transition: transform var(--d-med) var(--ease-out), box-shadow var(--d-med) var(--ease-out);
+  }
+  .stat-card:hover, .recipe-card:hover, .price-card:hover, .invoice-card:hover,
+  .dash-recipe-row:hover, .mover-list li:hover, .alert-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* ---------- reduced motion ---------- */
+/* The view entrance has staggered delays (up to 300ms), during which
+   the from keyframe (opacity 0) shows. A duration hack cannot help
+   there, so kill the animation outright and force full visibility. */
+@media (prefers-reduced-motion: reduce) {
+  .view-enter .stagger-item {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .notice { animation: none !important; }
+  .sk::after { animation: none !important; }
+  .btn, .tab-btn, .stat-card, .recipe-card, .price-card, .invoice-card,
+  .dash-recipe-row, .mover-list li, .alert-item {
+    transition: none !important;
+  }
+}
 
 /* ---------- dashboard ---------- */
 
@@ -214,8 +269,12 @@
   color: var(--ink-soft);
   cursor: pointer;
   font-family: var(--sans);
+  transition: transform var(--d-press) var(--ease-spring),
+    color var(--d-fast) var(--ease-out),
+    border-color var(--d-fast) var(--ease-out);
 }
 .intake-tab:hover { color: var(--accent); }
+.intake-tab:active { transform: scale(0.97); }
 .intake-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .intake-panel {
   background: var(--card);

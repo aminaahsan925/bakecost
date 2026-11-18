@@ -184,10 +184,109 @@ in place; no feature was cut and no logic module changed.
   loading. Tests still green: npm test 157 passed, npm run
   smoke 33 passed, npm run check clean, zero em/en dashes.
 
+## Motion rebuild (2026-11-18 evening)
+
+Amina judged the redesign "still not too good, not too bad" and
+asked for research on good UI and motion UI, then a rebuild with
+motion. The research report lives at
+~/workspace/research_notes/motion-ui-good-design-research-20261118-1507/
+(12-technique playbook, 8 reference sites). Motion is a new layer
+on the same warm editorial look and the same short copy, not a new
+identity. No GSAP, no WebGL, no loading screens, no custom
+cursors, no scroll hijacking, no dark-by-default.
+
+What was added, per technique:
+
+- Motion tokens in styles.css: durations 100-300ms, strong
+  ease-out curves, a spring overshoot curve for tactile controls.
+- Hero entrance choreography: eyebrow, headline, subline, CTA,
+  dashboard mockup stagger in 60ms apart (500ms, hero-in
+  keyframes). Visible-safe: elements start at 55% opacity, never
+  0, so load paint is never blank.
+- CSS scroll reveals for below-fold sections
+  (animation-timeline: view(), range entry 0% to entry 30%,
+  backwards fill so hover transforms keep working), plus an
+  IntersectionObserver fallback in landing.js (~15 lines,
+  threshold 0.1, unobserve after firing) for browsers without
+  scroll timelines. Without either mechanism, content is visible.
+- Staggered entrances: app view switches cascade cards in 60ms
+  apart (app.js adds .view-enter, removes it after 800ms;
+  stagger index capped at 5).
+- Haptic button press: buttons and tabs scale to 0.97 over
+  100-160ms on :active. Spring-feel controls: motion.js has a
+  ~20 line vanilla JS spring integrator (stiffness 240, damping
+  22); the alert badge pops with it when the count changes, and
+  the calculator badge pops when its status flips.
+- Card hover lift: translateY(-3px) plus a deeper shadow,
+  transform only, pointer devices only, no hover-gated content.
+- Count-up stats: rAF plus cubic ease-out over ~1200ms,
+  triggered once by IntersectionObserver, tabular-nums, final
+  value in the HTML. Hero mock numbers and the three price-move
+  percentages (-35%, -17%, +24%).
+- Skeleton screens: shape-matched placeholders in app.html for
+  every view (stat cards, mover rows, invoice/price/recipe
+  cards, alert feed, tables), plus hidden skeletons in the paste
+  and upload panels that show only while Gemini is reading, plus
+  a showSkeletons() in app.js for signed-in cloud loads. The
+  shimmer sweep stops under reduced motion. No fake waiting:
+  skeletons never appear for instant local renders.
+- View Transitions between landing and app:
+  @view-transition { navigation: auto; }, zero JS.
+- Interactive in-page demo: a mini cost calculator on the
+  landing page (landing.js, ~150 lines). Pick a recipe, move one
+  ingredient price on a slider, cost and margin retween live
+  using the real costing.js and sample data. Badge flips between
+  On target, Near target, Below target with a spring pop.
+- Reduced motion and performance: prefers-reduced-motion kills
+  all of it (hero, reveals, staggers, shimmer, transitions,
+  view transitions); count-ups and calculator tweens jump to
+  finals in JS. Only transform and opacity animate, never layout
+  props. No parallax or mouse-follow on touch. No loaders over
+  a second.
+
+Bugs found by the frame proof and fixed:
+
+- The calculator badge never had its pill styling: landing.js
+  wrote class "badge badge-ok" but styles.css defines ".badge
+  .ok" (the app uses the hyphenated form in app.css; the landing
+  page uses the two-class form). Fixed to "badge " + status in
+  landing.js and index.html, and added .badge.watch and
+  .badge.unknown to styles.css.
+- Reduced motion left the hero headline at 0.55 opacity: the
+  duration hack cannot help during an animation delay phase, and
+  the first fix targeted a class name (hero-anim) that does not
+  exist. The real class is hero-enter; the reduced-motion block
+  now kills it outright (animation none, opacity 1, transform
+  none). Same delay-phase fix for .view-enter .stagger-item in
+  app.css.
+- Anchored sections hid their heading under the sticky nav when
+  jumped to. Added scroll-margin-top: 84px to section[id].
+
+Verification: headless Chromium (playwright-core shell build),
+script /tmp/pw-check/motion.cjs, frames in
+/tmp/pw-check/motion-shots/ (19 frames, every one read):
+hero entrance mid-flight (h1 opacity 0.55, +14px) and settled,
+count-up mid-flight (3, 2, 0, -27%) and settled (4, 3, 0, -35%),
+moves count-up mid-flight (-16%, -8%, +11%), scroll reveal
+mid-flight and settled (third card 0.58 mid-entry, 1 when
+centered), button press (scale 0.969), calculator default
+($5.86, 75.6%, On target, green pill) and moved (Sourdough,
+flour at max $6.20, $3.72, 53.5%, Below target, red pill),
+app skeletons (67 skeleton blocks, 0 stat cards at 500ms with
+app.js delayed), view-switch stagger mid-flight (opacities
+0.99, 0.90, 0.47), hover lift (translateY -3px), reduced motion
+(hero fully visible at 150ms, finals at once, shimmer none on
+a visible skeleton, tab switch opacities 1, 1, 1 at 50ms).
+Zero horizontal overflow on every view at 390px and 1280px.
+Tests still green: npm test 157 passed, npm run smoke 33
+passed, npm run check clean (now covers motion.js and
+landing.js), zero em/en dashes, all routes 200.
+
 ## Files
 
-- `index.html`, `styles.css`: landing page.
+- `index.html`, `styles.css`, `landing.js`: landing page.
 - `app.html`, `app.js`, `app.css`: the product.
+- `motion.js`: spring integrator, count-up, reduced-motion check.
 - `costing.js`, `invoice-parser.js`, `sample-data.js`, `charts.js`:
   pure logic and data.
 - `firebase-config.js`, `firebase-app.js`, `ai.js`, `store.js`:

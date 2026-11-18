@@ -27,6 +27,7 @@ import {
   signInWithGoogle, signOutUser, onAuthChange,
   loadCloudState, saveCloudState, freshCloudState
 } from "./store.js";
+import { springPop } from "./motion.js";
 
 var $ = function (id) { return document.getElementById(id); };
 
@@ -41,6 +42,8 @@ var manualLines = []; // lines in the manual invoice form
 var editorLines = []; // ingredient lines in the recipe editor
 var editingRecipeId = null;
 var cloudSavePending = false;
+var lastAlertCount = null; // for the alert badge pop (null until first render)
+var viewEnterTimer = null; // clears .view-enter after the entrance
 
 /* ---------- small helpers ---------- */
 
@@ -312,6 +315,12 @@ function renderHeader() {
   var alertBadge = $("alertCountBadge");
   alertBadge.textContent = count > 0 ? String(count) : "";
   alertBadge.hidden = count === 0;
+  // The badge pops with a real spring when the count changes, so a
+  // new alert is felt, not just seen. No pop on first render.
+  if (count > 0 && count !== lastAlertCount && lastAlertCount !== null) {
+    springPop(alertBadge, { peak: 1.4 });
+  }
+  lastAlertCount = count;
   var banner = $("sampleBanner");
   if (mode === "guest" && state.isSample) {
     banner.hidden = false;
@@ -332,6 +341,17 @@ function setView(view) {
     panel.hidden = panel.id !== "view-" + view;
   });
   renderView(view);
+  // Entrance cascade: the new view's cards stagger in. The class is
+  // removed after the animation so re-renders do not replay it and
+  // hover transforms keep working.
+  var panel = $("view-" + view);
+  if (panel) {
+    panel.classList.add("view-enter");
+    if (viewEnterTimer) clearTimeout(viewEnterTimer);
+    viewEnterTimer = setTimeout(function () {
+      panel.classList.remove("view-enter");
+    }, 800);
+  }
   window.scrollTo({ top: 0 });
 }
 
@@ -348,6 +368,40 @@ function renderAll() {
   renderView(currentView);
 }
 
+// Skeleton placeholders for genuinely async loads (cloud data). The
+// static skeletons in app.html cover first paint; this re-shows them
+// while a signed-in account load is in flight, then renderAll
+// replaces them. Never used for instant local renders: no fake waiting.
+function skeletonCards(n) {
+  var html = "";
+  for (var i = 0; i < n; i++) {
+    html += '<div class="sk-card"><div class="sk sk-line w40"></div>' +
+      '<div class="sk sk-line w80"></div><div class="sk sk-line w60"></div></div>';
+  }
+  return html;
+}
+
+function showSkeletons(view) {
+  if (view === "dashboard") {
+    var statSk = '<div class="sk-card"><div class="sk sk-num"></div><div class="sk sk-line w60"></div></div>';
+    $("dashCards").innerHTML = statSk + statSk + statSk + statSk;
+    $("dashMovers").innerHTML = skeletonCards(2);
+    $("dashAlerts").innerHTML = skeletonCards(1);
+    $("dashActivity").innerHTML = skeletonCards(1);
+    $("dashRecipes").innerHTML = skeletonCards(2);
+  } else if (view === "invoices") {
+    $("invoiceList").innerHTML = skeletonCards(2);
+  } else if (view === "prices") {
+    $("priceCards").innerHTML = skeletonCards(2);
+  } else if (view === "recipes") {
+    $("recipeList").innerHTML = skeletonCards(2);
+  } else if (view === "alerts") {
+    $("alertFeed").innerHTML = skeletonCards(2);
+    $("moversTable").innerHTML = skeletonCards(1);
+    $("targetsTable").innerHTML = skeletonCards(1);
+  }
+}
+
 /* ---------- rendering: dashboard ---------- */
 
 function renderDashboard() {
@@ -357,13 +411,13 @@ function renderDashboard() {
   var topMover = movers.length > 0 && movers[0].changePct !== null ? movers[0] : null;
 
   $("dashCards").innerHTML =
-    '<div class="stat-card"><div class="stat-num">' + state.ingredients.length + '</div>' +
+    '<div class="stat-card stagger-item" style="--i:0"><div class="stat-num">' + state.ingredients.length + '</div>' +
     '<div class="stat-label">Ingredients tracked</div></div>' +
-    '<div class="stat-card"><div class="stat-num">' + state.recipes.length + '</div>' +
+    '<div class="stat-card stagger-item" style="--i:1"><div class="stat-num">' + state.recipes.length + '</div>' +
     '<div class="stat-label">Recipes</div></div>' +
-    '<div class="stat-card' + (alerts.length > 0 ? " stat-alert" : "") + '"><div class="stat-num">' + alerts.length + '</div>' +
+    '<div class="stat-card stagger-item' + (alerts.length > 0 ? " stat-alert" : "") + '" style="--i:2"><div class="stat-num">' + alerts.length + '</div>' +
     '<div class="stat-label">Below target</div></div>' +
-    '<div class="stat-card"><div class="stat-num">' + (topMover ? pct(topMover.changePct) : "n/a") + '</div>' +
+    '<div class="stat-card stagger-item" style="--i:3"><div class="stat-num">' + (topMover ? pct(topMover.changePct) : "n/a") + '</div>' +
     '<div class="stat-label">Biggest price move' + (topMover ? ": " + escapeHtml(topMover.name) : "") + '</div></div>';
 
   var moversHtml = "";
@@ -371,10 +425,10 @@ function renderDashboard() {
   if (shown.length === 0) {
     moversHtml = '<p class="small">Add a second invoice to see price moves.</p>';
   } else {
-    moversHtml = '<ul class="mover-list">' + shown.map(function (m) {
+    moversHtml = '<ul class="mover-list">' + shown.map(function (m, i) {
       var points = pricePoints(m.name);
       var cls = m.changePct > 0 ? "up" : "down";
-      return '<li><div><strong>' + escapeHtml(m.name) + '</strong> ' +
+      return '<li class="stagger-item" style="--i:' + Math.min(i, 5) + '"><div><strong>' + escapeHtml(m.name) + '</strong> ' +
         '<span class="small">(' + escapeHtml(m.unit) + ')</span><br>' +
         '<span class="small">' + money(m.first) + " to " + money(m.last) + '</span></div>' +
         '<div class="mover-right">' + sparklineSVG(points) +
@@ -425,9 +479,9 @@ function renderDashboard() {
     tableHtml = '<p class="small">No recipes yet. Add one from the Recipes tab.</p>';
   } else {
     tableHtml = '<div class="dash-recipe-list">' +
-      rows.map(function (r) {
+      rows.map(function (r, i) {
         var marginText = r.marginPct === null ? "n/a" : r.marginPct.toFixed(1) + "%";
-        return '<div class="dash-recipe-row"><div class="dash-recipe-name"><strong>' +
+        return '<div class="dash-recipe-row stagger-item" style="--i:' + Math.min(i, 5) + '"><div class="dash-recipe-name"><strong>' +
           escapeHtml(r.recipe.name) + '</strong><span class="small">Sells at ' +
           money(r.sellPrice) + '</span></div>' +
           '<div class="dash-recipe-nums"><span class="dash-recipe-cost">' + money(r.costNow) + '</span>' +
@@ -450,7 +504,7 @@ function renderInvoices() {
     var sorted = state.invoices.slice().sort(function (a, b) {
       return a.date < b.date ? 1 : -1;
     });
-    list.innerHTML = '<div class="invoice-cards">' + sorted.map(function (inv) {
+    list.innerHTML = '<div class="invoice-cards">' + sorted.map(function (inv, i) {
       var total = inv.lines.reduce(function (sum, line) {
         return sum + line.qty * line.price;
       }, 0);
@@ -460,7 +514,7 @@ function renderInvoices() {
           '<span class="inv-line-price">' + money(line.price) + "</span>" +
           '<span class="inv-line-total">' + money(line.qty * line.price) + "</span></div>";
       }).join("");
-      return '<div class="invoice-card"><h3>' + escapeHtml(inv.supplier || "Unknown supplier") + "</h3>" +
+      return '<div class="invoice-card stagger-item" style="--i:' + Math.min(i, 5) + '"><h3>' + escapeHtml(inv.supplier || "Unknown supplier") + "</h3>" +
         '<div class="inv-date">' + formatDate(inv.date) + " &middot; " + inv.lines.length +
         " line" + (inv.lines.length === 1 ? "" : "s") + " &middot; total " + money(total) + "</div>" +
         rows +
@@ -589,13 +643,16 @@ function onParsePaste(useAi) {
     return;
   }
   setParseBusy(true, "Gemini is reading the invoice...");
+  $("pasteSkeleton").hidden = false;
   extractInvoiceTextWithGemini(text)
     .then(function (parsed) {
       setParseBusy(false);
+      $("pasteSkeleton").hidden = true;
       openPreview(parsed, "Gemini");
     })
     .catch(function (err) {
       setParseBusy(false);
+      $("pasteSkeleton").hidden = true;
       console.error("Gemini extraction failed:", err);
       showNotice("Gemini could not read that text (" + (err.message || "unknown error") +
         "). The local parser is still available below.", "error");
@@ -639,14 +696,17 @@ function onFileChosen(event) {
     }
     fileToBase64(file)
       .then(function (base64) {
+        $("uploadSkeleton").hidden = false;
         return extractInvoiceFileWithGemini(base64, file.type);
       })
       .then(function (parsed) {
         $("uploadStatus").textContent = "";
+        $("uploadSkeleton").hidden = true;
         openPreview(parsed, "Gemini");
       })
       .catch(function (err) {
         $("uploadStatus").textContent = "";
+        $("uploadSkeleton").hidden = true;
         console.error("Gemini file extraction failed:", err);
         showNotice("Gemini could not read that file (" + (err.message || "unknown error") +
           "). Try pasting the text instead.", "error");
@@ -740,7 +800,7 @@ function renderPrices() {
     wrap.innerHTML = '<p class="small">No ingredients yet. Add an invoice to start tracking prices.</p>';
     return;
   }
-  wrap.innerHTML = hs.map(function (h) {
+  wrap.innerHTML = hs.map(function (h, i) {
     var first = earliestPoint(h.points);
     var last = latestPoint(h.points);
     var prev = previousPoint(h.points);
@@ -754,7 +814,7 @@ function renderPrices() {
     var tableRows = h.points.slice().reverse().map(function (p) {
       return "<tr><td>" + formatDate(p.date) + '</td><td class="num">' + money(p.price) + "</td></tr>";
     }).join("");
-    return '<div class="price-card"><div class="price-head"><h3>' + escapeHtml(h.name) +
+    return '<div class="price-card stagger-item" style="--i:' + Math.min(i, 5) + '"><div class="price-head"><h3>' + escapeHtml(h.name) +
       ' <span class="small">(' + escapeHtml(h.unit) + ")</span></h3>" + changeHtml + "</div>" +
       '<div class="price-now"><span class="price-now-num">' + (last ? money(last.price) : "n/a") + "</span>" +
       (last ? '<span class="small">' + formatDate(last.date) + "</span>" : "") + "</div>" +
@@ -773,7 +833,7 @@ function renderRecipes() {
   if (rows.length === 0) {
     list.innerHTML = '<p class="small">No recipes yet. Add your first recipe below.</p>';
   } else {
-    list.innerHTML = rows.map(function (r) {
+    list.innerHTML = rows.map(function (r, i) {
       var recipe = r.recipe;
       var costText = r.costNow === null ? "n/a" : money(r.costNow);
       var costWas = r.costThen !== null ? " (was " + money(r.costThen) + ")" : "";
@@ -785,7 +845,7 @@ function renderRecipes() {
       }).join(", ");
       var noteHtml = recipe.note
         ? '<p class="small recipe-note">' + escapeHtml(recipe.note) + "</p>" : "";
-      return '<div class="recipe-card"><div class="recipe-head"><h3>' + escapeHtml(recipe.name) + "</h3>" +
+      return '<div class="recipe-card stagger-item" style="--i:' + Math.min(i, 5) + '"><div class="recipe-head"><h3>' + escapeHtml(recipe.name) + "</h3>" +
         '<span class="badge badge-' + r.status + '">' + statusLabel(r.status) + "</span></div>" +
         noteHtml +
         '<p class="recipe-ings">' + escapeHtml(ingText) + "</p>" +
@@ -935,17 +995,20 @@ function renderAlerts() {
   var moves = recentMoves(histories(), MOVE_THRESHOLD);
   var feed = $("alertFeed");
   var items = "";
+  var itemIndex = 0;
   alerts.forEach(function (a) {
-    items += '<li class="alert-item alert-' + a.status + '"><strong>' + escapeHtml(a.name) +
+    items += '<li class="alert-item alert-' + a.status + ' stagger-item" style="--i:' + Math.min(itemIndex, 5) + '"><strong>' + escapeHtml(a.name) +
       '</strong>: margin ' + a.marginPct.toFixed(1) + "% against a " + a.targetPct +
       "% target. Short by " + a.shortfall.toFixed(1) + " points at a " +
       money(a.sellPrice) + " selling price.</li>";
+    itemIndex++;
   });
   moves.forEach(function (m) {
     var cls = m.changePct > 0 ? "up" : "down";
-    items += '<li class="alert-item"><strong>' + escapeHtml(m.name) +
+    items += '<li class="alert-item stagger-item" style="--i:' + Math.min(itemIndex, 5) + '"><strong>' + escapeHtml(m.name) +
       '</strong> moved <span class="' + cls + '">' + pct(m.changePct) + "</span> since the last invoice (" +
       money(m.from) + " to " + money(m.to) + " " + escapeHtml(m.unit) + ", " + formatDate(m.date) + ").</li>";
+    itemIndex++;
   });
   if (!items) {
     feed.innerHTML = '<div class="alert-box ok"><h3>No alerts</h3>' +
@@ -1038,6 +1101,7 @@ function handleAuthChange(newUser) {
   user = newUser;
   if (user) {
     mode = "cloud";
+    showSkeletons(currentView);
     loadCloudState(user)
       .then(function (cloudState) {
         state = cloudState || freshCloudState();

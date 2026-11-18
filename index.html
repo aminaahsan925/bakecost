@@ -32,16 +32,16 @@
   <div class="wrap">
     <div class="hero-grid">
       <div class="hero-copy">
-        <span class="hero-eyebrow">For small bakeries</span>
-        <h1>Know what every recipe really costs.</h1>
-        <p class="lead">BakeCost reads your supplier invoices, tracks ingredient prices, and recosts your recipes. When a margin drops, you know first.</p>
-        <div class="btn-row">
+        <span class="hero-eyebrow hero-enter" style="--i:0">For small bakeries</span>
+        <h1 class="hero-enter" style="--i:1">Know what every recipe really costs.</h1>
+        <p class="lead hero-enter" style="--i:2">BakeCost reads your supplier invoices, tracks ingredient prices, and recosts your recipes. When a margin drops, you know first.</p>
+        <div class="btn-row hero-enter" style="--i:3">
           <a class="btn" href="app.html">Open the app, free</a>
           <a class="quiet-link" href="#audit">or get a free audit</a>
         </div>
-        <p class="hero-note">No sign-up. Sample data included.</p>
+        <p class="hero-note hero-enter" style="--i:4">No sign-up. Sample data included.</p>
       </div>
-      <div class="hero-mock" aria-label="Preview of the BakeCost app with sample data">
+      <div class="hero-mock hero-enter" style="--i:5" aria-label="Preview of the BakeCost app with sample data">
         <div class="mock-bar">
           <span class="mock-dots"><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span></span>
           <span class="mock-sample">Sample</span>
@@ -49,10 +49,10 @@
         <div class="mock-body">
           <div class="mock-title">Dashboard</div>
           <div class="mock-stats">
-            <div class="mock-stat"><div class="num">4</div><div class="label">Ingredients</div></div>
-            <div class="mock-stat"><div class="num">3</div><div class="label">Recipes</div></div>
-            <div class="mock-stat"><div class="num">0</div><div class="label">Below target</div></div>
-            <div class="mock-stat"><div class="num down">-35%</div><div class="label">Eggs, biggest move</div></div>
+            <div class="mock-stat"><div class="num" data-count="4" data-count-decimals="0">4</div><div class="label">Ingredients</div></div>
+            <div class="mock-stat"><div class="num" data-count="3" data-count-decimals="0">3</div><div class="label">Recipes</div></div>
+            <div class="mock-stat"><div class="num" data-count="0" data-count-decimals="0">0</div><div class="label">Below target</div></div>
+            <div class="mock-stat"><div class="num down" data-count="-35" data-count-decimals="0" data-count-suffix="%">-35%</div><div class="label">Eggs, biggest move</div></div>
           </div>
           <div class="mock-row">
             <span><strong>Butter Cake</strong></span>
@@ -77,30 +77,30 @@
 
 <section class="section" id="moves">
   <div class="wrap">
-    <h2>Prices moved this year.</h2>
+    <h2 class="reveal">Prices moved this year.</h2>
     <div class="moves">
-      <div class="move">
-        <div class="move-num down">-35%</div>
+      <div class="move reveal" style="--i:0">
+        <div class="move-num down" data-count="-35" data-count-decimals="0" data-count-suffix="%">-35%</div>
         <div class="move-label">Eggs</div>
       </div>
-      <div class="move">
-        <div class="move-num down">-17%</div>
+      <div class="move reveal" style="--i:1">
+        <div class="move-num down" data-count="-17" data-count-decimals="0" data-count-suffix="%">-17%</div>
         <div class="move-label">Butter</div>
       </div>
-      <div class="move">
-        <div class="move-num up">+24%</div>
+      <div class="move reveal" style="--i:2">
+        <div class="move-num up" data-count="24" data-count-decimals="0" data-count-suffix="%" data-count-signed="true">+24%</div>
         <div class="move-label">Wheat flour</div>
       </div>
     </div>
-    <p class="small">US Bureau of Labor Statistics prices, Sep 2025 to Sep 2026; French wheat flour, 12 months to Oct 2026. Sources: <a href="https://menuthere.com/en/guides/how-to-price-baked-goods">menuthere.com</a>, <a href="https://vespertool.com/blog/butter-biscuit-production-cost/">vespertool.com</a>.</p>
+    <p class="small reveal">US Bureau of Labor Statistics prices, Sep 2025 to Sep 2026; French wheat flour, 12 months to Oct 2026. Sources: <a href="https://menuthere.com/en/guides/how-to-price-baked-goods">menuthere.com</a>, <a href="https://vespertool.com/blog/butter-biscuit-production-cost/">vespertool.com</a>.</p>
   </div>
 </section>
 
 <section class="section alt" id="features">
   <div class="wrap">
-    <h2>From invoice to margin.</h2>
+    <h2 class="reveal">From invoice to margin.</h2>
     <div class="feature-grid">
-      <div class="feature">
+      <div class="feature reveal" style="--i:0">
         <div class="feature-visual">
           <div class="fv-invoice">
             <div class="fv-invoice-head">Millbrook Supplies</div>
@@ -113,7 +113,7 @@
         <h3>Invoices in, prices out</h3>
         <p>Photo, PDF, paste, or type. Every line is checked in a preview before it saves.</p>
       </div>
-      <div class="feature">
+      <div class="feature reveal" style="--i:1">
         <div class="feature-visual">
           <div class="fv-recipe">
             <div class="fv-recipe-name">Butter Cake</div>
@@ -125,7 +125,7 @@
         <h3>Recipes recost themselves</h3>
         <p>Add a recipe once. Every new invoice reprices it from the latest costs.</p>
       </div>
-      <div class="feature">
+      <div class="feature reveal" style="--i:2">
         <div class="feature-visual">
           <div class="fv-alert">
             <div class="fv-alert-tag">Example</div>
@@ -140,9 +140,49 @@
   </div>
 </section>
 
+<section class="section" id="tryit">
+  <div class="wrap">
+    <h2 class="reveal">Try it yourself.</h2>
+    <p class="lead reveal">Pick a recipe, move one price, watch the margin move.</p>
+    <div class="calc-card reveal" id="calc">
+      <div class="calc-grid">
+        <div class="calc-field">
+          <label for="calcRecipe">Recipe</label>
+          <select id="calcRecipe"></select>
+        </div>
+        <div class="calc-field">
+          <label for="calcIngredient">Ingredient price to move</label>
+          <select id="calcIngredient"></select>
+        </div>
+        <div class="calc-field">
+          <div class="calc-slider-row">
+            <label for="calcSlider">New price</label>
+            <span class="calc-price-value" id="calcPriceValue"></span>
+          </div>
+          <input class="calc-slider" id="calcSlider" type="range" min="0" max="10" step="0.05" value="0">
+        </div>
+      </div>
+      <div class="calc-outputs">
+        <div class="calc-out">
+          <div class="calc-out-num" id="calcCost" data-value="0"></div>
+          <div class="calc-out-label">Cost per recipe</div>
+        </div>
+        <div class="calc-out">
+          <div class="calc-out-num" id="calcMargin" data-value="0"></div>
+          <div class="calc-out-label">Margin at selling price</div>
+        </div>
+      </div>
+      <div class="calc-status">
+        <span class="badge ok" id="calcBadge" data-status="ok">On target</span>
+        <span class="small">Sample prices from the demo data.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="section" id="audit">
   <div class="wrap">
-    <div class="dark-panel">
+    <div class="dark-panel reveal">
       <h2>Free audit</h2>
       <p>Send your last 3 months of supplier invoices. In a day, you get every price move and what it did to your best sellers.</p>
       <div class="btn-row">
@@ -155,10 +195,10 @@
 
 <section class="section alt" id="pricing">
   <div class="wrap">
-    <h2>Pricing</h2>
-    <p class="lead">Start free. Pay only if the numbers help.</p>
+    <h2 class="reveal">Pricing</h2>
+    <p class="lead reveal">Start free. Pay only if the numbers help.</p>
     <div class="pricing">
-      <div class="plan">
+      <div class="plan reveal" style="--i:0">
         <h3>Audit</h3>
         <div class="price">$49</div>
         <div class="price-note">one time</div>
@@ -169,7 +209,7 @@
         </ul>
         <a class="btn ghost" href="mailto:ah.systemsss@gmail.com?subject=Ingredient%20cost%20audit%20%2449">Book an audit</a>
       </div>
-      <div class="plan">
+      <div class="plan reveal" style="--i:1">
         <h3>Home Baker</h3>
         <div class="price">$19</div>
         <div class="price-note">per month</div>
@@ -180,7 +220,7 @@
         </ul>
         <a class="btn ghost" href="mailto:ah.systemsss@gmail.com?subject=BakeCost%20Home%20Baker%20plan">Ask about this plan</a>
       </div>
-      <div class="plan featured">
+      <div class="plan featured reveal" style="--i:2">
         <span class="plan-tag">Most bakeries</span>
         <h3>Bakery</h3>
         <div class="price">$29</div>
@@ -198,17 +238,17 @@
 
 <section class="section" id="faq">
   <div class="wrap">
-    <h2>Questions</h2>
+    <h2 class="reveal">Questions</h2>
     <div class="faq">
-      <details>
+      <details class="reveal" style="--i:0">
         <summary>Do I need to install anything?</summary>
         <p>No. It runs in your browser, on your phone or computer. The guest demo needs no account.</p>
       </details>
-      <details>
+      <details class="reveal" style="--i:1">
         <summary>What happens to my invoices?</summary>
         <p>In guest mode they never leave your browser. Signed in, they live in your account. Audit invoices are used only for your audit, and deleted on request.</p>
       </details>
-      <details>
+      <details class="reveal" style="--i:2">
         <summary>My invoices are paper photos. Is that fine?</summary>
         <p>Yes. Photos and PDFs both work. Even one invoice is enough to start.</p>
       </details>
@@ -218,8 +258,8 @@
 
 <section class="section alt">
   <div class="wrap center">
-    <h2>See what your recipes really cost.</h2>
-    <div class="btn-row" style="justify-content:center;">
+    <h2 class="reveal">See what your recipes really cost.</h2>
+    <div class="btn-row reveal" style="justify-content:center;">
       <a class="btn" href="app.html">Open the app, free</a>
     </div>
   </div>
@@ -245,5 +285,6 @@
   </div>
 </footer>
 
+<script type="module" src="landing.js"></script>
 </body>
 </html>
