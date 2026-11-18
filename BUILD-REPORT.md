@@ -282,6 +282,90 @@ Tests still green: npm test 157 passed, npm run smoke 33
 passed, npm run check clean (now covers motion.js and
 landing.js), zero em/en dashes, all routes 200.
 
+## Design v3 (2026-11-18 evening): burgundy + real photography
+
+Amina judged the motion version "still the same bad app" and
+asked to explore Pinterest, Figma and Canva for modern design.
+The exploration brief is at
+~/workspace/goals/500-per-week-from-technical-services/hidden_files/BakeCost-Design-Direction-v3.md.
+The new look is a visible rebuild, not a tweak.
+
+Palette: deep burgundy #6d1a2d replaces caramel as the lead
+accent (tokens --accent, --accent-dark #4f1220, --accent-soft
+#f7e8ea); warm cream background and ink text stay. Buttons are
+pills now (border-radius 999px), with a cream .btn.light
+variant for dark surfaces. The app restyles through the same
+shared tokens (tabs, buttons, alert borders), and charts.js
+now draws price lines and sparklines in burgundy. The only
+other hardcoded colour found was the chart default; app.css
+needed no change.
+
+Hero: full-bleed real bakery photography (Unsplash croissants,
+photo-1555507036, srcset 800w/1600w) with a dark legibility
+scrim, one oversized serif headline (clamp 52px to 104px) and
+one pill CTA. The hero has a dark #1a080c background fallback
+so the cream headline still reads if the photo ever fails.
+The dashboard mockup moved below the hero into its own
+"preview" section, keeping its count-ups.
+
+Product grid replaces the abstract feature cards: Butter Cake,
+Sourdough Loaf and Lemon Drizzle, each with a real photo, a
+SAMPLE chip, ingredient cost, selling price, and margin with
+an On target badge. Numbers computed from the sample data with
+the real costing code: $5.86 / $24.00 / 75.6%, $1.86 / $8.00 /
+76.8%, $3.94 / $18.00 / 78.1%. Photos (all Unsplash, each URL
+verified HTTP 200 with curl before shipping, each image viewed
+before use): hero photo-1555507036-ab1f4038808a (croissants),
+Butter Cake photo-1578985545062-69928b1d9587 (chocolate layer
+cake), Sourdough photo-1549931319-a545dcf3bc73 (sliced rustic
+loaf), Lemon Drizzle photo-1519915028121-7d3463d20b13 (lemon
+meringue tart). Four photos total: the brief said 2 to 3, but
+a three-card grid needs one photo per card. All are sized with
+Unsplash w= params (hero 800/1600, cards 800) and the card
+photos lazy-load. Footer credits "Photography via Unsplash."
+
+Section rhythm: hero (photo + headline + one CTA), app
+preview (mockup), how it works (3 numbered steps, burgundy
+rules and numerals), examples (product grid + mini calculator),
+proof (BLS moves only: -35%/-17%/+24%), free audit (now a
+burgundy panel with a cream pill button), pricing, FAQ (3
+items), one strong final CTA. Landing copy 473 words by the
+same count that gave 458 before (nav and footer included).
+
+Motion system kept intact (landing.js and motion.js
+untouched): hero entrance, scroll reveals, count-ups, springs,
+haptic press, skeleton screens, View Transitions,
+reduced-motion guardrails. The feature-card CSS and the
+quiet-link were removed; hover lift now applies to product
+cards.
+
+Verification: headless Chromium, script /tmp/pw-check/v3.cjs,
+31 frames in /tmp/pw-check/v3-shots/, every one read: hero
+entrance mid-flight (h1 opacity 0.55, +14px) and settled
+(photo loaded, headline readable over the croissants),
+count-up mid-flight (3, 2, 0, -25%) and settled (4, 3, 0,
+-35%), reveal mid-flight and settled, button press (scale
+0.969), calculator default ($5.86, 75.6%, On target) and
+moved (Sourdough, flour max $6.20, $3.72, 53.5%, Below
+target), moves settled (-35%/-17%/+24%), burgundy audit
+panel, pricing, FAQ, final CTA and footer (photo credit
+visible), all 5 app views at 390px (burgundy tabs, buttons,
+chart lines and sparklines), skeletons (67 blocks at 500ms),
+view-switch stagger mid-flight (opacities 0.97, 0.84, 0.22),
+reduced motion (hero fully visible at 150ms, shimmer none,
+switch opacities 1, 1, 1), desktop hero, 3-card grid, hover
+lift (-3px), desktop calculator and desktop app. Zero
+horizontal overflow on every view at 390px and 1280px.
+Fraunces confirmed loaded (document.fonts.check). One
+environment note: the VM egress proxy refuses Chromium's
+CONNECT tunnel to images.unsplash.com, so the proof run
+served the Unsplash requests from the exact downloaded bytes
+in /tmp/unsplash-check/; the remote URLs themselves were
+verified 200 via curl and need the live-site check to confirm
+in a real browser. Tests still green: npm test 157 passed,
+npm run smoke 33 passed, npm run check clean, zero em/en
+dashes, all routes 200.
+
 ## Files
 
 - `index.html`, `styles.css`, `landing.js`: landing page.

@@ -23,7 +23,7 @@ export function lineChartSVG(points, options) {
   options = options || {};
   var width = options.width || 560;
   var height = options.height || 180;
-  var color = options.color || "#b45309";
+  var color = options.color || "#6d1a2d";
   var label = options.label || "Price history";
 
   if (!points || points.length === 0) {
@@ -121,7 +121,7 @@ export function sparklineSVG(points, options) {
   options = options || {};
   var width = options.width || 120;
   var height = options.height || 36;
-  var color = options.color || "#b45309";
+  var color = options.color || "#6d1a2d";
   if (!points || points.length === 0) return "";
   var sorted = points.slice().sort(function (a, b) {
     return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
