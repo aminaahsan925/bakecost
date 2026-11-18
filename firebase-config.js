@@ -24,12 +24,12 @@
 // ---------------------------------------------------------------
 
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCDQy5C1xPEhzDaaRfeElN2CUTRur2JfLc",
+  authDomain: "bakecost-cf9a6.firebaseapp.com",
+  projectId: "bakecost-cf9a6",
+  storageBucket: "bakecost-cf9a6.firebasestorage.app",
+  messagingSenderId: "43722410808",
+  appId: "1:43722410808:web:52e91630ce6e03b3ab0fcd"
 };
 
 // Free-tier Gemini model used through Firebase AI Logic.
