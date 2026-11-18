@@ -544,7 +544,11 @@ function renderDashboard() {
     tableHtml = '<div class="dash-recipe-list">' +
       rows.map(function (r, i) {
         var marginText = r.marginPct === null ? "n/a" : r.marginPct.toFixed(1) + "%";
-        return '<div class="dash-recipe-row stagger-item" style="--i:' + Math.min(i, 5) + '"><div class="dash-recipe-name"><strong>' +
+        var photo = recipePhoto(r.recipe.name);
+        var thumbHtml = photo
+          ? '<img class="dash-recipe-thumb" src="' + photo + '" alt="" loading="lazy">'
+          : "";
+        return '<div class="dash-recipe-row stagger-item" style="--i:' + Math.min(i, 5) + '">' + thumbHtml + '<div class="dash-recipe-name"><strong>' +
           escapeHtml(r.recipe.name) + '</strong><span class="small">Sells at ' +
           money(r.sellPrice) + '</span></div>' +
           '<div class="dash-recipe-nums"><span class="dash-recipe-cost">' + money(r.costNow) + '</span>' +
@@ -893,6 +897,19 @@ function renderPrices() {
 
 /* ---------- rendering: recipes ---------- */
 
+// Photos for the three sample recipes, the same shots as the
+// landing page. User-added recipes have no photo; the card and the
+// dashboard row simply render without one.
+var RECIPE_PHOTOS = {
+  "Butter Cake": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&q=80&auto=format&fit=crop",
+  "Sourdough Loaf": "https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=800&q=80&auto=format&fit=crop",
+  "Lemon Drizzle": "https://images.unsplash.com/photo-1519915028121-7d3463d20b13?w=800&q=80&auto=format&fit=crop"
+};
+
+function recipePhoto(name) {
+  return RECIPE_PHOTOS[name] || "";
+}
+
 function renderRecipes() {
   var list = $("recipeList");
   var rows = costingRows();
@@ -911,7 +928,11 @@ function renderRecipes() {
       }).join(", ");
       var noteHtml = recipe.note
         ? '<p class="small recipe-note">' + escapeHtml(recipe.note) + "</p>" : "";
-      return '<div class="recipe-card stagger-item" style="--i:' + Math.min(i, 5) + '"><div class="recipe-head"><h3>' + escapeHtml(recipe.name) + "</h3>" +
+      var photo = recipePhoto(recipe.name);
+      var photoHtml = photo
+        ? '<div class="recipe-photo"><img src="' + photo + '" alt="" loading="lazy"></div>'
+        : "";
+      return '<div class="recipe-card stagger-item" style="--i:' + Math.min(i, 5) + '">' + photoHtml + '<div class="recipe-head"><h3>' + escapeHtml(recipe.name) + "</h3>" +
         '<span class="badge badge-' + r.status + '">' + statusLabel(r.status) + "</span></div>" +
         noteHtml +
         '<p class="recipe-ings">' + escapeHtml(ingText) + "</p>" +

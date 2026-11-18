@@ -1,21 +1,28 @@
-/* BakeCost v6 shared styles. Premium refinement of the v4/v5 identity:
-   deep burgundy, near-black burgundy, cream, and one champagne-gold
-   accent. Two fonts, three colours plus gold, two radii, soft layered
+/* BakeCost v7 shared styles. "The bakery counter": a light-first
+   redesign grounded in six real bakery sites (Magnolia, Bobbette &
+   Belle, Self Raised, Beaucoup, Leaven & Co, Bluebird) and 2026
+   bakery design data. Warm white canvas, white cards, burgundy as
+   the ACTION colour (buttons, prices, links) instead of the canvas,
+   honey as the warm accent. Two fonts, two radii, soft layered
    shadows plus hairlines. Mobile-first: the base rules are the 390px
-   phone layout, and the media queries at the bottom scale up. No build
-   step. Used by the landing page and the app. */
+   phone layout, and the media queries at the bottom scale up. No
+   build step. Used by the landing page and the app. */
 
 :root {
   --ink: #241a12;
   --ink-soft: #57493a;
   --muted: #8a7a66;
-  --paper: #f8f1e5;
-  --paper-deep: #f3e8d5;
-  --card: #fffdf7;
-  --line: #e7dbc4;
+  /* v7 tokens: the canvas is warm white, cards are pure white, and
+     burgundy is the action colour, not the ground. Honey is the
+     warm bakery accent (italic hero word, stamp, eyebrow). */
+  --paper: #fdf8f0;
+  --paper-deep: #f8ecd9;
+  --card: #ffffff;
+  --line: #eadfc8;
   --accent: #6d1a2d;
   --accent-dark: #4f1220;
   --accent-soft: #f7e8ea;
+  --honey: #b45309;
   /* Premium tokens (v4): near-black burgundy grounds the dark
      sections and footer; champagne gold is the only metallic accent,
      used for rules, prices, and tiny details. Hairlines replace
@@ -23,7 +30,7 @@
   --burgundy-deep: #3f0e1a;
   --burgundy-black: #2a0812;
   --gold: #c9a86a;
-  --hairline: rgba(109, 26, 45, 0.18);
+  --hairline: rgba(109, 26, 45, 0.14);
   --hairline-cream: rgba(253, 246, 236, 0.22);
   --green: #2e7d32;
   --green-soft: #e6f4ea;
@@ -142,7 +149,7 @@ code {
 /* ---------- header ---------- */
 
 .site-header {
-  background: rgba(248, 241, 229, 0.92);
+  background: rgba(253, 248, 240, 0.92);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--hairline);
@@ -200,85 +207,85 @@ code {
 .btn:disabled { opacity: 0.55; cursor: default; }
 .btn-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 24px; }
 
-/* ---------- hero ---------- */
-/* Full-bleed real bakery photography with one oversized serif
-   headline and one pill CTA. The photo is an <img> (not a CSS
-   background) so it gets srcset sizing, lazy behaviour control, and
-   an alt text. The scrim is a legibility layer only: it darkens the
-   photo so the cream headline reads on every crop. */
+/* ---------- hero (v7: light) ---------- */
+/* The bakery-counter hero: cream ground, giant burgundy serif
+   headline, one honey-italic word, then a wide photo banner with
+   organic rounded masks (Self Raised's structure). No photo behind
+   the type and no dark scrim: the page opens light, like Magnolia,
+   Bobbette & Belle and Self Raised. The v6 dark photo hero, its
+   scrim and its Ken Burns drift are gone with the elements. */
 .hero {
   position: relative;
-  min-height: 86vh;
-  min-height: 86svh;
-  display: flex;
-  align-items: center;
-  padding: 72px 0;
-  color: #fdf6ec;
+  padding: 64px 0 48px;
+  color: var(--ink);
   overflow: hidden;
-  /* Dark fallback so the cream headline still reads if the photo
-     ever fails to load. */
-  background: #1a080c;
-}
-.hero-photo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 35%;
-  /* Warm grade, shared by every photo on the page: slightly
-     desaturated with a warm cast, so all photography sits in the
-     same cream and burgundy world. */
-  filter: saturate(0.92) sepia(0.10) contrast(1.02);
-  /* v6: a slow Ken Burns drift keeps the hero alive without
-     shouting. Stops under reduced motion via the global rule. */
-  animation: hero-drift 28s var(--ease-standard) infinite alternate;
-}
-@keyframes hero-drift {
-  from { transform: scale(1) translateY(0); }
-  to { transform: scale(1.06) translateY(-1.5%); }
-}
-.hero-scrim {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(26, 8, 12, 0.62) 0%, rgba(26, 8, 12, 0.42) 55%, rgba(26, 8, 12, 0.68) 100%);
 }
 .hero-inner { position: relative; width: 100%; }
-.hero-copy { max-width: 680px; }
+.hero-copy { max-width: 720px; }
 .hero h1 {
-  font-size: clamp(52px, 14vw, 104px);
+  font-size: clamp(48px, 12vw, 96px);
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: #fdf6ec;
+  color: var(--accent);
   text-wrap: balance;
 }
-/* Exactly one italic word in the hero headline: the script accent
-   from the luxury bakery references. */
-.hero h1 em { font-style: italic; font-weight: 600; }
-.hero .lead { font-size: 19px; color: rgba(253, 246, 236, 0.92); }
-.hero-note { margin-top: 16px; font-size: 14px; color: rgba(253, 246, 236, 0.78); }
+/* Exactly one italic word in the hero headline, in honey: the warm
+   accent that says bakery. */
+.hero h1 em { font-style: italic; font-weight: 600; color: var(--honey); }
+.hero .lead { font-size: 19px; color: var(--ink-soft); }
+.hero-note { margin-top: 16px; font-size: 14px; color: var(--muted); }
 .hero-eyebrow {
   display: inline-block;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #f3d9c8;
+  color: var(--honey);
   margin-bottom: 14px;
+}
+
+/* ---------- hero photo banner (v7) ---------- */
+/* Wide bright photography under the headline. Phone: one arched
+   banner photo (seeded loaves). Desktop: the banner spans two rows
+   with two smaller photos stacked beside it, each with a soft
+   organic radius. The stamp overlaps the banner's top-right corner.
+   All photos are verified Unsplash images, the same warm grade as
+   the rest of the page. */
+.hero-banner-wrap { position: relative; margin-top: 40px; }
+.hero-banner { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.hero-banner-main {
+  border-radius: 999px 999px 20px 20px;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: var(--paper-deep);
+}
+.hero-banner-main img,
+.hero-banner-side img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.92) sepia(0.10) contrast(1.02);
+}
+.hero-banner-side {
+  display: none;
+  border-radius: 46% 54% 52% 48% / 48% 46% 54% 52%;
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: var(--paper-deep);
 }
 
 /* ---------- hero stamp ---------- */
 /* Circular rotating-text badge: "Baked fresh • Costed right •" on a
-   ring with a serif B at the centre. Bottom-right of the hero, clear
-   of the left-aligned copy and CTA on phones. The SVG ring rotates
+   ring with a serif B at the centre. v7: it overlaps the photo
+   banner's top-right corner, on the light ground, so the ring text
+   is burgundy and the centre letter is honey. The SVG ring rotates
    slowly (28s); the centre letter stays still. Under reduced motion
    the global rule below stops the rotation. */
 .hero-stamp {
   position: absolute;
-  right: 16px;
-  /* v6: floats above the app preview card, which overlaps the
-     hero's bottom edge by 56px. */
-  bottom: 80px;
+  right: 8px;
+  top: -24px;
   width: 84px;
   height: 84px;
   z-index: 2;
@@ -295,7 +302,7 @@ code {
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 2px;
-  fill: rgba(253, 246, 236, 0.92);
+  fill: rgba(109, 26, 45, 0.85);
   text-transform: uppercase;
 }
 .stamp-center {
@@ -307,7 +314,7 @@ code {
   font-family: var(--display);
   font-size: 28px;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--honey);
 }
 
 /* ---------- hero entrance ---------- */
@@ -323,13 +330,15 @@ code {
   animation-delay: calc(var(--i, 0) * 60ms);
 }
 
-/* ---------- app preview (v6) ---------- */
-/* The real app in a browser frame, overlapping the hero's bottom
-   edge (Figma/Canva pattern). The screenshot is captured from the
-   live app, so it shows the actual product, sample data included.
-   A floating alert card overlaps the frame's corner on desktop,
-   showing the product's value at a glance. */
-.app-preview { margin-top: -56px; position: relative; z-index: 2; padding-bottom: 8px; }
+/* ---------- app preview (v6, v7 spacing) ---------- */
+/* The real app in a browser frame below the hero (Figma/Canva
+   pattern). The screenshot is captured from the live app, so it
+   shows the actual product, sample data included. A floating alert
+   card overlaps the frame's corner on desktop, showing the
+   product's value at a glance. v7: the hero is light and no longer
+   overlaps, so the preview sits on the cream ground with plain
+   spacing instead of a negative margin. */
+.app-preview { position: relative; z-index: 2; padding: 8px 0; }
 .app-frame-wrap { position: relative; }
 .app-frame {
   background: var(--card);
@@ -910,9 +919,14 @@ input[type="range"].calc-slider { width: 100%; accent-color: var(--accent); heig
   .wrap, .header-inner, .footer-inner { padding-left: 20px; padding-right: 20px; }
   .site-nav { gap: 22px; }
   .site-nav a:not(.btn) { display: inline; }
-  .hero { min-height: 90vh; min-height: 90svh; padding: 96px 0; }
-  .hero-stamp { width: 120px; height: 120px; right: 48px; bottom: 104px; }
+  .hero { padding: 96px 0 64px; }
+  .hero-stamp { width: 120px; height: 120px; right: 24px; top: -32px; }
   .stamp-center { font-size: 36px; }
+  /* v7 desktop hero banner: main photo spans two rows, two organic
+     side photos stack beside it. */
+  .hero-banner { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 16px; }
+  .hero-banner-main { grid-row: span 2; aspect-ratio: auto; }
+  .hero-banner-side { display: block; }
   .section { padding: 160px 0; }
   .photo-band { height: 420px; }
   .steps { grid-template-columns: repeat(3, 1fr); gap: 28px; }

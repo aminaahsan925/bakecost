@@ -717,6 +717,58 @@ already used the firebase/ai API (getAI with the GoogleAI backend,
 getGenerativeModel, Schema), so no code change was needed beyond the
 version bump. Tests: npm run check clean, npm test 53 e2e passed.
 
+## v7 "bakery counter" redesign (19 Nov ~00:00 PKT)
+
+Amina, 23:52 PKT 18 Nov: the UI was "too bad", search real bakery
+UI/UX designs and rebuild from them. Grounded in six real bakery
+homepages (screenshots downloaded and viewed: Magnolia, Bobbette &
+Belle, Self Raised, Beaucoup, Leaven & Co, Bluebird) plus 2026
+bakery design data (61.8% of Shopify bakery sites use white or
+near-white backgrounds, 88.2% photo-based heroes; Milk Bar and
+GAIL's scored 10/10). Diagnosis: v6 sat in an awkward middle, dark
+burgundy canvas and moody hero, neither light and fresh like
+Magnolia/Bobbette/Self Raised nor bold-type-driven like
+Beaucoup/Leaven. The fix was a flip, not more polish.
+
+Landing page: light first. Warm white canvas #fdf8f0, white cards,
+burgundy demoted from canvas to action colour (buttons, prices,
+links), honey #b45309 as the warm accent. The dark photo hero, its
+scrim and Ken Burns drift are gone. The new hero is cream ground
+with a giant burgundy serif headline, one honey-italic word
+("really"), and a wide photo banner below: arched seeded-loaves
+photo plus two organic blob photos (cookies, cupcakes), the
+rotating gold stamp overlapping the banner's corner. The app
+preview frame sits on the cream ground with plain spacing. Dark
+sections (audit, final CTA, footer) stay as the page's one dark
+moment. Everything else (bento, gallery, calculator, pricing,
+motion system) is restyled into the light language, not rebuilt.
+
+App: cream background, white cards, burgundy stat numbers, pill
+tabs on desktop (active view is a filled burgundy pill; the phone
+bottom bar keeps its icon style), and food photos: round thumbs on
+the dashboard recipe rows and a full-width photo banner on each
+recipe card, using the same three shots as the landing page.
+User-added recipes have no photo and render without one. The
+app-preview.png screenshot was re-captured from the new look.
+
+Two defects caught by proof and fixed: (1) aspect-ratio plus
+max-height made recipe photos shrink to 427px wide on desktop
+cards; fixed with a fixed height (200px phone, 240px desktop).
+(2) A headless-shell capture showed the Dashboard tab invisible
+after switching views; the cause was a frozen CSS colour transition
+under --virtual-time-budget (compositor transitions run in real
+time, virtual time does not wait for them). Proved a capture
+artifact by re-shooting with transitions disabled in the proof
+server only: the post-click steady state is correct (white text on
+the active pill, plain text on the rest). The shipped CSS is
+unchanged.
+
+Proof: all sections verified from rendered frames at 390px and
+1280px (hero, preview, examples, calculator, bento, gallery,
+pricing, audit, CTA, footer, dashboard, recipes), zero overflow at
+390px. Tests: npm run check clean, npm test 53 passed, zero
+em/en dashes. Brief: BakeCost-Design-Direction-v7-Bakery.md.
+
 ## Files
 
 - `index.html`, `styles.css`, `landing.js`: landing page.
