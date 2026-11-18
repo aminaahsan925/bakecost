@@ -54,7 +54,7 @@ configured.
   Holds placeholders only until the parent wires up a real project.
 - `firebase-app.js`, the shared lazy Firebase app instance.
 - `ai.js`, Gemini invoice extraction through Firebase AI Logic
-  (gemini-2.0-flash, Gemini Developer API backend, free tier). Reads
+  (gemini-3.8-flash, Gemini Developer API backend, free tier). Reads
   pasted text and uploaded photos and PDFs.
 - `store.js`, persistence (localStorage in guest mode, Firestore when
   signed in) and Google sign-in.
@@ -104,11 +104,11 @@ demo mode with sample data.
 - Firebase AI Logic (Firebase JS SDK v11, `firebase/ai`) calls Gemini
   from the browser. No server code is needed.
 - Backend: the app uses the Gemini Developer API backend explicitly
-  (`new GoogleAI()`). The SDK default is the Vertex AI backend, which
+  (`new GoogleAIBackend()`). The SDK default is the Vertex AI backend, which
   needs a billing plan, so the app deliberately does not use it.
-- Model: `gemini-2.0-flash`, on the Firebase AI Logic free tier. The
-  model ID lives in `firebase-config.js` and can be swapped for
-  `gemini-2.5-flash`, which is also free-tier eligible. No
+- Model: `gemini-3.8-flash`, on the Firebase AI Logic free tier. The
+  model ID lives in `firebase-config.js`. `gemini-2.0-flash` was retired
+  in Nov 2026 and returns a 404. No
   billing-required model is used anywhere.
 - Structured output: the app asks Gemini for JSON matching a fixed
   schema (supplier, date, lines with ingredient, quantity, unit,

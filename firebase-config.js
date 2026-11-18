@@ -33,9 +33,9 @@ export const firebaseConfig = {
 };
 
 // Free-tier Gemini model used through Firebase AI Logic.
-// gemini-2.0-flash is available on the Firebase AI Logic free tier.
-// gemini-2.5-flash is also free-tier eligible and can be swapped in here.
-export const MODEL_ID = "gemini-2.0-flash";
+// gemini-2.0-flash was retired (Nov 2026); the API itself recommends
+// gemini-3.8-flash, which is the current free-tier Flash model.
+export const MODEL_ID = "gemini-3.8-flash";
 
 // True only when every placeholder above has been replaced.
 export const isFirebaseConfigured = Object.values(firebaseConfig).every(

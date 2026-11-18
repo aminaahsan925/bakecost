@@ -603,6 +603,36 @@ page unloads before it could run); handleAuthChange already welcomes a
 first-time signed-in baker. No popup sign-in remains anywhere. Tests:
 npm run check clean, npm test 53 e2e passed, zero em/en dashes.
 
+## Gemini model retirement (18 Nov evening)
+
+The live AI test reached Gemini and returned 404: "This model
+models/gemini-2.0-flash is no longer available. Please update your code
+to use models/gemini-3.8-flash". MODEL_ID in firebase-config.js moved to
+gemini-3.8-flash (the API's own recommendation, current free-tier Flash
+model). The same change was made to StockPilot's firebase-config.js,
+which used the same retired model. README updated to match.
+
+## Firebase App Check (18 Nov evening)
+
+AI Logic setup turned on App Check enforcement "Basic - Enforced" for
+the AI Logic API. The web app has no App Check provider registered, so
+every Gemini call failed with 401 "Firebase App Check token is invalid".
+Enforcement was switched OFF in the console 18 Nov 22:43 PKT (now
+"Basic - Unenforced", success confirmed). The console says unenforcement
+can take up to 15 minutes to start. DEADLINE: App Check will be
+automatically enforced for AI Logic again on 21 Jan 2027. Before then
+the web app must be registered with reCAPTCHA Enterprise and App Check
+initialised in the app, or Gemini calls will 401 again. The API key
+HTTP referrer restrictions stay in place as the abuse protection.
+
+## Firebase Auth users (18 Nov evening)
+
+Authentication > Users shows 0 users ("No users for this project yet")
+after many completed Google sign-in flows in the cloud browser. No
+sign-in has ever completed end to end, so no user record exists. The
+sign-in is unproven until it works in a real browser (Amina's phone);
+do not keep re-attempting it in the cloud browser.
+
 ## Firebase AI backend class fix (18 Nov evening, after the second AI test)
 
 The second live AI test failed with "GoogleAI is not a constructor".
