@@ -189,6 +189,66 @@ document.getElementById("recipeForm").dispatchEvent(new window.Event("submit", {
 check("alert badge shows 2 after target edit",
   document.getElementById("alertCountBadge").textContent, "2");
 
+// v5: the More menu opens and closes, and the three new views work.
+click(document.getElementById("moreBtn"));
+check("more menu opens", document.getElementById("moreMenu").hidden, false);
+click(document.getElementById("moreBtn"));
+check("more menu closes", document.getElementById("moreMenu").hidden, true);
+
+// Orders view shows the 3 sample orders, one flagged overdue.
+click(document.querySelector('[data-view="orders"]'));
+check("orders view shows 3 sample orders",
+  document.querySelectorAll("#orderList .order-card").length, 3);
+checkContains("orders view flags an overdue order",
+  document.getElementById("orderList").textContent, "Overdue");
+checkContains("orders summary shows outstanding $74.00",
+  document.getElementById("orderSummary").textContent, "$74.00");
+
+// Add an order through the editor: Test, 2 Butter Cakes, $10 deposit.
+click(document.getElementById("addOrderBtn"));
+check("order editor opens", document.getElementById("orderEditor").hidden, false);
+document.getElementById("orderCustomer").value = "Test";
+document.getElementById("orderDueDate").value = "2026-12-01";
+setValue(document.querySelector('#orderItems select[data-order-field="recipeId"]'), "sample-r1");
+setValue(document.querySelector('#orderItems input[data-order-field="qty"]'), "2");
+document.getElementById("orderDeposit").value = "10";
+document.getElementById("orderDeposit").dispatchEvent(new window.Event("input", { bubbles: true }));
+checkContains("order totals preview shows $48.00",
+  document.getElementById("orderTotalPreview").textContent, "$48.00");
+checkContains("order balance preview shows $38.00",
+  document.getElementById("orderBalancePreview").textContent, "$38.00");
+document.getElementById("orderForm").dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
+check("orders view now shows 4 orders",
+  document.querySelectorAll("#orderList .order-card").length, 4);
+checkContains("new order shows balance $38.00",
+  document.getElementById("orderList").textContent, "$38.00");
+
+// Mark the new order paid: it is the last one by due date.
+const paidButtons = document.querySelectorAll("#orderList [data-order-paid]");
+click(paidButtons[paidButtons.length - 1]);
+check("mark paid leaves 2 unpaid orders",
+  document.querySelectorAll("#orderList [data-order-paid]").length, 2);
+checkContains("outstanding back to $74.00 after mark paid",
+  document.getElementById("orderSummary").textContent, "$74.00");
+
+// Bake Day: the sample day loads with its shopping list.
+click(document.querySelector('[data-view="bakeday"]'));
+checkContains("bake day shopping list shows 8.8 kg flour",
+  document.getElementById("bakeShopping").textContent, "8.8");
+checkContains("bake day shopping list shows 16 eggs",
+  document.getElementById("bakeShopping").textContent, "16");
+check("one saved bake day listed",
+  document.querySelectorAll("#bakeDayList .bake-card").length, 1);
+
+// Suppliers: City Mills appears and the cheapest price is highlighted.
+click(document.querySelector('[data-view="suppliers"]'));
+checkContains("suppliers view names City Mills",
+  document.getElementById("supplierCards").textContent, "City Mills");
+checkContains("suppliers view highlights the cheapest price",
+  document.getElementById("supplierCards").textContent, "Cheapest");
+checkContains("suppliers view flags the flour jump",
+  document.getElementById("supplierCards").textContent, "Jumped");
+
 // Sample data controls: start empty, then reset the sample data.
 click(document.getElementById("startEmptyBtn"));
 click(document.querySelector('[data-view="dashboard"]'));

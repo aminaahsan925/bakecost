@@ -60,6 +60,49 @@
 .tab-btn:hover { color: var(--accent); }
 .tab-btn:active { transform: scale(0.96); }
 .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ---------- More menu ---------- */
+/* The tab bar holds 5 tabs plus More; the three newer views live in
+   this menu so the bar still fits on a phone. On desktop it drops
+   down below the tab; on phones it opens upward above the bottom bar. */
+.more-wrap { position: relative; }
+.more-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  min-width: 210px;
+  padding: 6px;
+  z-index: 30;
+  animation: more-in var(--d-fast) var(--ease-out);
+}
+@keyframes more-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.more-menu[hidden] { display: none; }
+.more-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-radius: 8px;
+  font-family: var(--sans);
+}
+.more-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+.more-item:hover { background: var(--paper-deep); color: var(--accent); }
+.more-item.active { color: var(--accent); background: var(--accent-soft); }
 .count-badge {
   display: inline-block;
   background: var(--red);
@@ -160,11 +203,12 @@
    shadow appears; hairlines do the separating. */
 @media (hover: hover) and (pointer: fine) {
   .stat-card, .recipe-card, .price-card, .invoice-card, .dash-recipe-row,
-  .mover-list li, .alert-item {
+  .mover-list li, .alert-item, .order-card, .supplier-card, .bake-card {
     transition: transform var(--d-hover) var(--ease-out);
   }
   .stat-card:hover, .recipe-card:hover, .price-card:hover, .invoice-card:hover,
-  .dash-recipe-row:hover, .mover-list li:hover, .alert-item:hover {
+  .dash-recipe-row:hover, .mover-list li:hover, .alert-item:hover,
+  .order-card:hover, .supplier-card:hover, .bake-card:hover {
     transform: translateY(-2px);
   }
 }
@@ -182,9 +226,11 @@
   .notice { animation: none !important; }
   .sk::after { animation: none !important; }
   .btn, .tab-btn, .stat-card, .recipe-card, .price-card, .invoice-card,
-  .dash-recipe-row, .mover-list li, .alert-item {
+  .dash-recipe-row, .mover-list li, .alert-item, .order-card,
+  .supplier-card, .bake-card, .more-menu {
     transition: none !important;
   }
+  .more-menu { animation: none !important; }
 }
 
 /* ---------- dashboard ---------- */
@@ -445,6 +491,119 @@
 .alert-item.alert-alert { border-left-color: var(--red); }
 .alert-item.alert-watch { border-left-color: #d97706; }
 
+/* ---------- orders ---------- */
+
+.order-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.order-sum {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+}
+.order-sum-value { font-family: var(--display); font-size: 26px; font-weight: 700; line-height: 1.1; display: block; }
+.order-sum-label { font-size: 12px; color: var(--muted); margin-top: 3px; display: block; line-height: 1.35; }
+
+.order-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 18px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.order-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.order-head h3 { margin-bottom: 0; }
+.order-meta { color: var(--muted); font-size: 14px; margin: 6px 0 10px; }
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+}
+.order-item span:last-child { color: var(--muted); font-size: 14px; white-space: nowrap; }
+.order-nums {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin: 14px 0 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.order-num-value { font-family: var(--display); font-size: 26px; font-weight: 700; line-height: 1.1; display: block; }
+.order-num-label { font-size: 12px; color: var(--muted); margin-top: 3px; display: block; line-height: 1.35; }
+.order-card .btn-row { margin-top: 16px; }
+
+.order-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: flex-end;
+  font-size: 16px;
+  padding-bottom: 4px;
+}
+.order-totals strong { font-family: var(--display); font-size: 22px; }
+
+/* ---------- bake day ---------- */
+
+.bake-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.bake-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.bake-head h3 { margin-bottom: 0; }
+.bake-card .btn-row { margin-top: 14px; }
+
+.shopping-list { list-style: none; margin: 12px 0 0; padding: 0; }
+.shopping-list li {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 13px 16px;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+.shopping-list label { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.shopping-list input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--accent); }
+.shopping-list .shop-qty { font-weight: 700; font-family: var(--display); white-space: nowrap; }
+.shopping-list li.done { opacity: 0.55; }
+.shopping-list li.done label { text-decoration: line-through; }
+
+/* ---------- suppliers ---------- */
+
+.supplier-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 18px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.supplier-card h3 { margin-bottom: 8px; }
+.supplier-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+  padding: 13px 0;
+  border-top: 1px solid var(--line);
+}
+.supplier-row.cheapest { border-left: 4px solid var(--green); padding-left: 12px; margin-left: -12px; }
+.supplier-name { flex: 1 1 160px; min-width: 140px; font-size: 15px; }
+.supplier-price { text-align: right; }
+.supplier-price-num { font-family: var(--display); font-size: 26px; font-weight: 700; line-height: 1.1; }
+.supplier-change { flex: 1 1 100%; font-size: 14px; }
+
 /* ---------- phone: bottom tab bar ---------- */
 
 @media (max-width: 700px) {
@@ -485,6 +644,14 @@
     height: 18px;
     line-height: 18px;
   }
+  /* The More menu opens upward above the bottom bar on phones. */
+  .more-menu {
+    top: auto;
+    bottom: calc(100% + 8px);
+    right: 0;
+  }
+  .more-wrap { flex: 1; }
+  .more-wrap .tab-btn { width: 100%; }
   .app-body .site-footer { padding-bottom: 110px; }
   .mover-right .sparkline { display: none; }
   .preview-panel, .editor-panel { padding: 18px 14px; }

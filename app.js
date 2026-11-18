@@ -12,6 +12,11 @@ import {
   recentMoves, roundTo, money, pct, buildCSV, buildPriceCSV, buildInvoiceCSV
 } from "./costing.js";
 import {
+  recipeById, orderTotal, orderMoney, orderStatus, orderStatusLabel,
+  outstandingBalance, aggregateBakeDay, dozensToBuy,
+  supplierComparison, isPriceJump
+} from "./features.js";
+import {
   parseInvoiceText, matchIngredient, normalizeUnit, convertPrice,
   convertQty, displayUnitKey
 } from "./invoice-parser.js";
@@ -44,6 +49,15 @@ var editingRecipeId = null;
 var cloudSavePending = false;
 var lastAlertCount = null; // for the alert badge pop (null until first render)
 var viewEnterTimer = null; // clears .view-enter after the entrance
+// Views reached through the More menu (the bottom tab bar holds 5 tabs
+// plus More; 8 tabs would not fit on a phone).
+var MORE_VIEWS = ["orders", "bakeday", "suppliers"];
+var orderItems = []; // recipe lines in the order editor
+var editingOrderId = null;
+var bakeDate = ""; // date in the bake-day planner
+var bakeItems = []; // recipe lines in the bake-day planner
+var editingBakeDayId = null; // saved bake day loaded in the planner, or null
+var bakePlanReady = false; // the planner loads the latest bake day once
 
 /* ---------- small helpers ---------- */
 
@@ -128,6 +142,18 @@ function baseUnitLabel(ing) {
 function addActivity(text) {
   state.activity.unshift({ id: uid(), at: todayISO(), text: text });
   if (state.activity.length > 50) state.activity.length = 50;
+}
+
+// States saved before v5 have no orders or bake days. Fill the gaps
+// so the new views never meet undefined arrays.
+function normalizeState(loaded) {
+  if (!Array.isArray(loaded.orders)) loaded.orders = [];
+  if (!Array.isArray(loaded.bakeDays)) loaded.bakeDays = [];
+  if (!Array.isArray(loaded.ingredients)) loaded.ingredients = [];
+  if (!Array.isArray(loaded.invoices)) loaded.invoices = [];
+  if (!Array.isArray(loaded.recipes)) loaded.recipes = [];
+  if (!Array.isArray(loaded.activity)) loaded.activity = [];
+  return loaded;
 }
 
 /* ---------- persistence ---------- */
@@ -331,10 +357,19 @@ function renderHeader() {
 
 function setView(view) {
   currentView = view;
+  closeMoreMenu();
   var tabs = document.querySelectorAll(".tab-btn");
   tabs.forEach(function (btn) {
     btn.classList.toggle("active", btn.getAttribute("data-view") === view);
     btn.setAttribute("aria-selected", btn.getAttribute("data-view") === view ? "true" : "false");
+  });
+  // A More view lights up the More tab, and its item in the menu.
+  var moreBtn = $("moreBtn");
+  var inMore = MORE_VIEWS.indexOf(view) !== -1;
+  moreBtn.classList.toggle("active", inMore);
+  moreBtn.setAttribute("aria-selected", inMore ? "true" : "false");
+  document.querySelectorAll(".more-item").forEach(function (item) {
+    item.classList.toggle("active", item.getAttribute("data-view") === view);
   });
   var panels = document.querySelectorAll(".view");
   panels.forEach(function (panel) {
@@ -361,6 +396,9 @@ function renderView(view) {
   else if (view === "prices") renderPrices();
   else if (view === "recipes") renderRecipes();
   else if (view === "alerts") renderAlerts();
+  else if (view === "orders") renderOrders();
+  else if (view === "bakeday") renderBakeDay();
+  else if (view === "suppliers") renderSuppliers();
 }
 
 function renderAll() {
@@ -399,7 +437,32 @@ function showSkeletons(view) {
     $("alertFeed").innerHTML = skeletonCards(2);
     $("moversTable").innerHTML = skeletonCards(1);
     $("targetsTable").innerHTML = skeletonCards(1);
+  } else if (view === "orders") {
+    $("orderList").innerHTML = skeletonCards(2);
+  } else if (view === "bakeday") {
+    $("bakeTotals").innerHTML = skeletonCards(1);
+    $("bakeShopping").innerHTML = skeletonCards(1);
+    $("bakeDayList").innerHTML = skeletonCards(1);
+  } else if (view === "suppliers") {
+    $("supplierCards").innerHTML = skeletonCards(2);
   }
+}
+
+/* ---------- More menu ---------- */
+
+function closeMoreMenu() {
+  var menu = $("moreMenu");
+  if (menu) menu.hidden = true;
+  var btn = $("moreBtn");
+  if (btn) btn.setAttribute("aria-expanded", "false");
+}
+
+function toggleMoreMenu() {
+  var menu = $("moreMenu");
+  var btn = $("moreBtn");
+  var open = menu.hidden;
+  menu.hidden = !open;
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
 }
 
 /* ---------- rendering: dashboard ---------- */
@@ -1047,6 +1110,422 @@ function renderAlerts() {
     : '<p class="small">No recipes yet.</p>';
 }
 
+/* ---------- rendering: orders ---------- */
+
+function recipeOptions(selectedId) {
+  var options = '<option value="">Pick a recipe</option>' +
+    state.recipes.map(function (r) {
+      return '<option value="' + r.id + '"' +
+        (r.id === selectedId ? " selected" : "") + ">" +
+        escapeHtml(r.name) + " (" + money(r.sellPrice) + ")</option>";
+    }).join("");
+  return options;
+}
+
+function renderOrders() {
+  var summary = $("orderSummary");
+  var list = $("orderList");
+  if (state.orders.length === 0) {
+    summary.innerHTML = "";
+    list.innerHTML = '<p class="small">No orders yet. Add your first order below. ' +
+      (state.recipes.length === 0
+        ? "Orders are built from recipes, so add a recipe first."
+        : "Pick a customer, a due date, and the recipes they ordered.") + "</p>";
+  } else {
+    var today = todayISO();
+    var outstanding = outstandingBalance(state.orders, state.recipes);
+    var overdueCount = state.orders.filter(function (o) {
+      return orderStatus(o, state.recipes, today).overdue;
+    }).length;
+    summary.innerHTML = '<div class="order-summary">' +
+      '<div class="order-sum"><span class="order-sum-value">' + money(outstanding) + '</span>' +
+      '<span class="order-sum-label">Outstanding</span></div>' +
+      '<div class="order-sum"><span class="order-sum-value">' + overdueCount + '</span>' +
+      '<span class="order-sum-label">Overdue</span></div>' +
+      '<div class="order-sum"><span class="order-sum-value">' + state.orders.length + '</span>' +
+      '<span class="order-sum-label">Orders</span></div></div>';
+    var sorted = state.orders.slice().sort(function (a, b) {
+      return a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0;
+    });
+    list.innerHTML = sorted.map(function (order, i) {
+      var amounts = orderMoney(order, state.recipes);
+      var st = orderStatus(order, state.recipes, today);
+      var badgeClass = st.status === "paid" ? "ok" :
+        (st.overdue ? "alert" : "watch");
+      var badgeText = st.overdue ? "Overdue" : orderStatusLabel(st.status);
+      var itemsHtml = order.items.map(function (item) {
+        var recipe = recipeById(state.recipes, item.recipeId);
+        if (!recipe) return '<div class="order-item"><span>Recipe removed</span></div>';
+        return '<div class="order-item"><span>' + item.qty + " x " + escapeHtml(recipe.name) +
+          "</span><span>" + money(recipe.sellPrice) + " each</span></div>";
+      }).join("");
+      var totalText = amounts.total === null ? "n/a" : money(amounts.total);
+      var balanceText = amounts.balance === null ? "n/a" : money(amounts.balance);
+      var paidBtn = amounts.balance !== null && amounts.balance > 0
+        ? '<button class="btn small" type="button" data-order-paid="' + order.id + '">Mark paid</button>'
+        : "";
+      return '<div class="order-card stagger-item" style="--i:' + Math.min(i, 5) + '"><div class="order-head"><h3>' +
+        escapeHtml(order.customer) + "</h3>" +
+        '<span class="badge badge-' + badgeClass + '">' + badgeText + "</span></div>" +
+        '<div class="order-meta">Due ' + formatDate(order.dueDate) +
+        (order.isSample ? ' <span class="badge badge-demo">Sample</span>' : "") + "</div>" +
+        itemsHtml +
+        '<div class="order-nums">' +
+        '<div class="order-num"><span class="order-num-value">' + totalText + '</span>' +
+        '<span class="order-num-label">Total</span></div>' +
+        '<div class="order-num"><span class="order-num-value">' + money(amounts.deposit) + '</span>' +
+        '<span class="order-num-label">Deposit paid</span></div>' +
+        '<div class="order-num"><span class="order-num-value">' + balanceText + '</span>' +
+        '<span class="order-num-label">Balance due</span></div>' +
+        "</div>" +
+        '<div class="btn-row"><button class="btn small ghost" type="button" data-order-edit="' + order.id + '">Edit</button>' +
+        paidBtn +
+        '<button class="btn small ghost danger" type="button" data-order-delete="' + order.id + '">Delete</button></div></div>';
+    }).join("");
+  }
+  if ($("orderEditor").hidden === false) {
+    renderOrderItems();
+    renderOrderTotals();
+  }
+}
+
+function openOrderEditor(orderId) {
+  var order = null;
+  if (orderId) {
+    for (var i = 0; i < state.orders.length; i++) {
+      if (state.orders[i].id === orderId) order = state.orders[i];
+    }
+  }
+  editingOrderId = order ? order.id : null;
+  $("orderEditorTitle").textContent = order ? "Edit order" : "Add an order";
+  $("orderCustomer").value = order ? order.customer : "";
+  $("orderDueDate").value = order ? order.dueDate : todayISO();
+  $("orderDeposit").value = order ? order.depositPaid : 0;
+  $("orderDeleteBtn").hidden = !order;
+  orderItems = order
+    ? order.items.map(function (item) {
+        return { recipeId: item.recipeId, qty: item.qty };
+      })
+    : [{ recipeId: "", qty: 1 }];
+  $("orderEditor").hidden = false;
+  renderOrderItems();
+  renderOrderTotals();
+  $("orderEditor").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function closeOrderEditor() {
+  editingOrderId = null;
+  orderItems = [];
+  $("orderEditor").hidden = true;
+}
+
+function renderOrderItems() {
+  $("orderItems").innerHTML = orderItems.map(function (item, i) {
+    return '<div class="line-row">' +
+      '<select data-order-field="recipeId" data-index="' + i + '">' + recipeOptions(item.recipeId) + "</select>" +
+      '<input type="number" min="1" step="1" placeholder="Qty" value="' + item.qty +
+      '" data-order-field="qty" data-index="' + i + '">' +
+      '<button class="btn small ghost danger" type="button" data-order-remove="' + i + '">Remove</button>' +
+      "</div>";
+  }).join("");
+}
+
+function renderOrderTotals() {
+  var draft = {
+    items: orderItems,
+    depositPaid: parseFloat($("orderDeposit").value) || 0
+  };
+  var amounts = orderMoney(draft, state.recipes);
+  $("orderTotalPreview").textContent = amounts.total === null ? "n/a" : money(amounts.total);
+  $("orderBalancePreview").textContent = amounts.balance === null ? "n/a" : money(amounts.balance);
+}
+
+function onOrderSave(event) {
+  event.preventDefault();
+  var customer = $("orderCustomer").value.trim();
+  var dueDate = $("orderDueDate").value;
+  var deposit = parseFloat($("orderDeposit").value) || 0;
+  if (!customer) {
+    showNotice("Give the order a customer name.", "warn");
+    return;
+  }
+  if (!dueDate) {
+    showNotice("Pick a due date before saving.", "warn");
+    return;
+  }
+  if (deposit < 0) {
+    showNotice("The deposit cannot be below zero.", "warn");
+    return;
+  }
+  var items = [];
+  for (var i = 0; i < orderItems.length; i++) {
+    var item = orderItems[i];
+    var qty = parseInt(item.qty, 10);
+    if (!item.recipeId || !(qty > 0)) continue;
+    items.push({ recipeId: item.recipeId, qty: qty });
+  }
+  if (items.length === 0) {
+    showNotice("Add at least one recipe with a quantity above zero.", "warn");
+    return;
+  }
+  if (editingOrderId) {
+    for (var j = 0; j < state.orders.length; j++) {
+      if (state.orders[j].id === editingOrderId) {
+        state.orders[j] = {
+          id: editingOrderId, customer: customer, dueDate: dueDate,
+          items: items, depositPaid: deposit,
+          isSample: state.orders[j].isSample
+        };
+      }
+    }
+    addActivity("Order updated: " + customer + ", due " + formatDate(dueDate) + ".");
+  } else {
+    state.orders.push({
+      id: uid(), customer: customer, dueDate: dueDate,
+      items: items, depositPaid: deposit
+    });
+    addActivity("Order added: " + customer + ", due " + formatDate(dueDate) + ".");
+  }
+  state.isSample = false;
+  closeOrderEditor();
+  persist();
+  renderAll();
+  showNotice("Order saved.", "ok");
+}
+
+function onDeleteOrder(id) {
+  var order = null;
+  for (var i = 0; i < state.orders.length; i++) {
+    if (state.orders[i].id === id) order = state.orders[i];
+  }
+  if (!order) return;
+  if (!window.confirm("Delete the order for " + order.customer + "?")) return;
+  state.orders = state.orders.filter(function (item) { return item.id !== id; });
+  if (editingOrderId === id) closeOrderEditor();
+  addActivity("Order deleted: " + order.customer + ".");
+  persist();
+  renderAll();
+  showNotice("Order deleted.", "ok");
+}
+
+function onMarkPaid(id) {
+  for (var i = 0; i < state.orders.length; i++) {
+    if (state.orders[i].id !== id) continue;
+    var total = orderTotal(state.orders[i], state.recipes);
+    if (total === null) {
+      showNotice("This order has a missing recipe, so the total is unknown. Edit it first.", "warn");
+      return;
+    }
+    state.orders[i].depositPaid = roundTo(total, 2);
+    addActivity("Order paid in full: " + state.orders[i].customer + ".");
+  }
+  persist();
+  renderAll();
+  showNotice("Order marked paid in full.", "ok");
+}
+
+/* ---------- rendering: bake day ---------- */
+
+// The planner loads the latest saved bake day the first time the
+// view opens, so the sample bake day (and its shopping list) shows
+// at once. After that the planner keeps whatever the baker typed.
+function ensureBakePlan() {
+  if (bakePlanReady) return;
+  bakePlanReady = true;
+  if (state.bakeDays.length > 0) {
+    var latest = state.bakeDays.slice().sort(function (a, b) {
+      return a.date < b.date ? 1 : -1;
+    })[0];
+    loadBakePlan(latest);
+  } else {
+    bakeDate = todayISO();
+    bakeItems = [{ recipeId: "", qty: 1 }];
+    editingBakeDayId = null;
+  }
+}
+
+function loadBakePlan(bakeDay) {
+  bakeDate = bakeDay.date;
+  bakeItems = bakeDay.items.map(function (item) {
+    return { recipeId: item.recipeId, qty: item.qty };
+  });
+  editingBakeDayId = bakeDay.id;
+}
+
+function renderBakeDay() {
+  ensureBakePlan();
+  $("bakeDate").value = bakeDate;
+  $("bakeItems").innerHTML = bakeItems.map(function (item, i) {
+    return '<div class="line-row">' +
+      '<select data-bake-field="recipeId" data-index="' + i + '">' + recipeOptions(item.recipeId) + "</select>" +
+      '<input type="number" min="1" step="1" placeholder="Qty" value="' + item.qty +
+      '" data-bake-field="qty" data-index="' + i + '">' +
+      '<button class="btn small ghost danger" type="button" data-bake-remove="' + i + '">Remove</button>' +
+      "</div>";
+  }).join("");
+  renderBakeTotals();
+  var list = $("bakeDayList");
+  if (state.bakeDays.length === 0) {
+    list.innerHTML = '<p class="small">No saved bake days yet. Plan one above and save it.</p>';
+  } else {
+    var sorted = state.bakeDays.slice().sort(function (a, b) {
+      return a.date < b.date ? 1 : -1;
+    });
+    list.innerHTML = sorted.map(function (day, i) {
+      var summary = day.items.map(function (item) {
+        var recipe = recipeById(state.recipes, item.recipeId);
+        return item.qty + " x " + (recipe ? recipe.name : "Recipe removed");
+      }).join(", ");
+      var inPlanner = day.id === editingBakeDayId;
+      return '<div class="bake-card stagger-item" style="--i:' + Math.min(i, 5) + '"><div class="bake-head"><h3>' +
+        formatDate(day.date) + "</h3>" +
+        (inPlanner ? '<span class="badge badge-ok">In the planner</span>' : "") +
+        (day.isSample ? ' <span class="badge badge-demo">Sample</span>' : "") + "</div>" +
+        '<p class="small">' + escapeHtml(summary) + "</p>" +
+        '<div class="btn-row"><button class="btn small ghost" type="button" data-bake-load="' + day.id + '">Load</button>' +
+        '<button class="btn small ghost danger" type="button" data-bake-delete="' + day.id + '">Delete</button></div></div>';
+    }).join("");
+  }
+}
+
+function shoppingQtyText(item) {
+  var ing = ingredientByName(item.name);
+  if (ing && ing.factor === 12) {
+    return item.qty + " (buy " + dozensToBuy(item.qty) + " dozen)";
+  }
+  var label = ing ? baseUnitLabel(ing) : "kg";
+  return item.qty + " " + label;
+}
+
+function renderBakeTotals() {
+  var totals = aggregateBakeDay(bakeItems, state.recipes);
+  var planSummary = bakeItems.filter(function (item) {
+    return item.recipeId && Number(item.qty) > 0;
+  }).map(function (item) {
+    var recipe = recipeById(state.recipes, item.recipeId);
+    return item.qty + " x " + (recipe ? recipe.name : "Recipe removed");
+  }).join(", ");
+  if (totals.length === 0) {
+    $("bakeTotals").innerHTML = '<p class="small">Add a recipe above to see what you need.</p>';
+    $("bakeShopping").innerHTML = '<p class="small">The shopping list appears once the plan has a recipe.</p>';
+    return;
+  }
+  $("bakeTotals").innerHTML =
+    '<p class="small">For ' + escapeHtml(planSummary) + ".</p>" +
+    '<div class="table-wrap"><table><thead><tr><th>Ingredient</th><th class="num">Needed</th></tr></thead><tbody>' +
+    totals.map(function (t) {
+      return "<tr><td>" + escapeHtml(t.name) + '</td><td class="num">' +
+        escapeHtml(shoppingQtyText(t)) + "</td></tr>";
+    }).join("") + "</tbody></table></div>";
+  $("bakeShopping").innerHTML = '<ul class="shopping-list">' +
+    totals.map(function (t, i) {
+      return '<li class="stagger-item" style="--i:' + Math.min(i, 5) + '"><label>' +
+        '<input type="checkbox" data-shop-check>' +
+        '<span class="shop-qty">' + escapeHtml(shoppingQtyText(t)) + "</span> " +
+        escapeHtml(t.name) + "</label></li>";
+    }).join("") + "</ul>";
+}
+
+function onBakeSave() {
+  if (!bakeDate) {
+    showNotice("Pick a bake date before saving.", "warn");
+    return;
+  }
+  var items = [];
+  for (var i = 0; i < bakeItems.length; i++) {
+    var item = bakeItems[i];
+    var qty = parseInt(item.qty, 10);
+    if (!item.recipeId || !(qty > 0)) continue;
+    items.push({ recipeId: item.recipeId, qty: qty });
+  }
+  if (items.length === 0) {
+    showNotice("Add at least one recipe with a quantity above zero.", "warn");
+    return;
+  }
+  if (editingBakeDayId) {
+    for (var j = 0; j < state.bakeDays.length; j++) {
+      if (state.bakeDays[j].id === editingBakeDayId) {
+        state.bakeDays[j] = {
+          id: editingBakeDayId, date: bakeDate, items: items,
+          isSample: state.bakeDays[j].isSample
+        };
+      }
+    }
+    addActivity("Bake day updated: " + formatDate(bakeDate) + ".");
+  } else {
+    var created = { id: uid(), date: bakeDate, items: items };
+    state.bakeDays.push(created);
+    editingBakeDayId = created.id;
+    addActivity("Bake day saved: " + formatDate(bakeDate) + ".");
+  }
+  state.isSample = false;
+  persist();
+  renderAll();
+  showNotice("Bake day saved.", "ok");
+}
+
+function onBakeDelete(id) {
+  var day = null;
+  for (var i = 0; i < state.bakeDays.length; i++) {
+    if (state.bakeDays[i].id === id) day = state.bakeDays[i];
+  }
+  if (!day) return;
+  if (!window.confirm("Delete the bake day for " + formatDate(day.date) + "?")) return;
+  state.bakeDays = state.bakeDays.filter(function (item) { return item.id !== id; });
+  if (editingBakeDayId === id) {
+    editingBakeDayId = null;
+    bakeDate = todayISO();
+    bakeItems = [{ recipeId: "", qty: 1 }];
+  }
+  addActivity("Bake day deleted: " + formatDate(day.date) + ".");
+  persist();
+  renderAll();
+  showNotice("Bake day deleted.", "ok");
+}
+
+/* ---------- rendering: suppliers ---------- */
+
+function renderSuppliers() {
+  var wrap = $("supplierCards");
+  var comparison = supplierComparison(state.invoices, state.ingredients);
+  if (comparison.length === 0) {
+    wrap.innerHTML = '<p class="small">No ingredients yet. Add an invoice to start comparing suppliers.</p>';
+    return;
+  }
+  wrap.innerHTML = comparison.map(function (entry, i) {
+    if (entry.suppliers.length === 0) {
+      return '<div class="supplier-card stagger-item" style="--i:' + Math.min(i, 5) + '"><h3>' +
+        escapeHtml(entry.name) + ' <span class="small">(' + escapeHtml(entry.unit) + ")</span></h3>" +
+        '<p class="small">No prices yet. Add an invoice with this ingredient.</p></div>';
+    }
+    var rows = entry.suppliers.map(function (s) {
+      var isCheapest = s.supplier === entry.cheapest && entry.suppliers.length > 1;
+      var changeHtml = "";
+      if (s.changePct === null) {
+        changeHtml = '<span class="small">First price from this supplier</span>';
+      } else {
+        var jumped = isPriceJump(s.changePct);
+        changeHtml = '<span class="' + (s.changePct > 0 ? "up" : "down") + '">' + pct(s.changePct) + "</span>" +
+          '<span class="small"> since ' + money(s.prevPrice) + " (" + formatDate(s.prevDate) + ")</span>" +
+          (jumped ? ' <span class="badge badge-alert">Jumped</span>' : "");
+      }
+      return '<div class="supplier-row' + (isCheapest ? " cheapest" : "") + '">' +
+        '<div class="supplier-name"><strong>' + escapeHtml(s.supplier) + "</strong>" +
+        (isCheapest ? ' <span class="badge badge-ok">Cheapest</span>' : "") +
+        '<br><span class="small">' + formatDate(s.latestDate) + "</span></div>" +
+        '<div class="supplier-price"><span class="supplier-price-num">' + money(s.latestPrice) + "</span>" +
+        '<span class="small">' + escapeHtml(entry.unit) + "</span></div>" +
+        '<div class="supplier-change">' + changeHtml + "</div></div>";
+    }).join("");
+    var note = entry.suppliers.length === 1
+      ? '<p class="small">Only one supplier so far. Add an invoice from another supplier to compare.</p>'
+      : "";
+    return '<div class="supplier-card stagger-item" style="--i:' + Math.min(i, 5) + '"><h3>' +
+      escapeHtml(entry.name) + ' <span class="small">(' + escapeHtml(entry.unit) + ")</span></h3>" +
+      rows + note + "</div>";
+  }).join("");
+}
+
 /* ---------- sample data controls ---------- */
 
 function onResetSample() {
@@ -1071,7 +1550,7 @@ function onCopyGuestToCloud() {
   if (!guest) return;
   if (!window.confirm("Copy your guest data into your account? This replaces what is saved in your account now.")) return;
   guest.isSample = false;
-  state = guest;
+  state = normalizeState(guest);
   persist();
   renderAll();
   showNotice("Guest data copied to your account.", "ok");
@@ -1104,7 +1583,7 @@ function handleAuthChange(newUser) {
     showSkeletons(currentView);
     loadCloudState(user)
       .then(function (cloudState) {
-        state = cloudState || freshCloudState();
+        state = normalizeState(cloudState || freshCloudState());
         renderAll();
         if (!cloudState) {
           showNotice("Welcome. Your account is empty, so here is a clean start. " +
@@ -1120,7 +1599,7 @@ function handleAuthChange(newUser) {
       });
   } else {
     mode = "guest";
-    state = loadGuestState() || sampleState();
+    state = normalizeState(loadGuestState() || sampleState());
     if (!loadGuestState()) persist();
     renderAll();
   }
@@ -1184,9 +1663,27 @@ function onDeleteRecipe(id) {
 /* ---------- wiring ---------- */
 
 function init() {
-  // Tabs.
+  // Tabs (the More button is not a view, it gets its own handler below).
   document.querySelectorAll(".tab-btn").forEach(function (btn) {
+    if (btn.id === "moreBtn") return;
     btn.addEventListener("click", function () { setView(btn.getAttribute("data-view")); });
+  });
+  // More menu: the button toggles it, an item jumps to its view.
+  $("moreBtn").addEventListener("click", function (event) {
+    event.stopPropagation();
+    toggleMoreMenu();
+  });
+  document.querySelectorAll(".more-item").forEach(function (item) {
+    item.addEventListener("click", function () {
+      setView(item.getAttribute("data-view"));
+    });
+  });
+  // A tap anywhere outside the menu closes it. Escape does too.
+  document.addEventListener("click", function (event) {
+    if (!event.target.closest(".more-wrap")) closeMoreMenu();
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") closeMoreMenu();
   });
   // Links that jump to a view.
   document.addEventListener("click", function (event) {
@@ -1227,6 +1724,50 @@ function init() {
     if (editorRemove) {
       editorLines.splice(parseInt(editorRemove.getAttribute("data-editor-remove"), 10), 1);
       renderEditorLines();
+      return;
+    }
+    var orderEdit = event.target.closest("[data-order-edit]");
+    if (orderEdit) {
+      openOrderEditor(orderEdit.getAttribute("data-order-edit"));
+      return;
+    }
+    var orderDelete = event.target.closest("[data-order-delete]");
+    if (orderDelete) {
+      onDeleteOrder(orderDelete.getAttribute("data-order-delete"));
+      return;
+    }
+    var orderPaid = event.target.closest("[data-order-paid]");
+    if (orderPaid) {
+      onMarkPaid(orderPaid.getAttribute("data-order-paid"));
+      return;
+    }
+    var orderRemove = event.target.closest("[data-order-remove]");
+    if (orderRemove) {
+      orderItems.splice(parseInt(orderRemove.getAttribute("data-order-remove"), 10), 1);
+      renderOrderItems();
+      renderOrderTotals();
+      return;
+    }
+    var bakeLoad = event.target.closest("[data-bake-load]");
+    if (bakeLoad) {
+      for (var bi = 0; bi < state.bakeDays.length; bi++) {
+        if (state.bakeDays[bi].id === bakeLoad.getAttribute("data-bake-load")) {
+          loadBakePlan(state.bakeDays[bi]);
+        }
+      }
+      renderBakeDay();
+      window.scrollTo({ top: 0 });
+      return;
+    }
+    var bakeDelete = event.target.closest("[data-bake-delete]");
+    if (bakeDelete) {
+      onBakeDelete(bakeDelete.getAttribute("data-bake-delete"));
+      return;
+    }
+    var bakeRemove = event.target.closest("[data-bake-remove]");
+    if (bakeRemove) {
+      bakeItems.splice(parseInt(bakeRemove.getAttribute("data-bake-remove"), 10), 1);
+      renderBakeDay();
     }
   });
 
@@ -1274,6 +1815,29 @@ function init() {
       } else if (efield === "newUnit") {
         eline.newUnit = el.value;
       }
+      return;
+    }
+    var ofield = el.getAttribute("data-order-field");
+    if (ofield) {
+      var oi = parseInt(el.getAttribute("data-index"), 10);
+      var oline = orderItems[oi];
+      if (!oline) return;
+      oline[ofield] = el.value;
+      renderOrderTotals();
+      return;
+    }
+    var bfield = el.getAttribute("data-bake-field");
+    if (bfield) {
+      var bfi = parseInt(el.getAttribute("data-index"), 10);
+      var bline = bakeItems[bfi];
+      if (!bline) return;
+      bline[bfield] = el.value;
+      renderBakeTotals();
+      return;
+    }
+    if (el.hasAttribute("data-shop-check")) {
+      var row = el.closest("li");
+      if (row) row.classList.toggle("done", el.checked);
     }
   });
 
@@ -1289,6 +1853,10 @@ function init() {
   $("qaAddRecipe").addEventListener("click", function () {
     setView("recipes");
     openRecipeEditor(null);
+  });
+  $("qaAddOrder").addEventListener("click", function () {
+    setView("orders");
+    openOrderEditor(null);
   });
   $("qaExport").addEventListener("click", onExportRecipes);
   $("copyGuestBtn").addEventListener("click", onCopyGuestToCloud);
@@ -1351,6 +1919,30 @@ function init() {
   $("exportRecipesBtn").addEventListener("click", onExportRecipes);
   $("exportPricesBtn").addEventListener("click", onExportPrices);
   $("exportInvoicesBtn").addEventListener("click", onExportInvoices);
+
+  // Orders.
+  $("addOrderBtn").addEventListener("click", function () { openOrderEditor(null); });
+  $("orderAddItemBtn").addEventListener("click", function () {
+    orderItems.push({ recipeId: "", qty: 1 });
+    renderOrderItems();
+    renderOrderTotals();
+  });
+  $("orderForm").addEventListener("submit", onOrderSave);
+  $("orderCancelBtn").addEventListener("click", closeOrderEditor);
+  $("orderDeleteBtn").addEventListener("click", function () {
+    if (editingOrderId) onDeleteOrder(editingOrderId);
+  });
+  $("orderDeposit").addEventListener("input", renderOrderTotals);
+
+  // Bake Day.
+  $("bakeDate").addEventListener("input", function () {
+    bakeDate = $("bakeDate").value;
+  });
+  $("bakeAddItemBtn").addEventListener("click", function () {
+    bakeItems.push({ recipeId: "", qty: 1 });
+    renderBakeDay();
+  });
+  $("bakeSaveBtn").addEventListener("click", onBakeSave);
 
   // Auth state drives the first render (guest mode calls back at once).
   onAuthChange(handleAuthChange);

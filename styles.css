@@ -688,6 +688,20 @@ section[id] { scroll-margin-top: 84px; }
 .sk-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-sm); }
 .sk-row { display: flex; gap: 12px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; }
 
+/* ---------- new-features strip (v5) ---------- */
+/* Compact: three hairline rows, one line each, no cards. */
+.feature-strip { margin-top: 28px; border-top: 1px solid var(--hairline); }
+.feature-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.feature-row h3 { font-size: 22px; margin: 0; }
+.feature-row p { margin: 0; color: var(--ink-soft); font-size: 16px; }
+#new .btn-row { margin-top: 24px; }
+
 /* ---------- mini cost calculator ---------- */
 .calc-card {
   background: var(--card);
@@ -760,6 +774,8 @@ input[type="range"].calc-slider { width: 100%; accent-color: var(--accent); heig
   .photo-band { height: 420px; }
   .steps { grid-template-columns: repeat(3, 1fr); gap: 28px; }
   .product-grid { grid-template-columns: repeat(3, 1fr); }
+  .feature-row { flex-direction: row; gap: 16px; align-items: baseline; }
+  .feature-row h3 { min-width: 120px; flex-shrink: 0; }
   .pricing { grid-template-columns: repeat(3, 1fr); }
   .moves { gap: 16px; }
   .move { padding: 28px 16px; }

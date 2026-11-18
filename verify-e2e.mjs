@@ -14,6 +14,10 @@ import {
 } from "./costing.js";
 import { lineChartSVG, sparklineSVG } from "./charts.js";
 import { normaliseGeminiResult } from "./ai.js";
+import {
+  orderMoney, orderStatus, outstandingBalance, aggregateBakeDay,
+  dozensToBuy, supplierComparison, isPriceJump
+} from "./features.js";
 
 let passed = 0;
 let failed = 0;
@@ -86,6 +90,34 @@ check("baseline no alerts", marginAlerts(base.map((r) => ({
   name: r.recipe.name, marginPct: r.marginPct, targetPct: r.recipe.targetPct,
   sellPrice: r.recipe.sellPrice, cost: r.costNow
 }))).length, 0);
+
+/* Step 1b (v5): orders, bake day, suppliers on the pristine sample state. */
+check("sample orders", state.orders.length, 3);
+check("sample bake days", state.bakeDays.length, 1);
+const todayE2e = new Date().toISOString().slice(0, 10);
+const [oMaya, oLena, oNoor] = state.orders;
+check("Maya order total", orderMoney(oMaya, state.recipes).total, 40.00);
+check("Maya balance due", orderStatus(oMaya, state.recipes, todayE2e).status, "balance due");
+check("Maya not overdue", orderStatus(oMaya, state.recipes, todayE2e).overdue, false);
+check("Lena total", orderMoney(oLena, state.recipes).total, 54.00);
+check("Lena deposit due", orderStatus(oLena, state.recipes, todayE2e).status, "deposit due");
+check("Lena overdue", orderStatus(oLena, state.recipes, todayE2e).overdue, true);
+check("Noor paid", orderStatus(oNoor, state.recipes, todayE2e).status, "paid");
+check("Noor not overdue", orderStatus(oNoor, state.recipes, todayE2e).overdue, false);
+check("outstanding balance", outstandingBalance(state.orders, state.recipes), 74.00);
+const planAgg = aggregateBakeDay(state.bakeDays[0].items, state.recipes);
+check("bake day butter 2 kg", planAgg.find((a) => a.name === "Butter").qty, 2.0);
+check("bake day flour 8.8 kg", planAgg.find((a) => a.name === "Wheat flour").qty, 8.8);
+check("bake day eggs 16 singles", planAgg.find((a) => a.name === "Eggs").qty, 16);
+check("16 eggs means 2 dozen", dozensToBuy(16), 2);
+const suppliers = supplierComparison(state.invoices, state.ingredients);
+check("flour cheapest is City Mills",
+  suppliers.find((c) => c.name === "Wheat flour").cheapest, "City Mills");
+check("butter cheapest is Millbrook",
+  suppliers.find((c) => c.name === "Butter").cheapest, "Millbrook Supplies");
+check("Millbrook flour jumped",
+  isPriceJump(suppliers.find((c) => c.name === "Wheat flour")
+    .suppliers.find((s) => s.supplier === "Millbrook Supplies").changePct), true);
 
 /* Step 2: paste the sample invoice text, parse it, save it. */
 const parsed = parseInvoiceText(SAMPLE_INVOICE_TEXT, state.ingredients);

@@ -477,16 +477,127 @@ in a real browser. Tests still green: npm test 157 passed,
 npm run smoke 33 passed, npm run check clean, zero em/en
 dashes, all routes 200.
 
+## Design v5 (2026-11-18 evening): three new features + shorter landing page
+
+Amina's feedback on v4: the page is too long and the app should
+have different features. She delegated the pick ("its up to you
+search what famous bakiers have then madeit"). The research report
+is at ~/workspace/research_notes/famous-bakery-features-research-20261118-1616/report.md
+and the pick brief at ~/workspace/goals/500-per-week-from-technical-services/hidden_files/BakeCost-v5-Features-Brief.md.
+The pick: Orders, Bake Day, and Suppliers, chosen because famous
+bakery tools (BakeSmart, FlexiBake, CakeBoss, Cybake, Bakesy) all
+have them, small bakers take orders on WhatsApp and Instagram and
+lose track of deposits, and supplier price comparison is the
+natural next step after price history.
+
+1. Orders view. Add an order: customer name, due date, recipe
+   items with quantities picked from existing recipes, deposit
+   paid. The total is computed from recipe selling prices and
+   the balance due follows automatically. The list shows every
+   order with a status badge: Paid, Balance due, Deposit due, or
+   Overdue (unpaid and past the due date). A summary strip shows
+   outstanding balance, overdue count, and order count. Edit,
+   delete, and Mark paid (sets deposit to total) per order.
+   Sample data: 3 orders with dates relative to today, so the
+   demo always shows one of each status: Maya (balance due),
+   Lena (deposit due and overdue), Noor (paid).
+2. Bake Day view. Pick a date, add recipes and quantities for
+   the day's bake. The totals table aggregates ingredient
+   quantities across recipes using the real costing code (base
+   units, eggs counted as singles), and the shopping list shows
+   what to buy, with eggs as "16 (buy 2 dozen)". Items tick off
+   as bought. Bake days save and reload from a saved list.
+   Sample data: one bake day (4 Butter Cakes + 12 Sourdough
+   Loaves: 2 kg butter, 8.8 kg flour, 16 eggs).
+3. Suppliers view. Per ingredient, every supplier from the
+   invoices, cheapest first, with the cheapest price
+   highlighted and a "Jumped" flag when a supplier's price rose
+   5% or more since that supplier's previous invoice. Drops
+   show green with no flag. Ingredients with no invoices show
+   "No prices yet". The second supplier comes from renaming
+   sample invoice 2 to City Mills (prices and dates unchanged,
+   so all existing price-history tests still pass): Millbrook
+   is cheapest for butter and eggs, City Mills for flour and
+   sugar, and Millbrook flour jumped 24% between its invoices.
+4. Nav. The tab bar had 5 tabs; 8 would not fit on a phone.
+   The three new views sit behind a More tab (three dots) that
+   opens a menu: on desktop it drops down below the tab, on
+   phones it opens upward above the bottom bar. Every view is
+   one tap from the tab bar or one tap from More. The More tab
+   lights up while a More view is open. The Alerts badge stays
+   margin-alerts-only; overdue orders are flagged in the Orders
+   view itself.
+5. Persistence. Orders and bake days persist in localStorage in
+   guest mode and in Firestore when signed in, through the
+   existing store.js pattern. normalizeState() fills missing
+   arrays so pre-v5 saved states load cleanly.
+6. Shorter landing page. Dropped: the app preview section, the
+   how-it-works section, the prices/BLS section, and the FAQ.
+   Kept, renumbered 01 to 05: sample recipes, mini calculator,
+   a new compact features strip (one line each for Orders,
+   Bake Day, Suppliers), the photo band, pricing, free audit,
+   final CTA. The v4 premium look is untouched (burgundy,
+   gold, hairlines, arches, stamp, numbered labels, motion
+   system, reduced-motion guardrails). The dropped sections'
+   CSS was left in styles.css as harmless dead CSS. The
+   landing-page count-ups lived in the dropped preview and
+   prices sections, so the calculator's animated numbers are
+   now the only count-ups on the page.
+
+One defect found by the smoke test and fixed before reporting:
+renderOrders and renderOrderTotals named a local variable
+`money`, shadowing the app's money() currency helper, so the
+orders view threw on render. Renamed the locals to `amounts`;
+the smoke test then passed in full.
+
+Verification: headless Chromium, scripts /tmp/pw-check/v5.cjs and
+v5b.cjs, 32 frames in /tmp/pw-check/v5-shots/, every one read:
+hero mid-flight and settled (stamp present, exactly one italic
+word, "really"), recipes (arched Butter Cake card, $5.86, 75.6%,
+On target), calculator default ($5.86, 75.6%, On target) and moved
+(Sourdough, flour to max $6.20, $3.72, 53.5%, Below target), the
+new-features strip (three hairline rows + CTA, phone stacked and
+desktop side by side), photo band, pricing (04), free audit (05),
+final CTA and near-black footer, desktop hero and pricing. Section
+labels confirmed 01 to 05 in order; the four dropped sections
+confirmed absent from the DOM. App: dashboard (4 ingredients, 3
+recipes, 0 below target, -35.0% eggs, "Add an order" quick action),
+More menu open upward above the bottom bar on a phone (menu bottom
+above the tab bar top, measured) and dropping down on desktop,
+Orders (summary $74.00 outstanding, 1 overdue, 3 orders; Lena
+Overdue, Maya $40.00/$20.00/$20.00 balance due, Noor Paid),
+order editor with live totals preview ($48.00 total, $38.00
+balance), the added order saved end to end (4 orders, summary
+$112.00, still 4 after a reload), Bake Day (planner with 4 Butter
+Cakes + 12 Sourdough, totals 2 kg butter / 16 eggs / 8.8 kg flour,
+shopping list with "16 (buy 2 dozen)", tick-off strike-through,
+saved day with "In the planner" badge), Suppliers (Butter:
+Millbrook $6.64 Cheapest with green border, -17.0%; City Mills
+$7.40 "First price from this supplier"; flour: Millbrook $3.10
+"+24.0% since $2.50" with a red Jumped badge), plus Invoices,
+Prices (Butter chart, -17.0%), Recipes ($5.86, 75.6%) and Alerts
+(eggs -23.5%, flour +10.7%, butter -10.3%) as regression. Reduced
+motion: hero h1 opacity 1 at 150ms. Zero horizontal overflow on
+every view at 390px and 1280px. 7/7 landing images decoded. Same
+environment note as v3/v4: the VM egress proxy refuses Chromium's
+CONNECT tunnel to images.unsplash.com, so the proof run served the
+Unsplash requests from the exact downloaded bytes in
+/tmp/unsplash-check/; the remote URLs themselves were verified 200
+via curl and need the live-site check to confirm in a real browser.
+Tests: npm test 232 passed (61 costing + 61 parser + 57 features
++ 53 e2e), npm run smoke 51 passed, npm run check clean, zero
+em/en dashes, all routes 200.
+
 ## Files
 
 - `index.html`, `styles.css`, `landing.js`: landing page.
 - `app.html`, `app.js`, `app.css`: the product.
 - `motion.js`: spring integrator, count-up, reduced-motion check.
-- `costing.js`, `invoice-parser.js`, `sample-data.js`, `charts.js`:
-  pure logic and data.
+- `costing.js`, `invoice-parser.js`, `sample-data.js`, `charts.js`,
+  `features.js`: pure logic and data.
 - `firebase-config.js`, `firebase-app.js`, `ai.js`, `store.js`:
   Firebase integration.
 - `logo.png`, `vercel.json`, `package.json`, `LICENSE`, `.gitignore`.
 - `README.md`, `BUILD-REPORT.md` (this file).
-- `test-costing.mjs`, `test-parser.mjs`, `verify-e2e.mjs`,
-  `dom-smoke.mjs`: tests.
+- `test-costing.mjs`, `test-parser.mjs`, `test-features.mjs`,
+  `verify-e2e.mjs`, `dom-smoke.mjs`: tests.

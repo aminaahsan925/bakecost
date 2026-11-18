@@ -9,6 +9,11 @@ invoice intake (paste, upload, or type by hand), price history with
 charts, recipes with per-recipe margin targets, a margin alert feed,
 a dashboard, CSV export, guest demo mode, and Google sign-in with
 cloud saving and Gemini invoice reading when Firebase is wired up.
+Since v5 it also has an Orders view (orders, deposits, balances due,
+overdue flags), a Bake Day view (plan a day's bake, see total
+ingredients needed and a shopping list), and a Suppliers view
+(compare prices across suppliers, flag price jumps). The three new
+views sit behind a More tab so the tab bar still fits on a phone.
 
 It is still a static site: no build step, no dependencies, no backend
 of its own, no environment variables. Firebase is used only as a
@@ -17,20 +22,32 @@ configured.
 
 ## What is in here
 
-- `index.html`, the landing page: the problem with sourced price
-  moves, features, how it works, the free audit offer, pricing, FAQ.
+- `index.html`, the landing page (shortened in v5): hero, sample
+  recipes, a mini cost calculator, a strip naming the three new app
+  features, a photo band, pricing, and the free audit offer. The app
+  preview, how-it-works, prices, and FAQ sections were dropped.
 - `app.html` + `app.js` + `app.css`, the product: dashboard, invoices,
-  prices, recipes, alerts. Guest demo mode works with no sign-in and
-  no Firebase config.
+  prices, recipes, alerts, plus orders, bake day, and suppliers behind
+  a More tab. Guest demo mode works with no sign-in and no Firebase
+  config.
 - `costing.js`, the pure costing maths (recipe cost, margin, price
   change, movers, alerts, CSV), shared by the app and the Node tests.
+- `features.js`, the pure v5 maths (order totals and balances, order
+  status and overdue flags, bake-day ingredient aggregation, supplier
+  comparison and price-jump detection), shared by the app and the
+  Node tests.
 - `invoice-parser.js`, the local deterministic invoice text parser
   (demo mode). Handles supplier and date detection, `@` unit prices,
   line totals, gram to kg and ml to L conversion, and duplicate
   merging.
 - `sample-data.js`, the sample dataset carried over from v1 (3 sample
   invoices, 4 ingredients, 3 recipes with margin targets), plus a
-  pasteable sample invoice text.
+  pasteable sample invoice text. Since v5 the second invoice comes
+  from a second supplier (City Mills), so the Suppliers view has a
+  real comparison, and the sample state carries 3 sample orders (one
+  balance due, one overdue, one paid) and one sample bake day, with
+  dates relative to today so the demo always shows one of each order
+  status.
 - `charts.js`, hand-rolled SVG line charts and sparklines. No library,
   no network call.
 - `firebase-config.js`, Firebase config placeholders and the model ID.
@@ -43,10 +60,11 @@ configured.
   signed in) and Google sign-in.
 - `styles.css`, the shared stylesheet (landing page and app).
 - `logo.png`, the A&H Systems logo.
-- `test-costing.mjs`, `test-parser.mjs`, Node tests. Run with
-  `npm test` (also runs `verify-e2e.mjs`, below).
+- `test-costing.mjs`, `test-parser.mjs`, `test-features.mjs`, Node
+  tests. Run with `npm test` (also runs `verify-e2e.mjs`, below).
 - `verify-e2e.mjs`, a logic-chain smoke test: loads the sample state,
-  pastes the sample invoice, adds a price spike, checks an alert fires,
+  checks the sample orders, bake day, and supplier comparison, pastes
+  the sample invoice, adds a price spike, checks an alert fires,
   and builds every CSV.
 - `dom-smoke.mjs`, a DOM smoke test (needs jsdom, see Test it below):
   loads the real app in jsdom and drives the guest demo flow through
@@ -145,6 +163,7 @@ Or run the suites directly:
 ```
 node test-costing.mjs
 node test-parser.mjs
+node test-features.mjs
 node verify-e2e.mjs
 ```
 
@@ -152,8 +171,12 @@ node verify-e2e.mjs
 status bands, movers, alerts, and all three CSV builders against the
 verified sample audit figures. `test-parser.mjs` checks the local
 invoice parser: dates, units, conversions, line totals, gram lines,
-duplicate merging, and noise skipping. `verify-e2e.mjs` runs the
-guest demo flow as a logic chain: paste the sample invoice, check the
+duplicate merging, and noise skipping. `test-features.mjs` checks
+the v5 logic: order totals and balances, order status and overdue
+flags, bake-day ingredient aggregation with unit conversion,
+supplier cheapest and price-jump detection. `verify-e2e.mjs` runs the
+guest demo flow as a logic chain: check the sample orders, bake day,
+and supplier comparison, paste the sample invoice, check the
 price history and recipe costs update, spike the flour price, check
 an alert fires, build every CSV, render a chart, and normalise a
 Gemini-style payload.
@@ -167,8 +190,10 @@ npm run smoke
 
 It loads the real app.html in jsdom and drives the UI: paste and save
 an invoice, check the dashboard and charts update, add a manual
-invoice that fires an alert, add and edit a recipe, export CSV, and
-check localStorage persistence and the sample data controls.
+invoice that fires an alert, add and edit a recipe, export CSV, open
+the More menu, add an order and mark it paid, check the bake-day
+shopping list and the supplier comparison, and check localStorage
+persistence and the sample data controls.
 
 Syntax-check every module with:
 
@@ -179,10 +204,12 @@ npm run check
 ## Honesty notes
 
 - Every figure on the site is either a price from the BakeCost offer
-  ($49 audit, $19 and $29 a month) or a sourced public figure,
-  labelled with its source: eggs down 35% and butter down 17% (US
-  Bureau of Labor Statistics, September 2025 to September 2026),
-  wheat flour up 24% (French wheat flour, 12 months to October 2026).
+  ($49 audit, $19 and $29 a month) or a figure computed live from the
+  sample data. The sample data's end to end percentage moves for eggs,
+  butter and flour match public figures: eggs down 35% and butter
+  down 17% (US Bureau of Labor Statistics, September 2025 to
+  September 2026), wheat flour up 24% (French wheat flour, 12 months
+  to October 2026).
 - All demo data is sample data, labelled as such in the app and on the
   landing page. The dollar prices in the sample data are illustrative;
   only the end to end percentage moves for eggs, butter and flour
