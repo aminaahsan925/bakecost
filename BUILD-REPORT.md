@@ -148,6 +148,42 @@ two things:
 - v2 has not been pushed to GitHub and has not been deployed to
   Vercel. The parent handles that after verifying this build.
 
+## Redesign, 18 Nov 2026 (after Amina's verdict on the live site)
+
+Amina looked at the live site on her phone: "everything is off, too
+bad UI, too much text, too generic". The visual layer was rebuilt
+in place; no feature was cut and no logic module changed.
+
+- Landing copy cut from 1,234 words to 433 (65% less). One-line hero
+  plus one subline plus one CTA. The six text feature cards became
+  three features, each with a CSS-built visual (invoice lines, a
+  recosted recipe, an alert example). The how-it-works section was
+  removed. FAQ cut from 5 questions to 3. Pricing tightened to 3
+  short bullets per plan. One CTA repeated: "Open the app, free".
+- Character: bakery warmth, not generic SaaS. Deepened cream/ink/
+  caramel palette, Fraunces display serif plus Inter body (Google
+  Fonts, display=swap, Georgia/system fallbacks), no gradients.
+- App: bigger key numbers (dashboard stats, recipe cost/margin/
+  target, latest prices), invoice lines and dashboard recipes
+  rebuilt as rows instead of tables, invoice preview becomes
+  stacked cards on phones, icon bottom tab bar (56px touch
+  targets), bigger inputs, shorter leads everywhere.
+- Bug found by the phone screenshots and fixed: the `hidden`
+  attribute was losing to `.btn { display: inline-block }`, so the
+  Sign in/Sign out buttons and the empty alert badge were showing
+  when they should have been hidden. A global
+  `[hidden] { display: none !important; }` rule in styles.css
+  fixes it. The auth note now reads "Sign-in is not set up yet."
+  instead of the dev-facing Firebase wording.
+- Verification: a real headless Chromium (playwright-core, shell
+  build) was installed on the VM, so this redesign WAS checked
+  with real 390px renders. Screenshots in /tmp/pw-check/shots/:
+  landing, all five app views, recipe editor, invoice preview,
+  plus 1280px desktop landing and app. Zero horizontal overflow
+  on every view at 390px and at 1280px. Fraunces confirmed
+  loading. Tests still green: npm test 157 passed, npm run
+  smoke 33 passed, npm run check clean, zero em/en dashes.
+
 ## Files
 
 - `index.html`, `styles.css`: landing page.

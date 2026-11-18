@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BakeCost App | A&amp;H Systems</title>
 <meta name="description" content="The BakeCost app: upload supplier invoices, track ingredient prices, recost recipes, and get margin alerts. Guest demo works with no sign-in.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="app.css">
 </head>
@@ -14,10 +17,7 @@
   <div class="app-header-inner">
     <a class="brand" href="index.html">
       <img src="logo.png" alt="A&amp;H Systems logo">
-      <span>
-        <span class="brand-name">BakeCost</span>
-        <span class="brand-tag">by A&amp;H Systems</span>
-      </span>
+      <span class="brand-name">BakeCost</span>
     </a>
     <div class="header-badges">
       <span class="badge badge-guest" id="modeBadge">Guest demo</span>
@@ -26,15 +26,31 @@
     <div class="auth-area" id="authArea">
       <button class="btn small" id="signInBtn" type="button" hidden>Sign in with Google</button>
       <button class="btn small ghost" id="signOutBtn" type="button" hidden>Sign out</button>
-      <span class="small" id="authNote" hidden>Sign-in needs Firebase. See the README.</span>
+      <span class="small" id="authNote" hidden>Sign-in is not set up yet.</span>
     </div>
   </div>
   <nav class="tabs" role="tablist" aria-label="App sections">
-    <button class="tab-btn active" type="button" role="tab" aria-selected="true" data-view="dashboard">Dashboard</button>
-    <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="invoices">Invoices</button>
-    <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="prices">Prices</button>
-    <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="recipes">Recipes</button>
-    <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="alerts">Alerts <span class="count-badge" id="alertCountBadge" hidden></span></button>
+    <button class="tab-btn active" type="button" role="tab" aria-selected="true" data-view="dashboard">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="invoices">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6"/></svg>
+      <span>Invoices</span>
+    </button>
+    <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="prices">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+      <span>Prices</span>
+    </button>
+    <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="recipes">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-2-1.5-4.5-2-7-2v14c2.5 0 5 .5 7 2 2-1.5 4.5-2 7-2V4c-2.5 0-5 .5-7 2z"/><path d="M12 6v14"/></svg>
+      <span>Recipes</span>
+    </button>
+    <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="alerts">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+      <span>Alerts</span>
+      <span class="count-badge" id="alertCountBadge" hidden></span>
+    </button>
   </nav>
 </header>
 
@@ -45,7 +61,7 @@
 
 <div class="sample-banner" id="sampleBanner" hidden>
   <strong>Guest demo, sample data.</strong>
-  You are looking at sample invoices and recipes. Everything you do here stays in this browser.
+  Everything here stays in this browser.
   <span class="banner-actions">
     <button class="btn small ghost" id="resetSampleBtn" type="button">Reset sample data</button>
     <button class="btn small ghost" id="startEmptyBtn" type="button">Start empty</button>
@@ -57,7 +73,7 @@
 <!-- ================= Dashboard ================= -->
 <section class="view" id="view-dashboard">
   <h1>Dashboard</h1>
-  <p class="lead">Your bakery's ingredient costs at a glance: what moved, what it did to your margins, and what needs attention.</p>
+  <p class="lead">What moved, what it did to your margins, and what needs attention.</p>
 
   <div class="stat-grid" id="dashCards"></div>
 
@@ -71,7 +87,7 @@
     <div>
       <h2>Biggest price moves</h2>
       <div id="dashMovers"></div>
-      <h2 style="margin-top:32px;">Margin alerts</h2>
+      <h2 class="mt-lg">Margin alerts</h2>
       <div id="dashAlerts"></div>
     </div>
     <div>
@@ -83,28 +99,28 @@
   <div id="copyGuestWrap" hidden>
     <div class="note-box">
       <strong>Your guest work is still in this browser.</strong>
-      Copy it into your account to keep it across devices.
+      Copy it into your account to keep it.
       <div class="btn-row"><button class="btn small" id="copyGuestBtn" type="button">Copy guest data to my account</button></div>
     </div>
   </div>
 
-  <h2 style="margin-top:32px;">Recipes at the latest prices</h2>
-  <p class="small">Ingredient cost only. Packaging, labour and overheads are not included.</p>
+  <h2 class="mt-lg">Recipes at the latest prices</h2>
+  <p class="small">Ingredient cost only.</p>
   <div id="dashRecipes"></div>
 </section>
 
 <!-- ================= Invoices ================= -->
 <section class="view" id="view-invoices" hidden>
   <h1>Invoices</h1>
-  <p class="lead">Every supplier invoice you add builds the price history. New prices recost your recipes and refresh your alerts automatically.</p>
+  <p class="lead">Every invoice builds the price history. New prices recost your recipes automatically.</p>
 
   <div class="btn-row">
     <button class="btn small ghost" id="exportInvoicesBtn" type="button">Export invoices CSV</button>
   </div>
 
-  <div id="invoiceList" style="margin-top:20px;"></div>
+  <div id="invoiceList" class="mt-md"></div>
 
-  <h2 style="margin-top:36px;">Add an invoice</h2>
+  <h2 class="mt-lg">Add an invoice</h2>
   <div class="intake-tabs" role="tablist" aria-label="Ways to add an invoice">
     <button class="intake-tab active" id="tab-paste" type="button" role="tab">Paste text</button>
     <button class="intake-tab" id="tab-upload" type="button" role="tab">Upload a file</button>
@@ -112,7 +128,7 @@
   </div>
 
   <div class="intake-panel" id="panel-paste">
-    <p>Paste the invoice text, one item per line. For example: <code>Butter 20 kg @ $7.10</code> or <code>Sugar 25 kg $48.75</code>. Totals and tax lines are skipped automatically.</p>
+    <p>Paste the invoice text, one item per line. For example: <code>Butter 20 kg @ $7.10</code> or <code>Sugar 25 kg $48.75</code>. Totals and tax lines are skipped.</p>
     <textarea id="pasteText" rows="7" placeholder="Millbrook Supplies&#10;Invoice date: 2026-11-02&#10;Butter 20 kg @ $7.10&#10;Wheat flour 50 kg @ $3.45&#10;Eggs 10 dozen @ $4.20&#10;Sugar 25 kg @ $1.95"></textarea>
     <div class="btn-row">
       <button class="btn small" id="parsePasteBtn" type="button">Parse with local parser</button>
@@ -124,14 +140,14 @@
   </div>
 
   <div class="intake-panel" id="panel-upload" hidden>
-    <p>Upload a photo or PDF of an invoice, or a text file. Photos and PDFs are read by Gemini when AI is on; text files are read by the local parser and work without AI.</p>
+    <p>Upload a photo or PDF of an invoice, or a text file. Photos and PDFs need AI on; text files work without it.</p>
     <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.txt,.csv">
     <p class="small" id="uploadStatus"></p>
-    <p class="small">In guest demo mode, uploaded files are read in your browser and never sent anywhere. With AI on, the file goes to Gemini only to be read, and only when you upload it.</p>
+    <p class="small">In guest demo mode, uploaded files are read in your browser and never sent anywhere.</p>
   </div>
 
   <div class="intake-panel" id="panel-manual" hidden>
-    <p>Type the invoice lines yourself. The unit price is the price for one unit, for example one kg or one dozen.</p>
+    <p>Type the invoice lines yourself. The unit price is for one unit, for example one kg.</p>
     <form id="manualForm">
       <div class="form-row">
         <div class="field">
@@ -182,22 +198,22 @@
 <!-- ================= Prices ================= -->
 <section class="view" id="view-prices" hidden>
   <h1>Price history</h1>
-  <p class="lead">One price line per ingredient, built from your invoices. This is the table a baker would otherwise keep by hand.</p>
+  <p class="lead">One price line per ingredient, built from your invoices.</p>
   <div class="btn-row">
     <button class="btn small ghost" id="exportPricesBtn" type="button">Export price history CSV</button>
   </div>
-  <div id="priceCards" style="margin-top:20px;"></div>
+  <div id="priceCards" class="mt-md"></div>
 </section>
 
 <!-- ================= Recipes ================= -->
 <section class="view" id="view-recipes" hidden>
   <h1>Recipes</h1>
-  <p class="lead">Every recipe is recosted from the latest ingredient prices. Set a margin target per recipe, and it shows green, amber, or red.</p>
+  <p class="lead">Recosted from your latest prices. Green is on target, amber is close, red is below.</p>
   <div class="btn-row">
     <button class="btn small" id="addRecipeBtn" type="button">Add a recipe</button>
     <button class="btn small ghost" id="exportRecipesBtn" type="button">Export recipes CSV</button>
   </div>
-  <div id="recipeList" style="margin-top:20px;"></div>
+  <div id="recipeList" class="mt-md"></div>
 
   <div class="editor-panel" id="recipeEditor" hidden>
     <h2 id="recipeEditorTitle">Add a recipe</h2>
@@ -216,11 +232,11 @@
           <input id="recipeTarget" type="number" min="0" max="100" step="1" value="60">
         </div>
       </div>
-      <div class="field" style="margin-bottom:12px;">
+      <div class="field">
         <label for="recipeNote">Note (optional)</label>
         <input id="recipeNote" type="text" placeholder="e.g. 500g butter, 400g flour, 4 eggs.">
       </div>
-      <p class="small">Quantities are in base units: kg for flour, butter and sugar, single eggs for eggs. Ingredients come from your invoices; pick "New ingredient..." to add one with no price yet (its cost shows as n/a until an invoice prices it).</p>
+      <p class="small">Quantities in base units: kg, or single eggs. Pick New ingredient to add one with no price yet.</p>
       <div id="recipeLines"></div>
       <div class="btn-row">
         <button class="btn small ghost" id="recipeEditorAddLineBtn" type="button">Add an ingredient</button>
@@ -235,13 +251,13 @@
 <!-- ================= Alerts ================= -->
 <section class="view" id="view-alerts" hidden>
   <h1>Alerts</h1>
-  <p class="lead">Recipes below their margin target, and ingredients that moved 5% or more since the last invoice. Alerts update every time you add an invoice.</p>
+  <p class="lead">Recipes below target, and ingredients that moved 5% or more since the last invoice.</p>
   <div id="alertFeed"></div>
-  <h2 style="margin-top:32px;">Biggest movers</h2>
-  <p class="small">Change from the first price on record to the latest price, per ingredient.</p>
+  <h2 class="mt-lg">Biggest movers</h2>
+  <p class="small">Change from the first price on record to the latest price.</p>
   <div id="moversTable"></div>
-  <h2 style="margin-top:32px;">Margin targets</h2>
-  <p class="small">Green means at or above target, amber means within 5 points below, red means more than 5 points below.</p>
+  <h2 class="mt-lg">Margin targets</h2>
+  <p class="small">Green is at or above target, amber is within 5 points below, red is more than 5 below.</p>
   <div id="targetsTable"></div>
 </section>
 

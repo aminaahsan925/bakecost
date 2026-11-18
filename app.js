@@ -362,14 +362,14 @@ function renderDashboard() {
     '<div class="stat-card"><div class="stat-num">' + state.recipes.length + '</div>' +
     '<div class="stat-label">Recipes</div></div>' +
     '<div class="stat-card' + (alerts.length > 0 ? " stat-alert" : "") + '"><div class="stat-num">' + alerts.length + '</div>' +
-    '<div class="stat-label">Recipes below target margin</div></div>' +
+    '<div class="stat-label">Below target</div></div>' +
     '<div class="stat-card"><div class="stat-num">' + (topMover ? pct(topMover.changePct) : "n/a") + '</div>' +
     '<div class="stat-label">Biggest price move' + (topMover ? ": " + escapeHtml(topMover.name) : "") + '</div></div>';
 
   var moversHtml = "";
   var shown = movers.filter(function (m) { return m.changePct !== null; }).slice(0, 5);
   if (shown.length === 0) {
-    moversHtml = '<p class="small">Add a second invoice to see price moves. One price point per ingredient is not a move yet.</p>';
+    moversHtml = '<p class="small">Add a second invoice to see price moves.</p>';
   } else {
     moversHtml = '<ul class="mover-list">' + shown.map(function (m) {
       var points = pricePoints(m.name);
@@ -385,7 +385,7 @@ function renderDashboard() {
 
   var belowHtml = "";
   if (alerts.length === 0) {
-    belowHtml = '<div class="alert-box ok"><h3>No margin alerts</h3><p>Every recipe with a price is at or above its target margin at the latest prices.</p></div>';
+    belowHtml = '<div class="alert-box ok"><h3>No margin alerts</h3><p>Every recipe is at or above its target margin.</p></div>';
   } else {
     belowHtml = '<div class="alert-box"><h3>' + alerts.length + ' recipe' +
       (alerts.length === 1 ? "" : "s") + ' below target</h3><ul>' +
@@ -419,23 +419,23 @@ function renderDashboard() {
     copyWrap.hidden = true;
   }
 
-  // Recipe margin table on the dashboard.
+  // Recipe margin rows on the dashboard: big numbers, no table.
   var tableHtml = "";
   if (rows.length === 0) {
     tableHtml = '<p class="small">No recipes yet. Add one from the Recipes tab.</p>';
   } else {
-    tableHtml = '<div class="table-wrap"><table><thead><tr><th>Recipe</th>' +
-      '<th class="num">Cost now</th><th class="num">Selling price</th>' +
-      '<th class="num">Margin</th><th>Status</th></tr></thead><tbody>' +
+    tableHtml = '<div class="dash-recipe-list">' +
       rows.map(function (r) {
-        var marginText = r.marginPct === null ? "n/a" :
-          money(r.marginAmount) + " (" + r.marginPct.toFixed(1) + "%)";
-        return '<tr><td><strong>' + escapeHtml(r.recipe.name) + '</strong></td>' +
-          '<td class="num">' + money(r.costNow) + '</td>' +
-          '<td class="num">' + money(r.sellPrice) + '</td>' +
-          '<td class="num">' + marginText + '</td>' +
-          '<td><span class="badge badge-' + r.status + '">' + statusLabel(r.status) + '</span></td></tr>';
-      }).join("") + "</tbody></table></div>";
+        var marginText = r.marginPct === null ? "n/a" : r.marginPct.toFixed(1) + "%";
+        return '<div class="dash-recipe-row"><div class="dash-recipe-name"><strong>' +
+          escapeHtml(r.recipe.name) + '</strong><span class="small">Sells at ' +
+          money(r.sellPrice) + '</span></div>' +
+          '<div class="dash-recipe-nums"><span class="dash-recipe-cost">' + money(r.costNow) + '</span>' +
+          '<span class="small">cost</span></div>' +
+          '<div class="dash-recipe-nums"><span class="dash-recipe-margin">' + marginText + '</span>' +
+          '<span class="small">margin</span></div>' +
+          '<span class="badge badge-' + r.status + '">' + statusLabel(r.status) + '</span></div>';
+      }).join("") + "</div>";
   }
   $("dashRecipes").innerHTML = tableHtml;
 }
@@ -445,7 +445,7 @@ function renderDashboard() {
 function renderInvoices() {
   var list = $("invoiceList");
   if (state.invoices.length === 0) {
-    list.innerHTML = '<p class="small">No invoices yet. Paste one below, upload a photo or PDF, or add lines by hand.</p>';
+    list.innerHTML = '<p class="small">No invoices yet. Add one below.</p>';
   } else {
     var sorted = state.invoices.slice().sort(function (a, b) {
       return a.date < b.date ? 1 : -1;
@@ -455,16 +455,15 @@ function renderInvoices() {
         return sum + line.qty * line.price;
       }, 0);
       var rows = inv.lines.map(function (line) {
-        return "<tr><td>" + escapeHtml(line.ingredient) + "</td>" +
-          '<td class="num">' + line.qty + " " + escapeHtml(line.unit) + "</td>" +
-          '<td class="num">' + money(line.price) + "</td>" +
-          '<td class="num">' + money(line.qty * line.price) + "</td></tr>";
+        return '<div class="inv-line"><span class="inv-line-name">' + escapeHtml(line.ingredient) + "</span>" +
+          '<span class="inv-line-qty">' + line.qty + " " + escapeHtml(line.unit) + "</span>" +
+          '<span class="inv-line-price">' + money(line.price) + "</span>" +
+          '<span class="inv-line-total">' + money(line.qty * line.price) + "</span></div>";
       }).join("");
       return '<div class="invoice-card"><h3>' + escapeHtml(inv.supplier || "Unknown supplier") + "</h3>" +
         '<div class="inv-date">' + formatDate(inv.date) + " &middot; " + inv.lines.length +
         " line" + (inv.lines.length === 1 ? "" : "s") + " &middot; total " + money(total) + "</div>" +
-        '<table><tr><th>Ingredient</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Total</th></tr>' +
-        rows + "</table>" +
+        rows +
         '<button class="btn small ghost danger" type="button" data-delete-invoice="' + inv.id + '">Delete invoice</button></div>';
     }).join("") + "</div>";
   }
@@ -747,19 +746,19 @@ function renderPrices() {
     var prev = previousPoint(h.points);
     var change = (h.points.length < 2 || !first || !last) ? null : priceChangePct(first.price, last.price);
     var recent = (!last || !prev) ? null : priceChangePct(prev.price, last.price);
-    var changeHtml = change === null ? '<span class="small">n/a, one price point so far</span>' :
-      '<span class="' + (change > 0 ? "up" : "down") + '">' + pct(change) + "</span>";
+    var changeHtml = change === null ? '<span class="price-change-chip">One price so far</span>' :
+      '<span class="price-change-chip ' + (change > 0 ? "up" : "down") + '">' + pct(change) + "</span>";
     var recentHtml = recent === null ? "" :
-      ' <span class="small">(latest move: <span class="' + (recent > 0 ? "up" : "down") + '">' +
-      pct(recent) + "</span>)</span>";
+      ' Latest move: <span class="' + (recent > 0 ? "up" : "down") + '">' +
+      pct(recent) + "</span>.";
     var tableRows = h.points.slice().reverse().map(function (p) {
       return "<tr><td>" + formatDate(p.date) + '</td><td class="num">' + money(p.price) + "</td></tr>";
     }).join("");
-    return '<div class="price-card"><h3>' + escapeHtml(h.name) +
-      ' <span class="small">(' + escapeHtml(h.unit) + ")</span></h3>" +
-      '<div class="price-now">Latest: <strong>' + (last ? money(last.price) : "n/a") + "</strong> " +
+    return '<div class="price-card"><div class="price-head"><h3>' + escapeHtml(h.name) +
+      ' <span class="small">(' + escapeHtml(h.unit) + ")</span></h3>" + changeHtml + "</div>" +
+      '<div class="price-now"><span class="price-now-num">' + (last ? money(last.price) : "n/a") + "</span>" +
       (last ? '<span class="small">' + formatDate(last.date) + "</span>" : "") + "</div>" +
-      '<div class="price-change">Change since first price: ' + changeHtml + recentHtml + "</div>" +
+      '<div class="price-change">Change since first price.' + recentHtml + "</div>" +
       lineChartSVG(h.points, { label: h.name }) +
       '<div class="table-wrap"><table><tr><th>Date</th><th class="num">Price</th></tr>' +
       tableRows + "</table></div></div>";
@@ -776,21 +775,28 @@ function renderRecipes() {
   } else {
     list.innerHTML = rows.map(function (r) {
       var recipe = r.recipe;
-      var marginText = r.marginPct === null ? "No price yet for one or more ingredients." :
-        "Margin " + money(r.marginAmount) + " (" + r.marginPct.toFixed(1) + "%) at a " +
-        money(r.sellPrice) + " selling price.";
-      var costText = r.costNow === null ? "Cost: n/a" :
-        "Cost now " + money(r.costNow) +
-        (r.costThen !== null ? " (was " + money(r.costThen) + ")" : "");
+      var costText = r.costNow === null ? "n/a" : money(r.costNow);
+      var costWas = r.costThen !== null ? " (was " + money(r.costThen) + ")" : "";
+      var marginValue = r.marginPct === null ? "n/a" : r.marginPct.toFixed(1) + "%";
+      var marginLabel = r.marginPct === null ? "No price yet" :
+        "Margin " + money(r.marginAmount) + " of " + money(r.sellPrice);
       var ingText = recipe.ingredients.map(function (ing) {
         return escapeHtml(ing.name) + " " + ing.qty;
       }).join(", ");
+      var noteHtml = recipe.note
+        ? '<p class="small recipe-note">' + escapeHtml(recipe.note) + "</p>" : "";
       return '<div class="recipe-card"><div class="recipe-head"><h3>' + escapeHtml(recipe.name) + "</h3>" +
         '<span class="badge badge-' + r.status + '">' + statusLabel(r.status) + "</span></div>" +
-        '<p class="small">' + escapeHtml(recipe.note || "") + "</p>" +
-        "<p>" + escapeHtml(ingText) + "</p>" +
-        "<p>" + costText + "<br>" + marginText + "<br>" +
-        '<span class="small">Target margin: ' + recipe.targetPct + "%</span></p>" +
+        noteHtml +
+        '<p class="recipe-ings">' + escapeHtml(ingText) + "</p>" +
+        '<div class="recipe-nums">' +
+        '<div class="recipe-num"><span class="recipe-num-value">' + costText + '</span>' +
+        '<span class="recipe-num-label">Cost now' + costWas + "</span></div>" +
+        '<div class="recipe-num"><span class="recipe-num-value">' + marginValue + "</span>" +
+        '<span class="recipe-num-label">' + marginLabel + "</span></div>" +
+        '<div class="recipe-num"><span class="recipe-num-value">' + recipe.targetPct + '%</span>' +
+        '<span class="recipe-num-label">Target margin</span></div>' +
+        "</div>" +
         '<div class="btn-row"><button class="btn small" type="button" data-edit-recipe="' + recipe.id + '">Edit recipe</button>' +
         '<button class="btn small ghost danger" type="button" data-delete-recipe="' + recipe.id + '">Delete</button></div></div>';
     }).join("");
