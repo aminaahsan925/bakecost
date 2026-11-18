@@ -1,4 +1,5 @@
-/* BakeCost shared styles. Monochrome with one warm bakery accent. No build step. */
+/* BakeCost v2 shared styles. Monochrome with one warm bakery accent.
+   No build step. Used by the landing page and the app. */
 
 :root {
   --ink: #1a1a1a;
@@ -9,10 +10,15 @@
   --line: #ddd5c8;
   --accent: #b45309;
   --accent-dark: #92400e;
+  --accent-soft: #fef3c7;
   --green: #1a7a3a;
   --red: #b3261e;
+  --amber: #d97706;
   --serif: Georgia, "Times New Roman", serif;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --shadow-sm: 0 1px 3px rgba(26, 26, 26, 0.08);
+  --shadow-md: 0 8px 28px rgba(26, 26, 26, 0.10);
+  --radius: 10px;
 }
 
 * { box-sizing: border-box; }
@@ -28,20 +34,26 @@ body {
   font-size: 17px;
 }
 
-h1, h2, h3 { font-family: var(--serif); line-height: 1.25; margin: 0 0 12px; }
-h1 { font-size: 42px; }
-h2 { font-size: 30px; }
+h1, h2, h3 { font-family: var(--serif); line-height: 1.2; margin: 0 0 12px; }
+h1 { font-size: 44px; }
+h2 { font-size: 31px; }
 h3 { font-size: 21px; }
 p { margin: 0 0 14px; }
 a { color: var(--accent); }
 a:hover { color: var(--accent-dark); }
+code {
+  background: #f0eadf;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
 
 /* ---------- layout ---------- */
 
-.wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
-.section { padding: 56px 0; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+.section { padding: 72px 0; }
 .section.alt { background: var(--card); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.lead { font-size: 19px; color: var(--ink-soft); max-width: 640px; }
+.lead { font-size: 19px; color: var(--ink-soft); max-width: 680px; }
 .small { font-size: 14px; color: var(--muted); }
 .center { text-align: center; }
 .center .lead { margin-left: auto; margin-right: auto; }
@@ -49,14 +61,16 @@ a:hover { color: var(--accent-dark); }
 /* ---------- header ---------- */
 
 .site-header {
-  background: var(--card);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
   position: sticky;
   top: 0;
   z-index: 10;
 }
 .header-inner {
-  max-width: 960px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 12px 20px;
   display: flex;
@@ -68,7 +82,7 @@ a:hover { color: var(--accent-dark); }
 .brand img { width: 40px; height: 40px; border-radius: 6px; }
 .brand-name { font-family: var(--serif); font-size: 24px; font-weight: bold; }
 .brand-tag { font-size: 12px; color: var(--muted); display: block; line-height: 1.2; }
-.site-nav { margin-left: auto; display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+.site-nav { margin-left: auto; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
 .site-nav a { text-decoration: none; color: var(--ink-soft); font-size: 15px; }
 .site-nav a:hover { color: var(--accent); }
 
@@ -80,24 +94,84 @@ a:hover { color: var(--accent-dark); }
   color: #fff;
   text-decoration: none;
   padding: 13px 24px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: bold;
   font-size: 16px;
   border: 2px solid var(--accent);
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
 }
 .btn:hover { background: var(--accent-dark); border-color: var(--accent-dark); color: #fff; }
-.btn.ghost { background: transparent; color: var(--ink); border-color: var(--ink); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--ink); box-shadow: none; }
 .btn.ghost:hover { background: var(--ink); color: #fff; }
 .btn.small { padding: 9px 16px; font-size: 15px; }
+.btn:disabled { opacity: 0.55; cursor: default; }
 .btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
 
 /* ---------- hero ---------- */
 
-.hero { padding: 72px 0 56px; }
-.hero h1 { font-size: 48px; max-width: 640px; }
+.hero {
+  padding: 84px 0 72px;
+  background: linear-gradient(180deg, #fdf6ec 0%, var(--paper) 100%);
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+.hero h1 { font-size: 54px; letter-spacing: -0.5px; }
 .hero .lead { font-size: 20px; }
 .hero-note { margin-top: 20px; font-size: 15px; color: var(--muted); }
+.hero-eyebrow {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+/* Product mockup in the hero: a small dashboard built in plain HTML
+   and CSS, showing the real sample numbers from the app. */
+.hero-mock {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+.mock-bar {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  background: #fdfbf7;
+}
+.mock-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+.mock-body { padding: 20px; }
+.mock-title { font-family: var(--serif); font-size: 19px; font-weight: bold; margin-bottom: 4px; }
+.mock-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+.mock-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.mock-stat {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+.mock-stat .num { font-family: var(--serif); font-size: 24px; font-weight: bold; line-height: 1.1; }
+.mock-stat .label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.mock-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+}
+.mock-row:first-of-type { border-top: none; }
 
 /* ---------- stat cards ---------- */
 
@@ -105,8 +179,9 @@ a:hover { color: var(--accent-dark); }
 .stat {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
 }
 .stat .num { font-family: var(--serif); font-size: 36px; font-weight: bold; line-height: 1.1; }
 .stat .num.down { color: var(--green); }
@@ -114,14 +189,41 @@ a:hover { color: var(--accent-dark); }
 .stat .label { font-weight: bold; margin-top: 6px; }
 .stat .detail { font-size: 14px; color: var(--muted); margin-top: 4px; }
 
+/* ---------- features ---------- */
+
+.feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+.feature {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+.feature h3 { font-size: 19px; margin-bottom: 8px; }
+.feature p { font-size: 15px; color: var(--ink-soft); margin-bottom: 0; }
+.feature-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-weight: bold;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
 /* ---------- steps ---------- */
 
 .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
 .step {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 22px;
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
 }
 .step .step-no {
   font-family: var(--serif);
@@ -137,8 +239,9 @@ a:hover { color: var(--accent-dark); }
 .dark-panel {
   background: var(--ink);
   color: #fff;
-  border-radius: 10px;
-  padding: 36px 32px;
+  border-radius: 12px;
+  padding: 40px 36px;
+  box-shadow: var(--shadow-md);
 }
 .dark-panel h2 { color: #fff; }
 .dark-panel .lead { color: #ddd; }
@@ -152,12 +255,13 @@ a:hover { color: var(--accent-dark); }
 .plan {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 24px;
+  border-radius: var(--radius);
+  padding: 26px;
   display: flex;
   flex-direction: column;
+  box-shadow: var(--shadow-sm);
 }
-.plan.featured { border: 2px solid var(--accent); }
+.plan.featured { border: 2px solid var(--accent); box-shadow: var(--shadow-md); }
 .plan .price { font-family: var(--serif); font-size: 38px; font-weight: bold; margin: 8px 0 4px; }
 .plan .price-note { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
 .plan ul { padding-left: 20px; margin: 0 0 20px; font-size: 15px; }
@@ -204,33 +308,12 @@ td.num, th.num { text-align: right; }
   font-weight: bold;
   padding: 3px 10px;
   border-radius: 20px;
+  white-space: nowrap;
 }
 .badge.ok { background: #e6f4ea; color: var(--green); }
 .badge.alert { background: #fdecea; color: var(--red); }
 
-/* ---------- demo ---------- */
-
-.demo-banner {
-  background: var(--red);
-  color: #fff;
-  text-align: center;
-  font-weight: bold;
-  letter-spacing: 1px;
-  padding: 12px 16px;
-  font-size: 15px;
-}
-.invoice-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
-.invoice-card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 18px;
-  font-size: 15px;
-}
-.invoice-card h3 { font-size: 17px; margin-bottom: 4px; }
-.invoice-card .inv-date { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
-.invoice-card table { min-width: 0; font-size: 14px; }
-.invoice-card th, .invoice-card td { padding: 6px 8px; }
+/* ---------- forms and boxes (shared with the app) ---------- */
 
 .form-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; align-items: end; }
 .field { display: flex; flex-direction: column; gap: 4px; }
@@ -262,6 +345,21 @@ td.num, th.num { text-align: right; }
   font-size: 15px;
 }
 
+/* ---------- invoice cards (shared with the app) ---------- */
+
+.invoice-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+.invoice-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  font-size: 15px;
+}
+.invoice-card h3 { font-size: 17px; margin-bottom: 4px; }
+.invoice-card .inv-date { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+.invoice-card table { min-width: 0; font-size: 14px; }
+.invoice-card th, .invoice-card td { padding: 6px 8px; }
+
 /* ---------- footer ---------- */
 
 .site-footer {
@@ -270,7 +368,7 @@ td.num, th.num { text-align: right; }
   margin-top: 8px;
 }
 .footer-inner {
-  max-width: 960px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 0 20px;
   display: flex;
@@ -288,14 +386,19 @@ td.num, th.num { text-align: right; }
 
 /* ---------- responsive ---------- */
 
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 32px; }
+  .hero h1 { font-size: 40px; }
+  .feature-grid, .pricing { grid-template-columns: 1fr 1fr; }
+}
 @media (max-width: 760px) {
   body { font-size: 16px; }
   h1 { font-size: 32px; }
   h2 { font-size: 25px; }
-  .hero { padding: 48px 0 40px; }
+  .hero { padding: 56px 0 48px; }
   .hero h1 { font-size: 34px; }
-  .section { padding: 40px 0; }
-  .stats, .steps, .pricing, .invoice-cards { grid-template-columns: 1fr; }
+  .section { padding: 48px 0; }
+  .stats, .steps, .pricing, .invoice-cards, .feature-grid { grid-template-columns: 1fr; }
   .site-nav { gap: 12px; }
   .dark-panel { padding: 28px 20px; }
   .form-row { flex-direction: column; align-items: stretch; }

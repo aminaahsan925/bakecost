@@ -1,0 +1,204 @@
+// BakeCost v2 DOM smoke test (jsdom + Node ESM).
+// jsdom does not fetch external <script type="module"> files, so this
+// test loads app.html into jsdom, exposes its document/window as Node
+// globals, then imports the real app.js with Node's own module loader
+// and drives the guest demo flow through the actual UI: paste an
+// invoice, save it from the preview, add a manual invoice that spikes
+// flour, check the alert fires, add and edit a recipe, and check the
+// sample data controls.
+// Needs jsdom, which is not a project dependency. Install it first
+// (it is git-ignored via node_modules/):
+//   npm install --no-save jsdom
+// Then run: node dom-smoke.mjs
+import { readFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { JSDOM } from "jsdom";
+
+const ROOT = dirname(fileURLToPath(import.meta.url));
+
+let passed = 0;
+let failed = 0;
+function check(name, actual, expected) {
+  const ok = actual === expected;
+  if (ok) { passed++; console.log("PASS " + name); }
+  else { failed++; console.log("FAIL " + name + " (expected " + JSON.stringify(expected) + ", got " + JSON.stringify(actual) + ")"); }
+}
+function checkContains(name, haystack, needle) {
+  const ok = String(haystack).includes(needle);
+  if (ok) { passed++; console.log("PASS " + name); }
+  else { failed++; console.log("FAIL " + name + " (missing " + JSON.stringify(needle) + ")"); }
+}
+function waitFor(fn, timeoutMs) {
+  const start = Date.now();
+  return new Promise((resolve, reject) => {
+    (function poll() {
+      let result = null;
+      try { result = fn(); } catch (e) { /* keep waiting */ }
+      if (result) return resolve(result);
+      if (Date.now() - start > timeoutMs) return reject(new Error("timeout waiting"));
+      setTimeout(poll, 50);
+    })();
+  });
+}
+
+const html = readFileSync(ROOT + "/app.html", "utf8");
+const dom = new JSDOM(html, {
+  url: "http://localhost:8124/app.html",
+  pretendToBeVisual: true
+});
+const { window } = dom;
+const { document } = window;
+
+// Expose the jsdom browser globals so the real app.js runs against them.
+globalThis.window = window;
+globalThis.document = document;
+globalThis.localStorage = window.localStorage;
+window.scrollTo = () => {};
+window.Element.prototype.scrollIntoView = function () {};
+window.confirm = () => true;
+globalThis.confirm = window.confirm;
+
+// Import the real app. init() runs on import; the guest auth callback
+// fires on the next tick and renders the dashboard.
+await import(pathToFileURL(ROOT + "/app.js").href);
+
+await waitFor(() => {
+  const cards = document.querySelectorAll("#dashCards .stat-card");
+  return cards.length === 4 ? cards : null;
+}, 5000);
+
+function setValue(el, value) {
+  el.value = value;
+  el.dispatchEvent(new window.Event("change", { bubbles: true }));
+}
+function click(el) {
+  el.dispatchEvent(new window.MouseEvent("click", { bubbles: true, cancelable: true }));
+}
+
+check("mode badge is Guest demo", document.getElementById("modeBadge").textContent, "Guest demo");
+check("AI badge is local parser", document.getElementById("aiBadge").textContent, "AI: off, local parser");
+check("sample banner visible", document.getElementById("sampleBanner").hidden, false);
+const cardText = document.getElementById("dashCards").textContent;
+checkContains("dashboard shows ingredients label", cardText, "Ingredients tracked");
+check("dashboard shows 0 alerts at baseline",
+  document.querySelectorAll("#dashCards .stat-card")[2].textContent.includes("0"), true);
+checkContains("dashboard biggest move is eggs -35%", cardText, "-35.0%");
+check("alert badge hidden at baseline", document.getElementById("alertCountBadge").hidden, true);
+
+// Go to Invoices, paste the sample invoice, parse it.
+click(document.querySelector('[data-view="invoices"]'));
+check("invoice list shows 3 sample invoices",
+  document.querySelectorAll("#invoiceList .invoice-card").length, 3);
+
+document.getElementById("pasteText").value =
+  "Millbrook Supplies\nInvoice date: 2026-11-02\nButter 20 kg @ $7.10\n" +
+  "Wheat flour 50 kg @ $3.45\nEggs 10 dozen @ $4.20\nSugar 25 kg @ $1.95\nTotal: $374.50";
+click(document.getElementById("parsePasteBtn"));
+check("preview panel opens", document.getElementById("previewPanel").hidden, false);
+check("preview shows 4 parsed lines",
+  document.querySelectorAll("#previewBody tr").length, 4);
+check("preview supplier filled",
+  document.getElementById("previewSupplier").value, "Millbrook Supplies");
+check("preview date filled",
+  document.getElementById("previewDate").value, "2026-11-02");
+
+// Save from the preview.
+click(document.getElementById("previewSaveBtn"));
+check("invoice list now shows 4 invoices",
+  document.querySelectorAll("#invoiceList .invoice-card").length, 4);
+checkContains("notice confirms save", document.getElementById("noticeText").textContent, "Invoice saved");
+
+// Dashboard reflects the new invoice: flour is now the biggest mover.
+click(document.querySelector('[data-view="dashboard"]'));
+checkContains("dashboard biggest move now flour +38%",
+  document.getElementById("dashCards").textContent, "+38.0%");
+
+// Prices view renders a chart per ingredient.
+click(document.querySelector('[data-view="prices"]'));
+check("prices view shows 4 ingredient cards",
+  document.querySelectorAll("#priceCards .price-card").length, 4);
+check("prices view renders charts",
+  document.querySelectorAll("#priceCards svg.chart").length, 4);
+checkContains("flour card shows latest price 3.45",
+  document.getElementById("priceCards").textContent, "$3.45");
+
+// Recipes view renders the three sample recipes with recosted prices.
+click(document.querySelector('[data-view="recipes"]'));
+check("recipes view shows 3 recipes",
+  document.querySelectorAll("#recipeList .recipe-card").length, 3);
+checkContains("butter cake shows recosted price",
+  document.getElementById("recipeList").textContent, "$6.33");
+
+// Manual invoice with a flour spike, to fire a real alert.
+click(document.querySelector('[data-view="invoices"]'));
+click(document.getElementById("tab-manual"));
+document.getElementById("manualSupplier").value = "Millbrook Supplies";
+document.getElementById("manualDate").value = "2026-11-15";
+setValue(document.querySelector('#manualLines select[data-manual-field="ingredient"]'), "Wheat flour");
+setValue(document.querySelector('#manualLines input[data-manual-field="qty"]'), "50");
+setValue(document.querySelector('#manualLines input[data-manual-field="price"]'), "6.00");
+document.getElementById("manualForm").dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
+check("alert badge appears after flour spike",
+  document.getElementById("alertCountBadge").textContent, "1");
+
+// Alerts view names the recipe below target.
+click(document.querySelector('[data-view="alerts"]'));
+checkContains("alert feed names Sourdough Loaf",
+  document.getElementById("alertFeed").textContent, "Sourdough Loaf");
+checkContains("alert feed shows margin 55.0%",
+  document.getElementById("alertFeed").textContent, "55.0%");
+
+// Export works (download runs against Node's Blob/URL, notice confirms).
+click(document.querySelector('[data-view="recipes"]'));
+click(document.getElementById("exportRecipesBtn"));
+checkContains("export notice confirms download",
+  document.getElementById("noticeText").textContent, "Downloaded bakecost-recipes.csv");
+
+// Guest state persisted to localStorage.
+const saved = JSON.parse(window.localStorage.getItem("bakecost-v2-guest"));
+check("guest state saved with 5 invoices", saved.invoices.length, 5);
+check("guest state is no longer sample data", saved.isSample, false);
+
+// Recipe editor: add a recipe through the form.
+click(document.querySelector('[data-view="recipes"]'));
+click(document.getElementById("addRecipeBtn"));
+check("recipe editor opens", document.getElementById("recipeEditor").hidden, false);
+document.getElementById("recipeName").value = "Test Cake";
+document.getElementById("recipeSellPrice").value = "24";
+document.getElementById("recipeTarget").value = "60";
+setValue(document.querySelector('#recipeLines select[data-editor-field="name"]'), "Butter");
+setValue(document.querySelector('#recipeLines input[data-editor-field="qty"]'), "0.5");
+click(document.getElementById("recipeEditorAddLineBtn"));
+const editorSelects = document.querySelectorAll('#recipeLines select[data-editor-field="name"]');
+setValue(editorSelects[1], "Wheat flour");
+const editorQtys = document.querySelectorAll('#recipeLines input[data-editor-field="qty"]');
+setValue(editorQtys[1], "0.4");
+document.getElementById("recipeForm").dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
+check("recipes view now shows 4 recipes",
+  document.querySelectorAll("#recipeList .recipe-card").length, 4);
+checkContains("new recipe costed at latest prices (butter 7.10, flour 6.00)",
+  document.getElementById("recipeList").textContent, "$5.95");
+
+// Edit the new recipe's target to 90, so it drops below target.
+const editButtons = document.querySelectorAll("#recipeList [data-edit-recipe]");
+click(editButtons[editButtons.length - 1]);
+document.getElementById("recipeTarget").value = "90";
+document.getElementById("recipeForm").dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
+check("alert badge shows 2 after target edit",
+  document.getElementById("alertCountBadge").textContent, "2");
+
+// Sample data controls: start empty, then reset the sample data.
+click(document.getElementById("startEmptyBtn"));
+click(document.querySelector('[data-view="dashboard"]'));
+check("dashboard shows 0 ingredients after start empty",
+  document.querySelectorAll("#dashCards .stat-card")[0].textContent.includes("0"), true);
+click(document.getElementById("resetSampleBtn"));
+click(document.querySelector('[data-view="invoices"]'));
+check("invoice list back to 3 after reset",
+  document.querySelectorAll("#invoiceList .invoice-card").length, 3);
+check("sample banner visible again", document.getElementById("sampleBanner").hidden, false);
+
+console.log("\n" + passed + " passed, " + failed + " failed.");
+process.exit(failed === 0 ? 0 : 1);

@@ -1,110 +1,162 @@
-# BakeCost Website, Build Report
+# BakeCost v2: Build Report
 
-Built 18 November 2026. Static site, no build step, no dependencies, no
-backend. Ready for a GitHub push and a Vercel deploy. Not pushed, not
-deployed: the parent handles accounts and credentials.
+Built 2026-11-18. v1 lives untouched at `~/workspace/projects/bakecost/`
+and stays deployed as it was. v2 is a fresh folder:
+`~/workspace/projects/bakecost-v2/`.
 
 ## What was built
 
-In `~/workspace/projects/bakecost/`:
+v1 was a landing page plus a read-only demo. v2 is the real product:
+a landing page plus a working app with invoice intake, price history
+with charts, editable recipes, margin alerts, a dashboard, CSV export,
+guest demo mode, and Google sign-in with cloud saving and Gemini
+invoice reading when Firebase is wired up.
 
-- `index.html`, landing page: hero ("Know what every recipe really costs"),
-  the problem with the sourced BLS figures (eggs down 35%, butter down 17%,
-  wheat flour up 24%, each labelled with its source and linked), how it
-  works in 3 steps, the free audit offer (done by hand, free, one time),
-  pricing ($49 one-time audit; $19/month Home Baker up to 15 recipes;
-  $29/month Bakery up to 50 recipes), a 4-question FAQ, contact
-  (ah.systemsss@gmail.com), footer (A&H Systems, "Less Manual Work. More
-  Business.").
-- `demo.html` + `demo.js`, a working interactive demo, not a mockup:
-  3 sample supplier invoices, a price history table per ingredient,
-  3 sample recipes recosted at the latest prices with cost then, cost now,
-  change, selling price, margin and a status badge, a margin target input
-  (default 60%) with a live alerts panel, a form to add your own invoice
-  line (existing or new ingredient), and CSV export of the costing table.
-  Everything runs client-side; nothing is sent anywhere. Every sample
-  element is labelled as sample/demo, including a red banner at the top.
-- `costing.js`, the pure costing maths (recipe cost, margin, price change,
-  latest/earliest price points, money/percent formatting, CSV build),
-  shared by the demo and the Node tests.
-- `styles.css`, shared stylesheet: monochrome with one warm caramel accent
-  (#b45309), Georgia serif headings, system sans body, responsive (single
-  column under 760px, tables scroll horizontally on narrow screens).
-- `logo.png`, the real A&H Systems logo, copied from the brand files and
-  used in the header and footer. No logo was generated or invented.
-- `vercel.json` (static config, clean URLs), `.gitignore`, MIT `LICENSE`,
-  `README.md` (what the site is, how to run it, how to deploy on Vercel).
-- `test-demo.cjs`, Node tests for the costing maths.
+### Landing page (`index.html`, `styles.css`)
 
-## Figures used, and where they come from
+Upgraded design: sticky blurred nav, gradient hero with a CSS-built
+dashboard mockup showing the real sample numbers (Butter Cake cost
+$5.86 at 75.6% margin, Sourdough Loaf $1.86 at 76.8%, eggs down 35%,
+wheat flour up 24%), a six-feature grid, how it works, the free audit
+offer, the same three pricing plans (now describing the app), and an
+FAQ updated for the app (no install, guest demo needs no account,
+every invoice is previewed before saving). No invented claims,
+testimonials, stats, or user counts anywhere. The real AH logo only.
 
-- Eggs down 35%, butter down 17%: US Bureau of Labor Statistics prices,
-  September 2025 to September 2026, as reported at menuthere.com (linked).
-- Wheat flour up 24%: French wheat flour, 12 months to October 2026, as
-  reported at vespertool.com (linked).
-- Demo dollar prices are illustrative, labelled as such. The demo's end to
-  end moves for eggs, butter and flour match the public figures above; the
-  middle invoice and the sugar prices are illustrative.
-- Prices: $49 audit, $19 and $29 a month, from the BakeCost brainstorm.
-- No customers, testimonials, revenue figures, user counts or other
-  statistics anywhere. No claim that any software product is live or that
-  anyone uses it yet. The audit is described as done by hand throughout.
+### App (`app.html`, `app.js`, `app.css`)
 
-## Verification (all passed)
+Five views, mobile-first (bottom tab bar on phones, top tabs on
+desktop):
 
-- `node --check` clean on `costing.js` and `demo.js`.
-- `node test-demo.cjs`: 28 of 28 checks pass. Recipe costs and margins
-  match the verified sample audit exactly (butter cake $7.00 then, $5.86
-  now, margin $17.00/71% then, $18.14/76% now at a $24 selling price).
-- Full demo flow exercised with a stubbed-DOM harness (kept in /tmp, not
-  part of the site): 27 of 27 checks pass. Covers initial render of all
-  three invoices, price history and margins; raising the target to 80%
-  (3 alerts appear); invalid target rejected; adding a manual butter line
-  at $10.00 (butter cake cost updates to $7.54, butter change flips to
-  +25.0%); adding a brand-new ingredient (appears in price history with
-  n/a change); CSV export (correct header, rows and values).
-- Served locally with `python3 -m http.server`: all 11 files return
-  HTTP 200, including `/` and `/demo.html`. Logo serves as image/png.
-- All internal links resolve (no missing href/src targets). Both HTML
-  files parse with no errors and no unclosed tags.
-- Grep: 0 em dashes, 0 en dashes, 0 AI-assistant credit lines, no lorem ipsum,
-  no TODO/FIXME/placeholder text anywhere in the project.
+- Dashboard: summary cards (ingredients tracked, recipes, recipes
+  below target, biggest price move), biggest movers with sparklines,
+  margin alerts, recent activity, recipe margin table, quick actions.
+- Invoices: invoice cards with line totals and delete, plus intake in
+  three ways: paste text (local parser or Gemini), upload a file
+  (photo or PDF via Gemini when AI is on, text files via the local
+  parser), or type lines by hand. Every parsed invoice opens in an
+  editable preview (supplier, date, and every line editable, lines
+  removable, lines addable) before saving.
+- Prices: one card per ingredient with the latest price, change since
+  first price, latest move, a hand-rolled SVG line chart, and the full
+  table of price points.
+- Recipes: recipe cards with cost then and now, margin, and a green,
+  amber, or red status against a per-recipe margin target. Add and
+  edit recipes with dynamic ingredient rows, including new ingredients
+  with no price yet (their cost shows as n/a until an invoice prices
+  them).
+- Alerts: the alert feed (recipes below target, ingredients that moved
+  5% or more since the last invoice), the biggest movers table, and a
+  margin targets table with quick edit links.
 
-## Two bugs found and fixed during verification
+Supporting modules:
 
-1. Floating point rounding: the lemon drizzle cost displayed $3.94 instead
-   of $3.95 (3.945 stored as 3.9449999999999998). Fixed with a half-up
-   `roundTo` helper in `costing.js`, now used by money formatting, percent
-   formatting and CSV output, so the table and the CSV always agree.
-   Regression checks added to `test-demo.cjs`.
-2. Single-point ingredients showed a +0.0% change. Now they show n/a, which
-   is the honest display when no change has been measured yet.
+- `costing.js`: v1 maths extended with margin status bands (ok, watch
+  within 5 points below target, alert), biggest movers, margin alerts,
+  recent moves above a threshold, and price-history and invoice CSV
+  builders.
+- `invoice-parser.js`: deterministic local parser. Detects supplier
+  and date (ISO, DD/MM/YYYY, written dates), reads `@` unit prices,
+  `per kg` prices, line totals, leading quantities, `2 x` quantities,
+  and gram to kg and ml to L conversion. Skips totals, taxes, and
+  noise lines, merges duplicate ingredients, and flags uncertain lines.
+- `sample-data.js`: the v1 dataset carried over (3 sample invoices,
+  4 ingredients, 3 recipes) with per-recipe margin targets added, plus
+  a pasteable sample invoice text.
+- `charts.js`: hand-rolled SVG line charts and sparklines. No library,
+  no network call.
+- `firebase-config.js`: placeholders only (same pattern as StockPilot),
+  model gemini-2.0-flash, `isFirebaseConfigured` flag.
+- `firebase-app.js`: shared lazy Firebase app instance, dynamic
+  imports only.
+- `ai.js`: Gemini invoice extraction through Firebase AI Logic, with
+  the Gemini Developer API backend selected explicitly (the SDK
+  default Vertex AI backend needs billing and is not used). Reads
+  pasted text and uploaded photos and PDFs. Returns structured JSON
+  against a fixed schema; the app normalises it into invoice lines.
+- `store.js`: localStorage in guest mode, Firestore under
+  `users/{uid}` when signed in, Google sign-in and sign-out, auth
+  state listener, and a copy-guest-data-to-account action.
 
-## Not verified
+## What works in demo mode vs what needs Firebase wiring
 
-- No headless browser is available on this machine, so the pages were not
-  screenshot-tested at mobile width. The responsive CSS was reviewed by
-  hand (single-column grids under 760px, horizontal scrolling tables,
-  full-width form fields), but a quick visual check on a phone after
-  deploy is still worth doing.
+Demo mode (no Firebase config, no sign-in) is the full product except
+two things:
 
-## Next steps for the parent
+- Works: sample data, paste and text-file invoice intake with the
+  local parser, manual invoice entry, editable preview, price history
+  with charts, recipes and targets, alerts, movers, dashboard,
+  activity log, all three CSV exports, localStorage persistence,
+  reset sample data, start empty.
+- Needs Firebase wiring: Google sign-in, cloud saving across devices,
+  and Gemini extraction of pasted text and of photo and PDF uploads.
+  With no Firebase config the app says so plainly where each feature
+  would appear, and offers the working alternative (paste or manual
+  entry).
 
-1. GitHub: create a repo (suggested name `bakecost`), then from this
-   folder: `git init`, `git add .`, `git commit -m "BakeCost website"`,
-   `git remote add origin <repo URL>`, `git push -u origin main`.
-   Note: `git clone` fails on this VM (TLS); the parent should push from
-   wherever git works, or use the GitHub web upload as a fallback.
-2. Vercel: import the repo, framework preset Other, no build command, no
-   output directory, no environment variables. Deploy. The site serves
-   `index.html` at `/` and `demo.html` at `/demo`.
-3. After deploy: open the live site on a phone-width screen and check the
-   hero, the pricing cards and the demo tables; run the demo flow once
-   (set target to 80%, add a line, export CSV).
-4. The demo's "Try the demo" link is live in the site header and hero, and
-   the free audit mailto links point at ah.systemsss@gmail.com. No further
-   wiring is needed before sharing the link with bakery owners.
+## Verification (all run 2026-11-18)
 
-## Blockers
+- `npm run check`: syntax check on all 9 JS modules, clean.
+- `npm test`: 157 checks, 0 failures.
+  - `test-costing.mjs`: 61 passed (recipe costs, margins, price
+    changes, status bands, movers, alerts, all three CSV builders,
+    against the verified sample audit figures).
+  - `test-parser.mjs`: 61 passed (dates, units, conversions, line
+    totals, gram lines, `2 x` form, duplicate merging, noise
+    skipping, unknown ingredients).
+  - `verify-e2e.mjs`: 35 passed (the guest demo flow as a logic
+    chain: paste the sample invoice, price history updates, recipes
+    recost, a flour spike fires a Sourdough alert at 55.0% margin,
+    every CSV builds, charts render, a Gemini-style payload
+    normalises).
+- `npm run smoke` (jsdom, needs `npm install --no-save jsdom` first):
+  33 passed, 0 failures. Loads the real app.html in jsdom and drives
+  the UI: dashboard renders, paste and save an invoice from the
+  preview, dashboard and charts update, a manual flour-spike invoice
+  fires an alert, the alerts view names Sourdough Loaf at 55.0%,
+  recipe add and edit work, CSV export runs, localStorage holds 5
+  invoices, start-empty and reset-sample work.
+- Static wiring check: all 71 DOM ids the app looks up exist in
+  app.html (this caught two dynamically created auth buttons, which
+  were moved to static markup in app.html).
+- Served over HTTP and fetched every route: `/`, `/app.html`, all JS,
+  CSS, `logo.png`, and `vercel.json` return 200.
+- Em dash scan: zero em dashes and zero en dashes in every file
+  (code, copy, comments, docs).
+- `logo.png` is a byte-identical copy of the v1 logo (md5 match).
+  No logo was generated or invented.
+- `firebase-config.js` holds placeholders only. No API keys or config
+  values were invented.
+- Landing page mock numbers verified against the computed sample
+  values (Butter Cake 75.6%, Sourdough 76.8%, eggs -35.0%, flour
+  +24.0%).
 
-None. Nothing was cut for scope.
+## Still needs a live run-through
+
+- The Gemini path (AI extraction of pasted text and of photo and PDF
+  uploads) has no Firebase project behind it yet, so it has not had a
+  live run-through. After Firebase is wired up: sign in, upload a real
+  invoice photo, and check the extraction before calling AI mode done.
+  The local parser path is fully tested and is the fallback.
+- Google sign-in and Firestore saving likewise need a Firebase project
+  with Auth (Google provider) and Firestore enabled, plus rules that
+  only let a user read and write their own `users/{uid}` document.
+- No real-browser visual check was possible on this VM (no headless
+  browser). The DOM smoke test verifies rendering and behaviour in
+  jsdom, but a phone-width visual check of the landing page and the
+  app is still worth doing after deploy.
+- v2 has not been pushed to GitHub and has not been deployed to
+  Vercel. The parent handles that after verifying this build.
+
+## Files
+
+- `index.html`, `styles.css`: landing page.
+- `app.html`, `app.js`, `app.css`: the product.
+- `costing.js`, `invoice-parser.js`, `sample-data.js`, `charts.js`:
+  pure logic and data.
+- `firebase-config.js`, `firebase-app.js`, `ai.js`, `store.js`:
+  Firebase integration.
+- `logo.png`, `vercel.json`, `package.json`, `LICENSE`, `.gitignore`.
+- `README.md`, `BUILD-REPORT.md` (this file).
+- `test-costing.mjs`, `test-parser.mjs`, `verify-e2e.mjs`,
+  `dom-smoke.mjs`: tests.

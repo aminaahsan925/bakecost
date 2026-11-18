@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BakeCost App | A&amp;H Systems</title>
+<meta name="description" content="The BakeCost app: upload supplier invoices, track ingredient prices, recost recipes, and get margin alerts. Guest demo works with no sign-in.">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body class="app-body">
+
+<header class="app-header">
+  <div class="app-header-inner">
+    <a class="brand" href="index.html">
+      <img src="logo.png" alt="A&amp;H Systems logo">
+      <span>
+        <span class="brand-name">BakeCost</span>
+        <span class="brand-tag">by A&amp;H Systems</span>
+      </span>
+    </a>
+    <div class="header-badges">
+      <span class="badge badge-guest" id="modeBadge">Guest demo</span>
+      <span class="badge badge-demo" id="aiBadge">AI: off, local parser</span>
+    </div>
+    <div class="auth-area" id="authArea">
+      <button class="btn small" id="signInBtn" type="button" hidden>Sign in with Google</button>
+      <button class="btn small ghost" id="signOutBtn" type="button" hidden>Sign out</button>
+      <span class="small" id="authNote" hidden>Sign-in needs Firebase. See the README.</span>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="App sections">
+    <button class="tab-btn active" type="button" role="tab" aria-selected="true" data-view="dashboard">Dashboard</button>
+    <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="invoices">Invoices</button>
+    <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="prices">Prices</button>
+    <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="recipes">Recipes</button>
+    <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="alerts">Alerts <span class="count-badge" id="alertCountBadge" hidden></span></button>
+  </nav>
+</header>
+
+<div class="notice" id="notice" hidden>
+  <span id="noticeText"></span>
+  <button class="notice-close" id="noticeClose" type="button" aria-label="Dismiss">x</button>
+</div>
+
+<div class="sample-banner" id="sampleBanner" hidden>
+  <strong>Guest demo, sample data.</strong>
+  You are looking at sample invoices and recipes. Everything you do here stays in this browser.
+  <span class="banner-actions">
+    <button class="btn small ghost" id="resetSampleBtn" type="button">Reset sample data</button>
+    <button class="btn small ghost" id="startEmptyBtn" type="button">Start empty</button>
+  </span>
+</div>
+
+<main class="app-main">
+
+<!-- ================= Dashboard ================= -->
+<section class="view" id="view-dashboard">
+  <h1>Dashboard</h1>
+  <p class="lead">Your bakery's ingredient costs at a glance: what moved, what it did to your margins, and what needs attention.</p>
+
+  <div class="stat-grid" id="dashCards"></div>
+
+  <div class="btn-row">
+    <button class="btn small" id="qaAddInvoice" type="button">Add an invoice</button>
+    <button class="btn small ghost" id="qaAddRecipe" type="button">Add a recipe</button>
+    <button class="btn small ghost" id="qaExport" type="button">Export recipes CSV</button>
+  </div>
+
+  <div class="dash-grid">
+    <div>
+      <h2>Biggest price moves</h2>
+      <div id="dashMovers"></div>
+      <h2 style="margin-top:32px;">Margin alerts</h2>
+      <div id="dashAlerts"></div>
+    </div>
+    <div>
+      <h2>Recent activity</h2>
+      <div id="dashActivity"></div>
+    </div>
+  </div>
+
+  <div id="copyGuestWrap" hidden>
+    <div class="note-box">
+      <strong>Your guest work is still in this browser.</strong>
+      Copy it into your account to keep it across devices.
+      <div class="btn-row"><button class="btn small" id="copyGuestBtn" type="button">Copy guest data to my account</button></div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:32px;">Recipes at the latest prices</h2>
+  <p class="small">Ingredient cost only. Packaging, labour and overheads are not included.</p>
+  <div id="dashRecipes"></div>
+</section>
+
+<!-- ================= Invoices ================= -->
+<section class="view" id="view-invoices" hidden>
+  <h1>Invoices</h1>
+  <p class="lead">Every supplier invoice you add builds the price history. New prices recost your recipes and refresh your alerts automatically.</p>
+
+  <div class="btn-row">
+    <button class="btn small ghost" id="exportInvoicesBtn" type="button">Export invoices CSV</button>
+  </div>
+
+  <div id="invoiceList" style="margin-top:20px;"></div>
+
+  <h2 style="margin-top:36px;">Add an invoice</h2>
+  <div class="intake-tabs" role="tablist" aria-label="Ways to add an invoice">
+    <button class="intake-tab active" id="tab-paste" type="button" role="tab">Paste text</button>
+    <button class="intake-tab" id="tab-upload" type="button" role="tab">Upload a file</button>
+    <button class="intake-tab" id="tab-manual" type="button" role="tab">Type lines by hand</button>
+  </div>
+
+  <div class="intake-panel" id="panel-paste">
+    <p>Paste the invoice text, one item per line. For example: <code>Butter 20 kg @ $7.10</code> or <code>Sugar 25 kg $48.75</code>. Totals and tax lines are skipped automatically.</p>
+    <textarea id="pasteText" rows="7" placeholder="Millbrook Supplies&#10;Invoice date: 2026-11-02&#10;Butter 20 kg @ $7.10&#10;Wheat flour 50 kg @ $3.45&#10;Eggs 10 dozen @ $4.20&#10;Sugar 25 kg @ $1.95"></textarea>
+    <div class="btn-row">
+      <button class="btn small" id="parsePasteBtn" type="button">Parse with local parser</button>
+      <button class="btn small" id="parsePasteAiBtn" type="button">Extract with Gemini</button>
+      <button class="btn small ghost" id="pasteSampleBtn" type="button">Try sample text</button>
+    </div>
+    <p class="small" id="pasteAiNote"></p>
+    <p class="small" id="pasteStatus"></p>
+  </div>
+
+  <div class="intake-panel" id="panel-upload" hidden>
+    <p>Upload a photo or PDF of an invoice, or a text file. Photos and PDFs are read by Gemini when AI is on; text files are read by the local parser and work without AI.</p>
+    <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.txt,.csv">
+    <p class="small" id="uploadStatus"></p>
+    <p class="small">In guest demo mode, uploaded files are read in your browser and never sent anywhere. With AI on, the file goes to Gemini only to be read, and only when you upload it.</p>
+  </div>
+
+  <div class="intake-panel" id="panel-manual" hidden>
+    <p>Type the invoice lines yourself. The unit price is the price for one unit, for example one kg or one dozen.</p>
+    <form id="manualForm">
+      <div class="form-row">
+        <div class="field">
+          <label for="manualSupplier">Supplier</label>
+          <input id="manualSupplier" type="text" placeholder="e.g. Millbrook Supplies">
+        </div>
+        <div class="field">
+          <label for="manualDate">Invoice date</label>
+          <input id="manualDate" type="date">
+        </div>
+      </div>
+      <div id="manualLines"></div>
+      <div class="btn-row">
+        <button class="btn small ghost" id="manualAddLineBtn" type="button">Add another line</button>
+        <button class="btn small" type="submit">Save invoice</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="preview-panel" id="previewPanel" hidden>
+    <h2>Check this invoice before saving</h2>
+    <p class="small" id="previewSource"></p>
+    <div class="form-row">
+      <div class="field">
+        <label for="previewSupplier">Supplier</label>
+        <input id="previewSupplier" type="text">
+      </div>
+      <div class="field">
+        <label for="previewDate">Invoice date</label>
+        <input id="previewDate" type="date">
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ingredient</th><th>Qty</th><th>Unit</th><th>Unit price ($)</th><th class="num">Line total</th><th></th></tr></thead>
+        <tbody id="previewBody"></tbody>
+      </table>
+    </div>
+    <p class="small" id="previewSkipped"></p>
+    <div class="btn-row">
+      <button class="btn small ghost" id="previewAddLineBtn" type="button">Add a line</button>
+      <button class="btn small" id="previewSaveBtn" type="button">Save invoice</button>
+      <button class="btn small ghost" id="previewCancelBtn" type="button">Discard</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Prices ================= -->
+<section class="view" id="view-prices" hidden>
+  <h1>Price history</h1>
+  <p class="lead">One price line per ingredient, built from your invoices. This is the table a baker would otherwise keep by hand.</p>
+  <div class="btn-row">
+    <button class="btn small ghost" id="exportPricesBtn" type="button">Export price history CSV</button>
+  </div>
+  <div id="priceCards" style="margin-top:20px;"></div>
+</section>
+
+<!-- ================= Recipes ================= -->
+<section class="view" id="view-recipes" hidden>
+  <h1>Recipes</h1>
+  <p class="lead">Every recipe is recosted from the latest ingredient prices. Set a margin target per recipe, and it shows green, amber, or red.</p>
+  <div class="btn-row">
+    <button class="btn small" id="addRecipeBtn" type="button">Add a recipe</button>
+    <button class="btn small ghost" id="exportRecipesBtn" type="button">Export recipes CSV</button>
+  </div>
+  <div id="recipeList" style="margin-top:20px;"></div>
+
+  <div class="editor-panel" id="recipeEditor" hidden>
+    <h2 id="recipeEditorTitle">Add a recipe</h2>
+    <form id="recipeForm">
+      <div class="form-row">
+        <div class="field">
+          <label for="recipeName">Recipe name</label>
+          <input id="recipeName" type="text" placeholder="e.g. Butter Cake">
+        </div>
+        <div class="field">
+          <label for="recipeSellPrice">Selling price ($)</label>
+          <input id="recipeSellPrice" type="number" min="0.01" step="0.01" placeholder="e.g. 24.00">
+        </div>
+        <div class="field">
+          <label for="recipeTarget">Margin target (%)</label>
+          <input id="recipeTarget" type="number" min="0" max="100" step="1" value="60">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label for="recipeNote">Note (optional)</label>
+        <input id="recipeNote" type="text" placeholder="e.g. 500g butter, 400g flour, 4 eggs.">
+      </div>
+      <p class="small">Quantities are in base units: kg for flour, butter and sugar, single eggs for eggs. Ingredients come from your invoices; pick "New ingredient..." to add one with no price yet (its cost shows as n/a until an invoice prices it).</p>
+      <div id="recipeLines"></div>
+      <div class="btn-row">
+        <button class="btn small ghost" id="recipeEditorAddLineBtn" type="button">Add an ingredient</button>
+        <button class="btn small" type="submit">Save recipe</button>
+        <button class="btn small ghost" id="recipeCancelBtn" type="button">Cancel</button>
+        <button class="btn small ghost danger" id="recipeDeleteBtn" type="button" hidden>Delete recipe</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ================= Alerts ================= -->
+<section class="view" id="view-alerts" hidden>
+  <h1>Alerts</h1>
+  <p class="lead">Recipes below their margin target, and ingredients that moved 5% or more since the last invoice. Alerts update every time you add an invoice.</p>
+  <div id="alertFeed"></div>
+  <h2 style="margin-top:32px;">Biggest movers</h2>
+  <p class="small">Change from the first price on record to the latest price, per ingredient.</p>
+  <div id="moversTable"></div>
+  <h2 style="margin-top:32px;">Margin targets</h2>
+  <p class="small">Green means at or above target, amber means within 5 points below, red means more than 5 points below.</p>
+  <div id="targetsTable"></div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="logo.png" alt="A&amp;H Systems logo">
+      <div>
+        <div class="name">A&amp;H Systems</div>
+        <div class="slogan">Less Manual Work. More Business.</div>
+      </div>
+    </div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a href="index.html#audit">Free audit</a>
+      <a href="mailto:ah.systemsss@gmail.com">ah.systemsss@gmail.com</a>
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
