@@ -7,7 +7,7 @@
 <meta name="description" content="BakeCost reads your supplier invoices, tracks ingredient prices, and recosts your recipes. When a margin drops, you know first. Try the app free, no sign-up.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600;1,9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -34,18 +34,28 @@
   <div class="wrap hero-inner">
     <div class="hero-copy">
       <span class="hero-eyebrow hero-enter" style="--i:0">For small bakeries</span>
-      <h1 class="hero-enter" style="--i:1">Know what every recipe really costs.</h1>
+      <h1 class="hero-enter" style="--i:1">Know what every recipe <em>really</em> costs.</h1>
       <p class="lead hero-enter" style="--i:2">BakeCost reads your supplier invoices, tracks ingredient prices, and recosts your recipes. When a margin drops, you know first.</p>
       <div class="btn-row hero-enter" style="--i:3">
         <a class="btn light" href="app.html">Open the app, free</a>
       </div>
       <p class="hero-note hero-enter" style="--i:4">No sign-up. Sample data included.</p>
     </div>
+    <div class="hero-stamp hero-enter" style="--i:4" aria-hidden="true">
+      <svg viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="58" fill="none" stroke="rgba(201,168,106,0.55)" stroke-width="1"></circle>
+        <circle cx="60" cy="60" r="33" fill="none" stroke="rgba(201,168,106,0.4)" stroke-width="1"></circle>
+        <defs><path id="stamp-circle" d="M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0"></path></defs>
+        <text class="stamp-text"><textPath href="#stamp-circle" textLength="288" lengthAdjust="spacingAndGlyphs">Baked fresh • Costed right •</textPath></text>
+      </svg>
+      <span class="stamp-center">B</span>
+    </div>
   </div>
 </section>
 
 <section class="section" id="preview">
   <div class="wrap">
+    <p class="section-label reveal">01 · The app</p>
     <h2 class="reveal">The numbers, at a glance.</h2>
     <p class="lead reveal">Everything on one screen.</p>
     <div class="mock-wrap reveal">
@@ -83,8 +93,9 @@
   </div>
 </section>
 
-<section class="section alt" id="how">
+<section class="section dark" id="how">
   <div class="wrap">
+    <p class="section-label reveal">02 · How it works</p>
     <h2 class="reveal">How it works.</h2>
     <div class="steps">
       <div class="step reveal" style="--i:0">
@@ -108,6 +119,7 @@
 
 <section class="section" id="examples">
   <div class="wrap">
+    <p class="section-label reveal">03 · Recipes</p>
     <h2 class="reveal">Real recipes, real margins.</h2>
     <p class="lead reveal">Sample recipes from the demo data, costed at the latest invoice prices.</p>
     <div class="product-grid">
@@ -117,10 +129,12 @@
           <span class="product-sample">Sample</span>
         </div>
         <div class="product-body">
+          <p class="product-category">Cake</p>
           <h3>Butter Cake</h3>
           <div class="product-row"><span>Ingredient cost</span><strong>$5.86</strong></div>
-          <div class="product-row"><span>Sells at</span><strong>$24.00</strong></div>
+          <div class="product-row"><span>Sells at</span><strong class="product-sell">$24.00</strong></div>
           <div class="product-row"><span>Margin</span><span class="product-margin"><strong>75.6%</strong><span class="badge ok">On target</span></span></div>
+          <a class="btn ghost small product-cta" href="app.html">See it in the app</a>
         </div>
       </article>
       <article class="product-card reveal" style="--i:1">
@@ -129,10 +143,12 @@
           <span class="product-sample">Sample</span>
         </div>
         <div class="product-body">
+          <p class="product-category">Bread</p>
           <h3>Sourdough Loaf</h3>
           <div class="product-row"><span>Ingredient cost</span><strong>$1.86</strong></div>
-          <div class="product-row"><span>Sells at</span><strong>$8.00</strong></div>
+          <div class="product-row"><span>Sells at</span><strong class="product-sell">$8.00</strong></div>
           <div class="product-row"><span>Margin</span><span class="product-margin"><strong>76.8%</strong><span class="badge ok">On target</span></span></div>
+          <a class="btn ghost small product-cta" href="app.html">See it in the app</a>
         </div>
       </article>
       <article class="product-card reveal" style="--i:2">
@@ -141,10 +157,12 @@
           <span class="product-sample">Sample</span>
         </div>
         <div class="product-body">
+          <p class="product-category">Tart</p>
           <h3>Lemon Drizzle</h3>
           <div class="product-row"><span>Ingredient cost</span><strong>$3.94</strong></div>
-          <div class="product-row"><span>Sells at</span><strong>$18.00</strong></div>
+          <div class="product-row"><span>Sells at</span><strong class="product-sell">$18.00</strong></div>
           <div class="product-row"><span>Margin</span><span class="product-margin"><strong>78.1%</strong><span class="badge ok">On target</span></span></div>
+          <a class="btn ghost small product-cta" href="app.html">See it in the app</a>
         </div>
       </article>
     </div>
@@ -153,6 +171,7 @@
 
 <section class="section alt" id="tryit">
   <div class="wrap">
+    <p class="section-label reveal">04 · Try it yourself</p>
     <h2 class="reveal">Try it yourself.</h2>
     <p class="lead reveal">Pick a recipe, move one price, watch the margin move.</p>
     <div class="calc-card reveal" id="calc">
@@ -193,6 +212,7 @@
 
 <section class="section" id="moves">
   <div class="wrap">
+    <p class="section-label reveal">05 · Prices</p>
     <h2 class="reveal">Prices moved this year.</h2>
     <div class="moves">
       <div class="move reveal" style="--i:0">
@@ -212,21 +232,25 @@
   </div>
 </section>
 
-<section class="section" id="audit">
+<section class="section dark" id="audit">
   <div class="wrap">
-    <div class="dark-panel reveal">
-      <h2>Free audit</h2>
-      <p>Send your last 3 months of supplier invoices. In a day, you get every price move and what it did to your best sellers.</p>
-      <div class="btn-row">
-        <a class="btn" href="mailto:ah.systemsss@gmail.com?subject=Free%20ingredient%20cost%20audit">Send your invoices</a>
-      </div>
-      <p class="small">ah.systemsss@gmail.com. Photos or PDFs are fine.</p>
+    <p class="section-label reveal">06 · Free audit</p>
+    <h2 class="reveal">Free audit</h2>
+    <p class="lead reveal">Send your last 3 months of supplier invoices. In a day, you get every price move and what it did to your best sellers.</p>
+    <div class="btn-row reveal">
+      <a class="btn light" href="mailto:ah.systemsss@gmail.com?subject=Free%20ingredient%20cost%20audit">Send your invoices</a>
     </div>
+    <p class="small reveal">ah.systemsss@gmail.com. Photos or PDFs are fine.</p>
   </div>
+</section>
+
+<section class="photo-band" aria-label="Inside a bakery, shelves and a counter full of fresh bread">
+  <img src="https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=1600&amp;q=80&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=800&amp;q=80&amp;auto=format&amp;fit=crop 800w, https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=1600&amp;q=80&amp;auto=format&amp;fit=crop 1600w" sizes="100vw" alt="Inside a bakery, shelves and a counter full of fresh bread and baguettes" loading="lazy" decoding="async">
 </section>
 
 <section class="section alt" id="pricing">
   <div class="wrap">
+    <p class="section-label reveal">07 · Pricing</p>
     <h2 class="reveal">Pricing</h2>
     <p class="lead reveal">Start free. Pay only if the numbers help.</p>
     <div class="pricing">
@@ -270,6 +294,7 @@
 
 <section class="section" id="faq">
   <div class="wrap">
+    <p class="section-label reveal">08 · Questions</p>
     <h2 class="reveal">Questions</h2>
     <div class="faq">
       <details class="reveal" style="--i:0">
@@ -288,11 +313,11 @@
   </div>
 </section>
 
-<section class="section alt">
+<section class="section dark">
   <div class="wrap center">
     <h2 class="reveal">See what your recipes really cost.</h2>
     <div class="btn-row reveal" style="justify-content:center;">
-      <a class="btn" href="app.html">Open the app, free</a>
+      <a class="btn light" href="app.html">Open the app, free</a>
     </div>
   </div>
 </section>

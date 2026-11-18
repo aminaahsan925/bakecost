@@ -156,15 +156,16 @@
 }
 
 /* ---------- card hover lift (pointer devices only) ---------- */
+/* Same calm hover as the landing page: lift 2px over 350ms, no
+   shadow appears; hairlines do the separating. */
 @media (hover: hover) and (pointer: fine) {
   .stat-card, .recipe-card, .price-card, .invoice-card, .dash-recipe-row,
   .mover-list li, .alert-item {
-    transition: transform var(--d-med) var(--ease-out), box-shadow var(--d-med) var(--ease-out);
+    transition: transform var(--d-hover) var(--ease-out);
   }
   .stat-card:hover, .recipe-card:hover, .price-card:hover, .invoice-card:hover,
   .dash-recipe-row:hover, .mover-list li:hover, .alert-item:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
   }
 }
 

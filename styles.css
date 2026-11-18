@@ -1,5 +1,7 @@
-/* BakeCost v3 shared styles. Bakery warmth: cream, warm ink, deep
-   burgundy. Mobile-first: the base rules are the 390px phone layout,
+/* BakeCost v4 shared styles. Premium refinement of the v3 identity:
+   deep burgundy, near-black burgundy, cream, and one champagne-gold
+   accent. Two fonts, three colours plus gold, one radius, one
+   hairline. Mobile-first: the base rules are the 390px phone layout,
    and the media queries at the bottom scale up. No build step. Used
    by the landing page and the app. */
 
@@ -14,6 +16,15 @@
   --accent: #6d1a2d;
   --accent-dark: #4f1220;
   --accent-soft: #f7e8ea;
+  /* Premium tokens (v4): near-black burgundy grounds the dark
+     sections and footer; champagne gold is the only metallic accent,
+     used for rules, prices, and tiny details. Hairlines replace
+     shadows as the way surfaces are separated. */
+  --burgundy-deep: #3f0e1a;
+  --burgundy-black: #2a0812;
+  --gold: #c9a86a;
+  --hairline: rgba(109, 26, 45, 0.18);
+  --hairline-cream: rgba(253, 246, 236, 0.22);
   --green: #2e7d32;
   --green-soft: #e6f4ea;
   --red: #b3261e;
@@ -22,18 +33,20 @@
   --amber-soft: #fef3c7;
   --display: "Fraunces", Georgia, "Times New Roman", serif;
   --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --shadow-sm: 0 1px 2px rgba(36, 26, 18, 0.06), 0 1px 3px rgba(36, 26, 18, 0.06);
-  --shadow-md: 0 12px 32px rgba(36, 26, 18, 0.12);
-  --radius: 14px;
+  --shadow-sm: 0 1px 2px rgba(36, 26, 18, 0.04);
+  --shadow-md: 0 10px 28px rgba(36, 26, 18, 0.10);
+  --radius: 18px;
   /* Motion tokens: every duration and curve in the site comes from
      here, so the whole product moves in one voice. Durations stay in
-     the 100-300ms band; only the hero entrance and reveals run longer. */
+     the 100-300ms band; only the hero entrance and reveals run longer.
+     Hovers are deliberately calm (350ms) in the premium refinement. */
   --d-press: 120ms;
   --d-fast: 150ms;
   --d-med: 250ms;
   --d-slow: 400ms;
   --d-hero: 500ms;
   --d-reveal: 600ms;
+  --d-hover: 350ms;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -58,13 +71,13 @@ body {
   font-family: var(--sans);
   color: var(--ink);
   background: var(--paper);
-  line-height: 1.55;
+  line-height: 1.65;
   font-size: 17px;
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 { font-family: var(--display); line-height: 1.08; margin: 0 0 12px; font-weight: 600; letter-spacing: -0.01em; }
-h1 { font-size: clamp(34px, 9vw, 56px); }
+h1, h2, h3 { font-family: var(--display); line-height: 1.06; margin: 0 0 12px; font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-size: clamp(34px, 9vw, 56px); line-height: 1.02; letter-spacing: -0.02em; }
 h2 { font-size: clamp(28px, 7vw, 40px); }
 h3 { font-size: 21px; }
 p { margin: 0 0 14px; }
@@ -80,8 +93,38 @@ code {
 /* ---------- layout ---------- */
 
 .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
-.section { padding: 56px 0; }
-.section.alt { background: var(--card); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+/* Air: 96px gaps on phones, 128px on desktop. Sections alternate
+   cream, deep burgundy, cream, so the page breathes in bands. */
+.section { padding: 96px 0; }
+.section.alt { background: var(--card); border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
+/* Deep burgundy ground: how it works, the free audit, and the final
+   CTA. Cream text, gold labels and rules. */
+.section.dark { background: var(--burgundy-deep); color: #fdf6ec; }
+.section.dark h2 { color: #fdf6ec; }
+.section.dark .lead { color: rgba(253, 246, 236, 0.85); }
+.section.dark .small { color: rgba(253, 246, 236, 0.65); }
+/* Plain links on dark grounds go light gold; buttons keep their own
+   colours, so they are excluded here. */
+.section.dark a:not(.btn) { color: #f3d9a8; }
+.section.dark .section-label { color: var(--gold); }
+/* Numbered section labels: 11px small caps with a short gold rule. */
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 16px;
+}
+.section-label::before {
+  content: "";
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  background: var(--gold);
+  vertical-align: middle;
+  margin-right: 10px;
+}
 .lead { font-size: 18px; color: var(--ink-soft); max-width: 620px; }
 .small { font-size: 14px; color: var(--muted); }
 .center { text-align: center; }
@@ -93,7 +136,7 @@ code {
   background: rgba(248, 241, 229, 0.92);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--hairline);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -110,7 +153,7 @@ code {
 .brand img { width: 38px; height: 38px; border-radius: 8px; }
 .brand-name { font-family: var(--display); font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
 .site-nav { margin-left: auto; display: flex; gap: 8px; align-items: center; }
-.site-nav a:not(.btn) { display: none; text-decoration: none; color: var(--ink-soft); font-size: 15px; font-weight: 500; }
+.site-nav a:not(.btn) { display: none; text-decoration: none; color: var(--ink-soft); font-size: 12px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; }
 .site-nav a:not(.btn):hover { color: var(--accent); }
 
 /* ---------- buttons ---------- */
@@ -174,6 +217,10 @@ code {
   height: 100%;
   object-fit: cover;
   object-position: center 35%;
+  /* Warm grade, shared by every photo on the page: slightly
+     desaturated with a warm cast, so all photography sits in the
+     same cream and burgundy world. */
+  filter: saturate(0.92) sepia(0.10) contrast(1.02);
 }
 .hero-scrim {
   position: absolute;
@@ -189,16 +236,60 @@ code {
   color: #fdf6ec;
   text-wrap: balance;
 }
+/* Exactly one italic word in the hero headline: the script accent
+   from the luxury bakery references. */
+.hero h1 em { font-style: italic; font-weight: 600; }
 .hero .lead { font-size: 19px; color: rgba(253, 246, 236, 0.92); }
 .hero-note { margin-top: 16px; font-size: 14px; color: rgba(253, 246, 236, 0.78); }
 .hero-eyebrow {
   display: inline-block;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #f3d9c8;
   margin-bottom: 14px;
+}
+
+/* ---------- hero stamp ---------- */
+/* Circular rotating-text badge: "Baked fresh • Costed right •" on a
+   ring with a serif B at the centre. Bottom-right of the hero, clear
+   of the left-aligned copy and CTA on phones. The SVG ring rotates
+   slowly (28s); the centre letter stays still. Under reduced motion
+   the global rule below stops the rotation. */
+.hero-stamp {
+  position: absolute;
+  right: 16px;
+  bottom: 24px;
+  width: 84px;
+  height: 84px;
+  z-index: 2;
+}
+.hero-stamp svg {
+  width: 100%;
+  height: 100%;
+  animation: stamp-spin 28s linear infinite;
+  overflow: visible;
+}
+@keyframes stamp-spin { to { transform: rotate(360deg); } }
+.stamp-text {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  fill: rgba(253, 246, 236, 0.92);
+  text-transform: uppercase;
+}
+.stamp-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold);
 }
 
 /* ---------- hero entrance ---------- */
@@ -220,9 +311,9 @@ code {
 .mock-wrap { max-width: 720px; margin: 28px auto 0; }
 .hero-mock {
   background: var(--card);
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline);
   border-radius: 18px;
-  box-shadow: var(--shadow-md);
+  box-shadow: none;
   overflow: hidden;
 }
 .mock-bar {
@@ -274,11 +365,11 @@ code {
 .moves { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 24px 0 16px; }
 .move {
   background: var(--card);
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
   padding: 20px 12px;
   text-align: center;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
 }
 .move-num { font-family: var(--display); font-size: clamp(28px, 8vw, 44px); font-weight: 700; line-height: 1.1; }
 .move-label { font-weight: 600; margin-top: 6px; font-size: 15px; }
@@ -297,25 +388,35 @@ code {
 }
 .step h3 { font-size: 22px; margin-bottom: 6px; }
 .step p { font-size: 15px; color: var(--ink-soft); margin-bottom: 0; }
+/* On the deep burgundy ground the steps use gold rules and numerals
+   with cream text. */
+.section.dark .step { border-top: 1px solid rgba(201, 168, 106, 0.55); }
+.section.dark .step-num { color: var(--gold); }
+.section.dark .step h3 { color: #fdf6ec; }
+.section.dark .step p { color: rgba(253, 246, 236, 0.8); }
 
 /* ---------- product grid ---------- */
 /* Real baked goods with their sample numbers: ingredient cost,
    selling price, and margin per item. Photos are Unsplash images,
    each verified to load; the SAMPLE chip marks the numbers as demo
-   data, the same as the dashboard mockup. */
+   data, the same as the dashboard mockup. Quiet and price-led: cream
+   cards, a small-caps category, serif name and price, one small pill
+   button to the app (this is not a shop, so no "Add"). The photo is
+   arched at the top inside a thin cream frame. */
 .product-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 28px; }
 .product-card {
   background: var(--card);
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline);
   border-radius: 18px;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
+  padding: 12px 12px 20px;
 }
-.product-photo { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--paper-deep); }
-.product-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.product-photo { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--paper-deep); border-radius: 999px 999px 16px 16px; border: 1px solid var(--hairline); }
+.product-photo img { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(0.92) sepia(0.10) contrast(1.02); }
 .product-sample {
   position: absolute;
-  top: 12px;
+  bottom: 12px;
   left: 12px;
   font-size: 11px;
   font-weight: 700;
@@ -326,7 +427,15 @@ code {
   padding: 4px 9px;
   border-radius: 4px;
 }
-.product-body { padding: 18px 18px 20px; }
+.product-body { padding: 16px 8px 0; }
+.product-category {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 6px;
+}
 .product-body h3 { font-size: 23px; margin-bottom: 12px; }
 .product-row {
   display: flex;
@@ -334,52 +443,59 @@ code {
   align-items: center;
   gap: 10px;
   padding: 9px 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--hairline);
   font-size: 15px;
 }
 .product-row span:first-child { color: var(--ink-soft); }
 .product-row strong { font-weight: 700; white-space: nowrap; }
+/* The selling price leads: serif, burgundy, larger than the rest. */
+.product-row strong.product-sell { font-family: var(--display); font-size: 19px; color: var(--accent); }
 .product-margin { display: flex; align-items: center; gap: 8px; }
+.product-cta { margin-top: 16px; width: 100%; }
 
-/* ---------- burgundy panel ---------- */
-
-.dark-panel {
-  background: var(--accent);
-  color: #fdf6ec;
-  border-radius: 18px;
-  padding: 36px 24px;
-  box-shadow: var(--shadow-md);
+/* ---------- photo band ---------- */
+/* Full-bleed bakery interior between the audit and pricing: a visual
+   breath before the plans. The crop favours the upper display
+   (baguettes and shelves) and keeps the shop's own price tags out of
+   frame; a burgundy wash keeps it calm. */
+.photo-band { position: relative; height: 220px; overflow: hidden; }
+.photo-band img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 8%;
+  display: block;
+  filter: saturate(0.92) sepia(0.10) contrast(1.02);
 }
-.dark-panel h2 { color: #fdf6ec; }
-.dark-panel p { color: rgba(253, 246, 236, 0.92); max-width: 560px; }
-.dark-panel .small { color: rgba(253, 246, 236, 0.75); margin: 16px 0 0; }
-.dark-panel a { color: #f8e3c8; }
-.dark-panel .btn { background: #fdf6ec; border-color: #fdf6ec; color: var(--accent-dark); }
-.dark-panel .btn:hover { background: #fff; border-color: #fff; color: var(--accent-dark); }
-.dark-panel .btn-row { margin-top: 20px; }
+.photo-band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(63, 14, 26, 0.22) 0%, rgba(63, 14, 26, 0.35) 55%, rgba(63, 14, 26, 0.55) 100%);
+}
 
 /* ---------- pricing ---------- */
 
 .pricing { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 28px; }
 .plan {
   background: var(--card);
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius);
   padding: 26px;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
 }
-.plan.featured { border: 2px solid var(--accent); box-shadow: var(--shadow-md); }
-.plan .price { font-family: var(--display); font-size: 44px; font-weight: 700; line-height: 1.1; margin: 8px 0 2px; }
+.plan.featured { border: 2px solid var(--accent); box-shadow: none; }
+.plan .price { font-family: var(--display); font-size: 44px; font-weight: 700; line-height: 1.1; margin: 8px 0 2px; color: var(--accent); }
 .plan .price-note { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
 .plan ul { padding-left: 20px; margin: 0 0 22px; font-size: 15px; color: var(--ink-soft); }
 .plan li { margin-bottom: 8px; }
 .plan .btn { margin-top: auto; text-align: center; }
 .plan-tag {
   display: inline-block;
-  background: var(--accent);
-  color: #fff;
+  background: var(--gold);
+  color: var(--burgundy-black);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -395,7 +511,7 @@ code {
 .faq { max-width: 680px; margin: 28px auto 0; text-align: left; }
 .faq details {
   background: var(--card);
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline);
   border-radius: 10px;
   padding: 18px 20px;
   margin-bottom: 12px;
@@ -468,9 +584,10 @@ section[id] { scroll-margin-top: 84px; }
 /* ---------- footer ---------- */
 
 .site-footer {
-  border-top: 1px solid var(--line);
-  padding: 36px 0 48px;
-  margin-top: 8px;
+  background: var(--burgundy-black);
+  color: rgba(253, 246, 236, 0.85);
+  border-top: 1px solid rgba(201, 168, 106, 0.35);
+  padding: 48px 0;
 }
 .footer-inner {
   max-width: 1080px;
@@ -484,16 +601,16 @@ section[id] { scroll-margin-top: 84px; }
 }
 .footer-brand { display: flex; align-items: center; gap: 12px; }
 .footer-brand img { width: 44px; height: 44px; border-radius: 8px; }
-.footer-brand .name { font-family: var(--display); font-size: 19px; font-weight: 700; }
-.footer-brand .slogan { font-size: 14px; color: var(--muted); }
-.footer-links a { display: block; font-size: 15px; margin-bottom: 8px; text-decoration: none; color: var(--ink-soft); }
-.footer-links a:hover { color: var(--accent); }
+.footer-brand .name { font-family: var(--display); font-size: 19px; font-weight: 700; color: #fdf6ec; }
+.footer-brand .slogan { font-size: 14px; color: rgba(253, 246, 236, 0.6); }
+.footer-links a { display: block; font-size: 15px; margin-bottom: 8px; text-decoration: none; color: rgba(253, 246, 236, 0.8); }
+.footer-links a:hover { color: var(--gold); }
 .photo-credit {
   max-width: 1080px;
   margin: 24px auto 0;
   padding: 0 16px;
   font-size: 13px;
-  color: var(--muted);
+  color: rgba(253, 246, 236, 0.5);
 }
 
 /* ---------- scroll reveals ---------- */
@@ -531,13 +648,21 @@ section[id] { scroll-margin-top: 84px; }
 .dash-recipe-margin, .stat-card .stat-num { font-variant-numeric: tabular-nums; }
 
 /* ---------- card hover lift (pointer devices only) ---------- */
+/* One calm hover for the whole site: the card lifts 2px and the
+   product photo scales to 1.03, both over 350ms. No shadow appears;
+   hairlines do the separating. */
 @media (hover: hover) and (pointer: fine) {
   .product-card, .plan, .move {
-    transition: transform var(--d-med) var(--ease-out), box-shadow var(--d-med) var(--ease-out);
+    transition: transform var(--d-hover) var(--ease-out);
   }
   .product-card:hover, .plan:hover, .move:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+  .product-photo img {
+    transition: transform var(--d-hover) var(--ease-out);
+  }
+  .product-card:hover .product-photo img {
+    transform: scale(1.03);
   }
 }
 
@@ -566,10 +691,10 @@ section[id] { scroll-margin-top: 84px; }
 /* ---------- mini cost calculator ---------- */
 .calc-card {
   background: var(--card);
-  border: 1px solid var(--line);
+  border: 1px solid var(--hairline);
   border-radius: 18px;
   padding: 22px 18px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   max-width: 640px;
 }
 .calc-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
@@ -629,11 +754,13 @@ input[type="range"].calc-slider { width: 100%; accent-color: var(--accent); heig
   .site-nav { gap: 22px; }
   .site-nav a:not(.btn) { display: inline; }
   .hero { min-height: 90vh; min-height: 90svh; padding: 96px 0; }
-  .section { padding: 72px 0; }
+  .hero-stamp { width: 120px; height: 120px; right: 48px; bottom: 40px; }
+  .stamp-center { font-size: 36px; }
+  .section { padding: 128px 0; }
+  .photo-band { height: 420px; }
   .steps { grid-template-columns: repeat(3, 1fr); gap: 28px; }
   .product-grid { grid-template-columns: repeat(3, 1fr); }
   .pricing { grid-template-columns: repeat(3, 1fr); }
-  .dark-panel { padding: 44px 40px; }
   .moves { gap: 16px; }
   .move { padding: 28px 16px; }
   .photo-credit { padding-left: 20px; padding-right: 20px; }

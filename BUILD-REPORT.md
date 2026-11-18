@@ -366,6 +366,117 @@ in a real browser. Tests still green: npm test 157 passed,
 npm run smoke 33 passed, npm run check clean, zero em/en
 dashes, all routes 200.
 
+## Design v4 (2026-11-18 evening): premium refinement
+
+Amina approved v3 ("yes now it loook good") and asked to refine
+it further toward premium by studying premium UI/UX design on
+Figma, Pinterest and Canva. The study brief is at
+~/workspace/goals/500-per-week-from-technical-services/hidden_files/BakeCost-Design-Direction-v4-Premium.md.
+This is a refinement, not a new look: the v3 identity stays
+(burgundy + cream, croissant hero, oversized serif headline,
+3 product cards, pill buttons, mini calculator, motion system)
+and the brief's 9 premium moves are applied on top.
+
+1. Deeper burgundy, one gold. New tokens: --burgundy-deep
+   #3f0e1a (dark sections), --burgundy-black #2a0812 (footer),
+   --gold #c9a86a (rules, prices, tiny accents). No other new
+   colours. Dark sections are now #3f0e1a instead of the
+   brighter accent; the footer is near-black burgundy with a
+   gold top hairline.
+2. Type system. Fraunces import now includes the italic axis;
+   exactly one word in the hero headline is italic
+   ("really"). Eyebrows, nav links and section labels are
+   11-12px small caps at 0.15-0.2em letter-spacing. Body
+   line-height is 1.65; h1 leading tightened to 1.02.
+3. Hairlines instead of shadows. New --hairline token
+   (burgundy at 18% opacity, cream at 22% on dark). Nav,
+   section separators, card borders and FAQ use 1px hairlines;
+   --shadow-sm is now near-zero and --shadow-md is a soft
+   12% blur. Mockup, moves, product cards, plans, FAQ and
+   calc card carry no shadow at all.
+4. Air. Section padding 96px on phones, 128px on desktop.
+5. Photography. All photos get a warm, slightly desaturated
+   grade (saturate 0.92, sepia 0.10, contrast 1.02). Product
+   photos are arched at the top (999px 999px 16px 16px)
+   inside a thin cream frame (12px card padding).
+6. Product cards quiet and price-led. Cream cards with a
+   small-caps category label (Cake / Bread / Tart), serif
+   name, selling price in serif burgundy, hairline rows, and
+   a small ghost pill button "See it in the app" linking to
+   app.html (not "Add": this is not a shop). The SAMPLE chip
+   moved to the bottom-left of the photo. Identical radius,
+   padding and near-zero shadow on every card.
+7. Micro-details. Numbered section labels ("01 · The app"
+   through "08 · Questions"; the separator is a middle dot,
+   not an em dash, per the no-em-dash rule) with a short gold
+   rule before each. A circular rotating-text stamp sits on
+   the hero, bottom-right: "BAKED FRESH • COSTED RIGHT •"
+   around a serif "B", gold rings, 28s rotation, 84px on
+   phones / 120px on desktop, aria-hidden. No testimonial
+   and no stars, as required (none exist).
+8. Alternating grounds. Cream, deep burgundy, cream: the how
+   it works section and the free audit section are now full
+   dark sections (the boxed .dark-panel is gone), with gold
+   numerals and rules and cream text; the final CTA is dark
+   and the footer darker still. A full-bleed photo band
+   (bakery interior) sits between the audit and pricing.
+   Band photo (Unsplash, URL verified HTTP 200 with curl,
+   image viewed before use): photo-1517433670267-08bbd4be890f
+   (bakery interior, bread display and baguettes), srcset
+   800w/1600w, lazy-loaded. The crop favours the upper
+   display and the wash deepens toward the bottom, so the
+   shop's own price tags stay out of frame.
+9. Locked tokens, calm motion. Two fonts, three colours plus
+   gold, one radius (18px cards, pill buttons), one hairline,
+   one calm hover (card lifts 2px, product photo scales to
+   1.03, both over 350ms, no shadow appears). The app's hover
+   matches (app.css: lift 2px, 350ms, no shadow). Entrance,
+   scroll, count-up and skeleton motion kept, with the
+   reduced-motion guardrails intact.
+
+Two defects found by the frame proof and fixed before
+reporting: (a) the new dark-section link colour
+(.section.dark a) outranked .btn.light, so the cream buttons
+on the audit and final CTA sections showed pale gold text on
+cream and were nearly unreadable; fixed by scoping the rule
+to a:not(.btn), verified by computed colour rgb(79, 18, 32)
+on both buttons. (b) The photo band's first crop (300px,
+30%) showed the shop's price tags legibly on phones; fixed
+by shortening the band to 220px, cropping to the upper
+display (object-position 8%) and deepening the bottom wash.
+
+Verification: headless Chromium, script /tmp/pw-check/v4.cjs,
+34 frames in /tmp/pw-check/v4-shots/, every one read: hero
+entrance mid-flight (h1 opacity 0.55, +14px) and settled
+(stamp present, spinning, clear of the headline and CTA;
+exactly one italic word, "really"), count-up mid-flight (3,
+2, 0, -26%) and settled (4, 3, 0, -35%), reveal mid-flight
+and settled, button press (scale 0.969), calculator default
+($5.86, 75.6%, On target) and moved (Sourdough, flour max
+$6.20, $3.72, 53.5%, Below target), moves settled
+(-35%/-17%/+24%), dark how-it-works section (gold numerals,
+verified rgb(201, 168, 106)), arched product cards (radius
+999px, category, burgundy serif sell price, "See it in the
+app" pill, no shadow), dark audit section, photo band
+(loaded, 220px, tags out of frame), pricing (gold plan tag,
+burgundy serif prices), FAQ, final CTA and near-black footer,
+all 5 app views at 390px, skeletons (67 blocks at 500ms),
+view-switch stagger mid-flight (opacities 0.99, 0.90, 0.46),
+reduced motion (hero fully visible at 150ms, shimmer none,
+switch opacities 1, 1, 1), desktop hero, 3-card grid, hover
+(card -2px, photo scale 1.03), desktop calculator, desktop
+band, desktop pricing, desktop footer and desktop app. Zero
+horizontal overflow on every view at 390px and 1280px.
+Fraunces (incl. italic) confirmed loaded. Same environment
+note as v3: the VM egress proxy refuses Chromium's CONNECT
+tunnel to images.unsplash.com, so the proof run served the
+Unsplash requests from the exact downloaded bytes in
+/tmp/unsplash-check/; the remote URLs themselves were
+verified 200 via curl and need the live-site check to confirm
+in a real browser. Tests still green: npm test 157 passed,
+npm run smoke 33 passed, npm run check clean, zero em/en
+dashes, all routes 200.
+
 ## Files
 
 - `index.html`, `styles.css`, `landing.js`: landing page.
