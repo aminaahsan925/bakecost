@@ -603,6 +603,19 @@ page unloads before it could run); handleAuthChange already welcomes a
 first-time signed-in baker. No popup sign-in remains anywhere. Tests:
 npm run check clean, npm test 53 e2e passed, zero em/en dashes.
 
+## Firebase SDK version fix (18 Nov evening, after the AI test failed)
+
+The first live AI test failed with "Failed to fetch dynamically imported
+module: .../11.0.2/firebase-ai.js". The firebase-ai module does not exist
+in SDK 11.0.2 (verified 404 with curl; it also 404s on 11.2.0 and 11.6.0).
+Only the old firebase-vertexai module exists that far back. All four
+Firebase SDK URLs in firebase-app.js moved to 11.10.0, the first version
+checked where firebase-ai.js exists (all four modules verified 200).
+All modules stay on one version, as Firebase requires. The app code
+already used the firebase/ai API (getAI with the GoogleAI backend,
+getGenerativeModel, Schema), so no code change was needed beyond the
+version bump. Tests: npm run check clean, npm test 53 e2e passed.
+
 ## Files
 
 - `index.html`, `styles.css`, `landing.js`: landing page.

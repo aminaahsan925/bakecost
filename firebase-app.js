@@ -6,10 +6,10 @@
 
 import { firebaseConfig, isFirebaseConfigured } from "./firebase-config.js";
 
-export const FIREBASE_APP_URL = "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-export const FIREBASE_AI_URL = "https://www.gstatic.com/firebasejs/11.0.2/firebase-ai.js";
-export const FIREBASE_AUTH_URL = "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-export const FIREBASE_FIRESTORE_URL = "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+export const FIREBASE_APP_URL = "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+export const FIREBASE_AI_URL = "https://www.gstatic.com/firebasejs/11.10.0/firebase-ai.js";
+export const FIREBASE_AUTH_URL = "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+export const FIREBASE_FIRESTORE_URL = "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 let appPromise = null;
 
