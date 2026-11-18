@@ -53,6 +53,25 @@
   </div>
 </section>
 
+<section class="app-preview" aria-label="The BakeCost app">
+  <div class="wrap">
+    <div class="app-frame-wrap reveal">
+      <div class="app-frame">
+        <div class="app-frame-bar">
+          <span class="mock-dots" aria-hidden="true"><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span></span>
+          <span class="app-frame-url">bakecost-sigma.vercel.app/app.html</span>
+        </div>
+        <img src="app-preview.png" width="1280" height="900" alt="The BakeCost dashboard: ingredients tracked, recipes, biggest price moves, and recent activity" decoding="async">
+      </div>
+      <div class="app-float" aria-hidden="true">
+        <div class="float-label">Price alert</div>
+        <div class="float-main">Wheat flour jumped 24%</div>
+        <div class="float-sub">Millbrook Supplies · 8 Sep 2026</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="section" id="examples">
   <div class="wrap">
     <p class="section-label reveal">01 · Recipes</p>
@@ -150,19 +169,33 @@
   <div class="wrap">
     <p class="section-label reveal">03 · New in the app</p>
     <h2 class="reveal">More than costing.</h2>
-    <div class="feature-strip">
-      <div class="feature-row reveal" style="--i:0">
+    <div class="bento">
+      <article class="bento-card wide reveal" style="--i:0">
         <h3>Orders</h3>
         <p>Every order, deposit, and balance due in one place.</p>
-      </div>
-      <div class="feature-row reveal" style="--i:1">
+        <div class="bento-visual">
+          <div class="bento-visual-row"><span><strong>Maya</strong> <span class="muted">1 cake, 2 loaves</span></span><span class="badge watch">Balance due $20</span></div>
+          <div class="bento-visual-row"><span><strong>Lena</strong> <span class="muted">3 lemon drizzles</span></span><span class="badge alert">Overdue $54</span></div>
+          <div class="bento-visual-row"><span><strong>Noor</strong> <span class="muted">1 loaf</span></span><span class="badge ok">Paid</span></div>
+        </div>
+      </article>
+      <article class="bento-card reveal" style="--i:1">
         <h3>Bake Day</h3>
         <p>Plan the day's bake and get the shopping list.</p>
-      </div>
-      <div class="feature-row reveal" style="--i:2">
+        <div class="bento-visual">
+          <div class="bento-visual-row"><span><strong>Butter</strong></span><span>2 kg <span class="bento-check">✓</span></span></div>
+          <div class="bento-visual-row"><span><strong>Flour</strong></span><span>8.8 kg <span class="bento-check">✓</span></span></div>
+          <div class="bento-visual-row"><span><strong>Eggs</strong></span><span>16 (buy 2 dozen)</span></div>
+        </div>
+      </article>
+      <article class="bento-card reveal" style="--i:2">
         <h3>Suppliers</h3>
         <p>Compare prices across suppliers and catch jumps.</p>
-      </div>
+        <div class="bento-visual">
+          <div class="bento-visual-row"><span><strong>Flour</strong> <span class="muted">City Mills</span></span><span>$2.80/kg <span class="badge ok">Cheapest</span></span></div>
+          <div class="bento-visual-row"><span><strong>Flour</strong> <span class="muted">Millbrook</span></span><span>$3.10/kg <span class="badge alert">Jumped +24%</span></span></div>
+        </div>
+      </article>
     </div>
     <div class="btn-row reveal">
       <a class="btn" href="app.html">Open the app, free</a>
@@ -170,8 +203,17 @@
   </div>
 </section>
 
-<section class="photo-band" aria-label="Inside a bakery, shelves and a counter full of fresh bread">
-  <img src="https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=1600&amp;q=80&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=800&amp;q=80&amp;auto=format&amp;fit=crop 800w, https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=1600&amp;q=80&amp;auto=format&amp;fit=crop 1600w" sizes="100vw" alt="Inside a bakery, shelves and a counter full of fresh bread and baguettes" loading="lazy" decoding="async">
+<section class="gallery-section" id="gallery" aria-label="From the bakery">
+  <div class="wrap">
+    <div class="gallery">
+      <figure><img src="https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Inside a bakery, shelves and a counter full of fresh bread" loading="lazy" decoding="async"></figure>
+      <figure><img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Seeded rustic bread loaves with wheat stalks on a wooden table" loading="lazy" decoding="async"></figure>
+      <figure><img src="https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="A colourful layered cake with a slice cut, on a cake stand" loading="lazy" decoding="async"></figure>
+      <figure><img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Chocolate chip cookies in a bowl lined with baking paper" loading="lazy" decoding="async"></figure>
+      <figure><img src="https://images.unsplash.com/photo-1550617931-e17a7b70dce2?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Chocolate cupcakes with swirled frosting" loading="lazy" decoding="async"></figure>
+      <figure><img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Strawberry desserts in small glass jars" loading="lazy" decoding="async"></figure>
+    </div>
+  </div>
 </section>
 
 <section class="section alt" id="pricing">
@@ -250,11 +292,18 @@
         <div class="slogan">Less Manual Work. More Business.</div>
       </div>
     </div>
-    <div class="footer-links">
-      <a href="index.html">Home</a>
-      <a href="app.html">Open the app</a>
-      <a href="#audit">Free audit</a>
-      <a href="mailto:ah.systemsss@gmail.com">ah.systemsss@gmail.com</a>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="app.html">Open the app</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#audit">Free audit</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="index.html">Home</a>
+        <a href="mailto:ah.systemsss@gmail.com">ah.systemsss@gmail.com</a>
+      </div>
     </div>
   </div>
   <p class="photo-credit">Photography via Unsplash.</p>

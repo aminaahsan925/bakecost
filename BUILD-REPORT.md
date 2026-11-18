@@ -603,6 +603,41 @@ page unloads before it could run); handleAuthChange already welcomes a
 first-time signed-in baker. No popup sign-in remains anywhere. Tests:
 npm run check clean, npm test 53 e2e passed, zero em/en dashes.
 
+## v6 premium redesign (18 Nov evening)
+
+Amina: the UI "is looking good but not toooooooo good, it should be
+premium like we see in canva pinterest and figma", then "not like
+modern and people impress through it". Full delegation. Research
+grounded it (premium SaaS 2026 + Canva/Pinterest/Figma patterns):
+whitespace is the number one premium signal, typography carries 60%
+of the feel, display size only for the hero, two radii, bento grids,
+visual proof over words.
+
+Changes (index.html, styles.css, app.css, new app-preview.png):
+more air (112px/160px sections), section headings stepped down so
+only the hero shouts, two radii (20px cards, 10px inner, 999px
+pills), soft layered shadows plus hairlines, the real app in a
+browser frame overlapping the hero (screenshot captured from the
+live app with a temporary harness, deleted after; the VM proxy
+blocks gstatic so the harness clicked away the sign-in notice real
+users never see), a floating price-alert card on the frame, the
+features as a bento grid with static UI snippets from the real
+sample data (Orders wide on top, Bake Day + Suppliers below; the
+first row-span layout left dead space in the Orders card, fixed by
+switching to column-span), the photo band replaced by a Pinterest
+masonry gallery (6 verified Unsplash photos), a slow Ken Burns
+drift on the hero photo, taller header, proper footer columns.
+The app inherits the new tokens (radius, shadows) via :root.
+
+Proof: headless Chromium frames at 390px and 1280px (tall-viewport
+full-page shots with a local proof server that serves Unsplash from
+downloaded bytes; the server pins the hero height because 90vh in
+a tall window swallows the page, and strips lazy/async attributes
+because they race the screenshot timer). All sections verified:
+hero, preview, examples, calculator, bento, gallery, pricing,
+audit, CTA, footer. Zero overflow at 390px. Tests 53 passed, check
+clean, zero em/en dashes.
+
 ## Gemini 500 "high demand" and retry logic (18 Nov evening)
 
 After the model switch, the live test reached Gemini and got 500 "This
@@ -613,6 +648,9 @@ transient errors (5xx, high demand, overloaded, network, timeout)
 twice, waiting 5s then 15s, before showing the error. Non-transient
 errors are not retried. If the retest still 500s after retries, the
 model is still overloaded and the honest answer is to try again later.
+Retest 18 Nov 23:01 PKT: still 500 high demand after the app's retries
+(2.5 minutes of reading). The retry logic works; Google's capacity for
+this model is the blocker. Retest later.
 
 ## Gemini model retirement (18 Nov evening)
 

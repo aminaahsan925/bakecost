@@ -1,9 +1,9 @@
-/* BakeCost v4 shared styles. Premium refinement of the v3 identity:
+/* BakeCost v6 shared styles. Premium refinement of the v4/v5 identity:
    deep burgundy, near-black burgundy, cream, and one champagne-gold
-   accent. Two fonts, three colours plus gold, one radius, one
-   hairline. Mobile-first: the base rules are the 390px phone layout,
-   and the media queries at the bottom scale up. No build step. Used
-   by the landing page and the app. */
+   accent. Two fonts, three colours plus gold, two radii, soft layered
+   shadows plus hairlines. Mobile-first: the base rules are the 390px
+   phone layout, and the media queries at the bottom scale up. No build
+   step. Used by the landing page and the app. */
 
 :root {
   --ink: #241a12;
@@ -33,9 +33,15 @@
   --amber-soft: #fef3c7;
   --display: "Fraunces", Georgia, "Times New Roman", serif;
   --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --shadow-sm: 0 1px 2px rgba(36, 26, 18, 0.04);
-  --shadow-md: 0 10px 28px rgba(36, 26, 18, 0.10);
-  --radius: 18px;
+  /* v6 shadows: soft and layered, in addition to hairlines. Cards
+     rest on shadow-sm; the app preview frame floats on shadow-lg. */
+  --shadow-sm: 0 1px 2px rgba(36, 26, 18, 0.05), 0 2px 8px rgba(36, 26, 18, 0.04);
+  --shadow-md: 0 1px 2px rgba(36, 26, 18, 0.06), 0 12px 32px rgba(36, 26, 18, 0.10);
+  --shadow-lg: 0 2px 4px rgba(36, 26, 18, 0.06), 0 24px 64px rgba(36, 26, 18, 0.16);
+  /* v6 radii: two values, used everywhere. Cards 20px, inner
+     elements 10px, pills 999px. */
+  --radius: 20px;
+  --radius-sm: 10px;
   /* Motion tokens: every duration and curve in the site comes from
      here, so the whole product moves in one voice. Durations stay in
      the 100-300ms band; only the hero entrance and reveals run longer.
@@ -78,7 +84,9 @@ body {
 
 h1, h2, h3 { font-family: var(--display); line-height: 1.06; margin: 0 0 12px; font-weight: 600; letter-spacing: -0.01em; }
 h1 { font-size: clamp(34px, 9vw, 56px); line-height: 1.02; letter-spacing: -0.02em; }
-h2 { font-size: clamp(28px, 7vw, 40px); }
+/* v6 type discipline: only the hero shouts. Section headings step
+   down so the page has one loud statement, not six. */
+h2 { font-size: clamp(26px, 5vw, 34px); }
 h3 { font-size: 21px; }
 p { margin: 0 0 14px; }
 a { color: var(--accent); }
@@ -93,9 +101,10 @@ code {
 /* ---------- layout ---------- */
 
 .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
-/* Air: 96px gaps on phones, 128px on desktop. Sections alternate
-   cream, deep burgundy, cream, so the page breathes in bands. */
-.section { padding: 96px 0; }
+/* Air (v6): 112px gaps on phones, 160px on desktop. Whitespace is
+   the premium signal; sections alternate cream, deep burgundy,
+   cream, so the page breathes in bands. */
+.section { padding: 112px 0; }
 .section.alt { background: var(--card); border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
 /* Deep burgundy ground: how it works, the free audit, and the final
    CTA. Cream text, gold labels and rules. */
@@ -144,7 +153,7 @@ code {
 .header-inner {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 10px 16px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -163,7 +172,7 @@ code {
   background: var(--accent);
   color: #fff;
   text-decoration: none;
-  padding: 14px 26px;
+  padding: 15px 28px;
   border-radius: 999px;
   font-weight: 600;
   font-size: 16px;
@@ -221,6 +230,13 @@ code {
      desaturated with a warm cast, so all photography sits in the
      same cream and burgundy world. */
   filter: saturate(0.92) sepia(0.10) contrast(1.02);
+  /* v6: a slow Ken Burns drift keeps the hero alive without
+     shouting. Stops under reduced motion via the global rule. */
+  animation: hero-drift 28s var(--ease-standard) infinite alternate;
+}
+@keyframes hero-drift {
+  from { transform: scale(1) translateY(0); }
+  to { transform: scale(1.06) translateY(-1.5%); }
 }
 .hero-scrim {
   position: absolute;
@@ -232,7 +248,7 @@ code {
 .hero h1 {
   font-size: clamp(52px, 14vw, 104px);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: #fdf6ec;
   text-wrap: balance;
 }
@@ -260,7 +276,9 @@ code {
 .hero-stamp {
   position: absolute;
   right: 16px;
-  bottom: 24px;
+  /* v6: floats above the app preview card, which overlaps the
+     hero's bottom edge by 56px. */
+  bottom: 80px;
   width: 84px;
   height: 84px;
   z-index: 2;
@@ -304,6 +322,59 @@ code {
   animation: hero-in var(--d-hero) var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * 60ms);
 }
+
+/* ---------- app preview (v6) ---------- */
+/* The real app in a browser frame, overlapping the hero's bottom
+   edge (Figma/Canva pattern). The screenshot is captured from the
+   live app, so it shows the actual product, sample data included.
+   A floating alert card overlaps the frame's corner on desktop,
+   showing the product's value at a glance. */
+.app-preview { margin-top: -56px; position: relative; z-index: 2; padding-bottom: 8px; }
+.app-frame-wrap { position: relative; }
+.app-frame {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.app-frame-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-deep);
+}
+.app-frame-url {
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app-frame img { display: block; width: 100%; height: auto; }
+.app-float {
+  display: none;
+  position: absolute;
+  right: -14px;
+  top: -28px;
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  padding: 14px 16px;
+  max-width: 230px;
+  transform: rotate(2deg);
+  z-index: 3;
+}
+.app-float .float-label { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--red); margin-bottom: 4px; }
+.app-float .float-main { font-family: var(--display); font-size: 20px; font-weight: 700; line-height: 1.15; }
+.app-float .float-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
 
 /* Product mockup in its own section below the hero: a small
    dashboard built in plain HTML and CSS, showing the real sample
@@ -403,14 +474,14 @@ code {
    cards, a small-caps category, serif name and price, one small pill
    button to the app (this is not a shop, so no "Add"). The photo is
    arched at the top inside a thin cream frame. */
-.product-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 28px; }
+.product-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 40px; }
 .product-card {
   background: var(--card);
   border: 1px solid var(--hairline);
-  border-radius: 18px;
+  border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: none;
-  padding: 12px 12px 20px;
+  box-shadow: var(--shadow-sm);
+  padding: 12px 12px 22px;
 }
 .product-photo { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--paper-deep); border-radius: 999px 999px 16px 16px; border: 1px solid var(--hairline); }
 .product-photo img { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(0.92) sepia(0.10) contrast(1.02); }
@@ -474,19 +545,40 @@ code {
   background: linear-gradient(180deg, rgba(63, 14, 26, 0.22) 0%, rgba(63, 14, 26, 0.35) 55%, rgba(63, 14, 26, 0.55) 100%);
 }
 
+/* ---------- masonry gallery (v6) ---------- */
+/* Pinterest-style masonry: CSS columns, images keep their natural
+   aspect ratios. The warm grade keeps every photo in the same
+   cream and burgundy world. A visual breath between sections, no
+   label, no number. */
+.gallery { columns: 2; column-gap: 16px; }
+.gallery figure {
+  margin: 0 0 16px;
+  break-inside: avoid;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: saturate(0.92) sepia(0.10) contrast(1.02);
+}
+.gallery-section { padding: 48px 0 96px; }
+
 /* ---------- pricing ---------- */
 
-.pricing { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 28px; }
+.pricing { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 40px; }
 .plan {
   background: var(--card);
   border: 1px solid var(--hairline);
   border-radius: var(--radius);
-  padding: 26px;
+  padding: 30px 28px;
   display: flex;
   flex-direction: column;
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
 }
-.plan.featured { border: 2px solid var(--accent); box-shadow: none; }
+.plan.featured { border: 2px solid var(--accent); box-shadow: var(--shadow-md); }
 .plan .price { font-family: var(--display); font-size: 44px; font-weight: 700; line-height: 1.1; margin: 8px 0 2px; color: var(--accent); }
 .plan .price-note { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
 .plan ul { padding-left: 20px; margin: 0 0 22px; font-size: 15px; color: var(--ink-soft); }
@@ -605,6 +697,20 @@ section[id] { scroll-margin-top: 84px; }
 .footer-brand .slogan { font-size: 14px; color: rgba(253, 246, 236, 0.6); }
 .footer-links a { display: block; font-size: 15px; margin-bottom: 8px; text-decoration: none; color: rgba(253, 246, 236, 0.8); }
 .footer-links a:hover { color: var(--gold); }
+/* v6 footer columns: Product and Company link groups beside the
+   brand block. */
+.footer-cols { display: flex; gap: 48px; flex-wrap: wrap; }
+.footer-col h4 {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 14px;
+}
+.footer-col a { display: block; font-size: 15px; margin-bottom: 8px; text-decoration: none; color: rgba(253, 246, 236, 0.8); }
+.footer-col a:hover { color: var(--gold); }
 .photo-credit {
   max-width: 1080px;
   margin: 24px auto 0;
@@ -649,14 +755,16 @@ section[id] { scroll-margin-top: 84px; }
 
 /* ---------- card hover lift (pointer devices only) ---------- */
 /* One calm hover for the whole site: the card lifts 2px and the
-   product photo scales to 1.03, both over 350ms. No shadow appears;
-   hairlines do the separating. */
+   shadow deepens a touch, both over 350ms. The product photo
+   scales to 1.03. */
 @media (hover: hover) and (pointer: fine) {
-  .product-card, .plan, .move {
-    transition: transform var(--d-hover) var(--ease-out);
+  .product-card, .plan, .move, .bento-card {
+    transition: transform var(--d-hover) var(--ease-out),
+      box-shadow var(--d-hover) var(--ease-out);
   }
-  .product-card:hover, .plan:hover, .move:hover {
+  .product-card:hover, .plan:hover, .move:hover, .bento-card:hover {
     transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
   }
   .product-photo img {
     transition: transform var(--d-hover) var(--ease-out);
@@ -702,14 +810,49 @@ section[id] { scroll-margin-top: 84px; }
 .feature-row p { margin: 0; color: var(--ink-soft); font-size: 16px; }
 #new .btn-row { margin-top: 24px; }
 
+/* ---------- bento features (v6) ---------- */
+/* The 2026 bento pattern: one large card (Orders) plus two smaller
+   ones, each with a small static UI snippet from the real sample
+   data. Stacked on phones; Orders spans two rows on desktop. */
+.bento { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 40px; }
+.bento-card {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: 26px 24px;
+  box-shadow: var(--shadow-sm);
+}
+.bento-card h3 { font-size: 23px; margin-bottom: 6px; }
+.bento-card > p { color: var(--ink-soft); font-size: 16px; margin-bottom: 0; }
+.bento-visual {
+  margin-top: 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 14px;
+}
+.bento-visual-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+.bento-visual-row + .bento-visual-row { border-top: 1px solid var(--line); }
+.bento-visual-row strong { font-weight: 600; }
+.bento-visual-row .muted { color: var(--muted); font-size: 13px; }
+.bento-check { color: var(--green); font-weight: 700; }
+
 /* ---------- mini cost calculator ---------- */
 .calc-card {
   background: var(--card);
   border: 1px solid var(--hairline);
-  border-radius: 18px;
-  padding: 22px 18px;
-  box-shadow: none;
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  box-shadow: var(--shadow-sm);
   max-width: 640px;
+  margin-top: 40px;
 }
 .calc-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
 .calc-field label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
@@ -768,9 +911,9 @@ input[type="range"].calc-slider { width: 100%; accent-color: var(--accent); heig
   .site-nav { gap: 22px; }
   .site-nav a:not(.btn) { display: inline; }
   .hero { min-height: 90vh; min-height: 90svh; padding: 96px 0; }
-  .hero-stamp { width: 120px; height: 120px; right: 48px; bottom: 40px; }
+  .hero-stamp { width: 120px; height: 120px; right: 48px; bottom: 104px; }
   .stamp-center { font-size: 36px; }
-  .section { padding: 128px 0; }
+  .section { padding: 160px 0; }
   .photo-band { height: 420px; }
   .steps { grid-template-columns: repeat(3, 1fr); gap: 28px; }
   .product-grid { grid-template-columns: repeat(3, 1fr); }
@@ -780,4 +923,11 @@ input[type="range"].calc-slider { width: 100%; accent-color: var(--accent); heig
   .moves { gap: 16px; }
   .move { padding: 28px 16px; }
   .photo-credit { padding-left: 20px; padding-right: 20px; }
+  /* v6 desktop: bento grid, 3-column masonry, floating alert card. */
+  .bento { grid-template-columns: 1fr 1fr; gap: 20px; }
+  .bento-card.wide { grid-column: span 2; }
+  .gallery { columns: 3; column-gap: 20px; }
+  .gallery figure { margin-bottom: 20px; }
+  .gallery-section { padding: 64px 0 128px; }
+  .app-float { display: block; }
 }
