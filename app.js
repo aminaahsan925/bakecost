@@ -737,6 +737,9 @@ function fileToBase64(file) {
 function onFileChosen(event) {
   var file = event.target.files && event.target.files[0];
   if (!file) return;
+  // Clear the input so choosing the same file again still fires a
+  // change event (lets the baker retry a failed read with the same photo).
+  event.target.value = "";
   hideNotice();
   $("uploadStatus").textContent = "Reading " + file.name + "...";
   if (isLocalTextFile(file.type, file.name)) {

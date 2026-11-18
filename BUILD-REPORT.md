@@ -603,6 +603,16 @@ page unloads before it could run); handleAuthChange already welcomes a
 first-time signed-in baker. No popup sign-in remains anywhere. Tests:
 npm run check clean, npm test 53 e2e passed, zero em/en dashes.
 
+## Firebase AI backend class fix (18 Nov evening, after the second AI test)
+
+The second live AI test failed with "GoogleAI is not a constructor".
+Reading the actual firebase-ai.js bundle (11.10.0 and 12.3.0) showed the
+export is named GoogleAIBackend, not GoogleAI, in every version. ai.js
+now uses modules.GoogleAIBackend and new GoogleAIBackend(). No version
+change was needed. Same fix round: onFileChosen now clears the file
+input after capturing the file, so choosing the same photo again still
+fires a change event and the baker can retry a failed read.
+
 ## Firebase SDK version fix (18 Nov evening, after the AI test failed)
 
 The first live AI test failed with "Failed to fetch dynamically imported

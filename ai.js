@@ -30,13 +30,13 @@ function buildModel(ai) {
     var getAI = modules.getAI;
     var getGenerativeModel = modules.getGenerativeModel;
     var Schema = modules.Schema;
-    var GoogleAI = modules.GoogleAI;
+    var GoogleAIBackend = modules.GoogleAIBackend;
     return getFirebaseApp().then(function (app) {
       // Use the Gemini Developer API backend explicitly. The SDK default
       // is the Vertex AI backend, which needs a billing plan. The Gemini
       // Developer API backend is the one with a free tier, and this app
       // only ever uses free-tier models.
-      var aiInstance = getAI(app, { backend: new GoogleAI() });
+      var aiInstance = getAI(app, { backend: new GoogleAIBackend() });
       var schema = Schema.object({
         properties: {
           supplier: Schema.string(),
