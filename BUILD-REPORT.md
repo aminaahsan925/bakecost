@@ -638,6 +638,18 @@ hero, preview, examples, calculator, bento, gallery, pricing,
 audit, CTA, footer. Zero overflow at 390px. Tests 53 passed, check
 clean, zero em/en dashes.
 
+## Retest 18 Nov 23:24 PKT: hung, no error
+
+The retest after the v6 push behaved differently: the app showed
+"Reading test-invoice.png..." for 5 minutes with no error banner and
+no extraction preview. Nothing was saved, sample data untouched.
+The retry loop has no per-attempt timeout, so a slow or stalled
+Gemini response leaves the app hanging forever. Fix (same night):
+every generateContent call is now wrapped in a 60s timeout, and a
+timeout counts as transient, so it still retries. Worst case the
+baker sees a clear error after about 3 minutes, never a hang.
+AI extraction remains unverified; retest in the morning.
+
 ## Gemini 500 "high demand" and retry logic (18 Nov evening)
 
 After the model switch, the live test reached Gemini and got 500 "This

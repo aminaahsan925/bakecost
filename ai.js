@@ -122,12 +122,32 @@ function isTransientError(err) {
   return /500|502|503|504|high demand|overloaded|try again later|temporarily|network|fetch failed|timeout/.test(text);
 }
 
+// Bound every Gemini call: without a timeout a slow or stalled
+// response leaves the app on "Reading..." forever. The 18 Nov 23:24
+// test hung for 5 minutes with no error and no result. A timed-out
+// attempt is transient, so it still gets its retries; worst case the
+// baker sees a clear error after about 3 minutes, never a hang.
+function withTimeout(promise, ms) {
+  var timer = null;
+  return Promise.race([
+    promise,
+    new Promise(function (resolve, reject) {
+      timer = setTimeout(function () {
+        reject(new Error("Timed out after " + Math.round(ms / 1000) + "s"));
+      }, ms);
+    })
+  ]).then(
+    function (value) { clearTimeout(timer); return value; },
+    function (err) { clearTimeout(timer); throw err; }
+  );
+}
+
 async function generateWithRetry(model, request) {
   var waits = [5000, 15000];
   var lastErr = null;
   for (var attempt = 0; attempt <= waits.length; attempt++) {
     try {
-      return await model.generateContent(request);
+      return await withTimeout(model.generateContent(request), 60000);
     } catch (err) {
       lastErr = err;
       if (!isTransientError(err) || attempt === waits.length) throw err;
