@@ -588,6 +588,21 @@ Tests: npm test 232 passed (61 costing + 61 parser + 57 features
 + 53 e2e), npm run smoke 51 passed, npm run check clean, zero
 em/en dashes, all routes 200.
 
+## Sign-in: popup to redirect (18 Nov evening, after the Firebase wiring)
+
+Google sign-in first shipped with signInWithPopup. The live test showed
+the Firebase popup opening as a full tab (and failing with "The requested
+action is invalid") in browsers that do not open real popup windows,
+including the test browser and many mobile browsers. The fix switches
+sign-in to the redirect flow: store.js now calls signInWithRedirect, the
+page navigates to Google and back, and onAuthChange picks the user up on
+return. A new consumeRedirectResult call at startup surfaces a failed or
+cancelled redirect as a notice instead of landing back in guest mode in
+silence. app.js no longer shows a "Signed in as" notice on the click (the
+page unloads before it could run); handleAuthChange already welcomes a
+first-time signed-in baker. No popup sign-in remains anywhere. Tests:
+npm run check clean, npm test 53 e2e passed, zero em/en dashes.
+
 ## Files
 
 - `index.html`, `styles.css`, `landing.js`: landing page.

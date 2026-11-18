@@ -29,7 +29,7 @@ import {
 } from "./ai.js";
 import {
   loadGuestState, saveGuestState, clearGuestState,
-  signInWithGoogle, signOutUser, onAuthChange,
+  signInWithGoogle, signOutUser, onAuthChange, consumeRedirectResult,
   loadCloudState, saveCloudState, freshCloudState
 } from "./store.js";
 import { springPop } from "./motion.js";
@@ -1560,10 +1560,10 @@ function onCopyGuestToCloud() {
 
 function onSignIn() {
   hideNotice();
+  // Redirect flow: the page navigates to Google and back. Success is
+  // picked up by handleAuthChange on return; only a failure to start
+  // the redirect reaches this catch.
   signInWithGoogle()
-    .then(function (signedInUser) {
-      showNotice("Signed in as " + (signedInUser.displayName || signedInUser.email || "baker") + ".", "ok");
-    })
     .catch(function (err) {
       console.error("Sign-in failed:", err);
       showNotice("Sign-in failed (" + (err.message || "unknown error") + "). You can keep using guest demo mode.", "error");
@@ -1943,6 +1943,13 @@ function init() {
     renderBakeDay();
   });
   $("bakeSaveBtn").addEventListener("click", onBakeSave);
+
+  // If a redirect sign-in failed or was cancelled, say so instead of
+  // landing back in guest mode with no explanation.
+  consumeRedirectResult().catch(function (err) {
+    console.error("Redirect sign-in failed:", err);
+    showNotice("Sign-in did not complete (" + (err.message || "unknown error") + "). You can try again or keep using guest demo mode.", "error");
+  });
 
   // Auth state drives the first render (guest mode calls back at once).
   onAuthChange(handleAuthChange);

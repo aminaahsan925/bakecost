@@ -73,8 +73,23 @@ function getAuth() {
 export async function signInWithGoogle() {
   var parts = await getAuth();
   var provider = new parts.mod.GoogleAuthProvider();
-  var result = await parts.mod.signInWithPopup(parts.auth, provider);
-  return result.user;
+  // Redirect flow, not a popup: popups open as full tabs (and fail) in
+  // some browsers, including embedded and mobile browsers. The redirect
+  // navigates the whole page to Google and back; onAuthChange picks the
+  // user up on return. This promise never resolves on success (the page
+  // unloads); it only rejects if the redirect cannot start.
+  return parts.mod.signInWithRedirect(parts.auth, provider);
+}
+
+// After a redirect sign-in returns to the app, this surfaces a failed
+// or cancelled sign-in. Returns the user, or null when there was no
+// pending redirect. Call once at startup; onAuthChange still delivers
+// the signed-in user.
+export async function consumeRedirectResult() {
+  if (!isFirebaseConfigured) return null;
+  var parts = await getAuth();
+  var result = await parts.mod.getRedirectResult(parts.auth);
+  return result ? result.user : null;
 }
 
 export async function signOutUser() {
