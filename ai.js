@@ -109,13 +109,41 @@ export function normaliseGeminiResult(parsed) {
   };
 }
 
+// Gemini sometimes answers 500 "high demand" when the model is busy.
+// That is transient, so a failed read retries twice before giving up,
+// with a short wait between tries. Non-transient errors (bad model,
+// bad key, bad request) are not retried.
+function sleep(ms) {
+  return new Promise(function (resolve) { setTimeout(resolve, ms); });
+}
+
+function isTransientError(err) {
+  var text = (err && err.message ? err.message : String(err)).toLowerCase();
+  return /500|502|503|504|high demand|overloaded|try again later|temporarily|network|fetch failed|timeout/.test(text);
+}
+
+async function generateWithRetry(model, request) {
+  var waits = [5000, 15000];
+  var lastErr = null;
+  for (var attempt = 0; attempt <= waits.length; attempt++) {
+    try {
+      return await model.generateContent(request);
+    } catch (err) {
+      lastErr = err;
+      if (!isTransientError(err) || attempt === waits.length) throw err;
+      await sleep(waits[attempt]);
+    }
+  }
+  throw lastErr;
+}
+
 // Extract an invoice from pasted text with Gemini.
 export async function extractInvoiceTextWithGemini(text) {
   if (!isFirebaseConfigured) {
     throw new Error("Firebase is not configured, so AI extraction is unavailable.");
   }
   var model = await getModel();
-  var result = await model.generateContent(GEMINI_PROMPT + "\n\nInvoice text:\n" + text);
+  var result = await generateWithRetry(model, GEMINI_PROMPT + "\n\nInvoice text:\n" + text);
   var parsed = JSON.parse(result.response.text());
   return normaliseGeminiResult(parsed);
 }
@@ -127,7 +155,7 @@ export async function extractInvoiceFileWithGemini(fileData, mimeType) {
     throw new Error("Firebase is not configured, so AI extraction is unavailable.");
   }
   var model = await getModel();
-  var result = await model.generateContent([
+  var result = await generateWithRetry(model, [
     { inlineData: { mimeType: mimeType, data: fileData } },
     { text: GEMINI_PROMPT }
   ]);

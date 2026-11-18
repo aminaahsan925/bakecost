@@ -603,6 +603,17 @@ page unloads before it could run); handleAuthChange already welcomes a
 first-time signed-in baker. No popup sign-in remains anywhere. Tests:
 npm run check clean, npm test 53 e2e passed, zero em/en dashes.
 
+## Gemini 500 "high demand" and retry logic (18 Nov evening)
+
+After the model switch, the live test reached Gemini and got 500 "This
+model is currently experiencing high demand. Spikes in demand are
+usually temporary." on two attempts (30s and 2.5min). The model name is
+accepted; the failure is Google-side overload. ai.js now retries
+transient errors (5xx, high demand, overloaded, network, timeout)
+twice, waiting 5s then 15s, before showing the error. Non-transient
+errors are not retried. If the retest still 500s after retries, the
+model is still overloaded and the honest answer is to try again later.
+
 ## Gemini model retirement (18 Nov evening)
 
 The live AI test reached Gemini and returned 404: "This model
