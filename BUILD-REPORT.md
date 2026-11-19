@@ -1458,6 +1458,234 @@ original v11 croissant hero was restored and re-verified
 animation phase). The donut version is dead; the ORIGINAL v11
 is the approved one being deployed.
 
+DEPLOYED 19 Nov 14:05-14:06 PKT (GitHub web upload, fresh
+browser window, no sign-in needed, session already signed in
+as aminaahsan925): commit aa6660cde71d0cdbebcde5e31c0bfac41bb1833e
+"v11 Aesthetic Motion landing redesign" (index.html, styles.css,
+landing.js, BUILD-REPORT.md) + commit
+e5598ffa6d42e5b599174b6812baedf2279eb5b9 "Add Anton display font
+for v11" (fonts/anton.woff2, new file; the fonts folder did not
+exist before). Vercel auto-redeployed. Parent verified the live
+site: index.html, styles.css and landing.js are byte-identical
+to local v11, fonts/anton.woff2 returns 200. STATUS: v11 LIVE.
+
+## v12 (19 Nov, NOT DEPLOYED): three new features + shorter landing
+
+Trigger: Amina on the live v11 (19 Nov 14:17 PKT): the UI is
+good but the page is too long, it should have different
+features. She delegated the pick; the picks follow the research
+ranking exactly (v5 built ranks 1-3; v12 builds ranks 4-6).
+Brief:
+`~/workspace/goals/500-per-week-from-technical-services/hidden_files/BakeCost-v12-Features-Brief.md`.
+Research:
+`~/workspace/research_notes/famous-bakery-features-research-20261118-1616/report.md`
+(sections 2 and 4). The v11 design language, hero, stamp,
+marquee, floating product and motion system are UNCHANGED; the
+landing only lost content and gained true-cost figures.
+
+Picked demo figures (chosen once in sample-data.js, everything
+derives from them): hourly labor rate $12; Butter Cake 30 min
+labor, $0.40 packaging, $0.50 overhead; Sourdough Loaf 20 min,
+$0.15, $0.50; Lemon Drizzle 25 min, $0.35, $0.50.
+
+Resulting true costs at the latest invoice prices (true cost =
+ingredients + labor + packaging + overhead):
+- Butter Cake: $5.86 + $6.00 + $0.40 + $0.50 = $12.76,
+  margin at $24 = 46.8% (was $5.86 / 75.6%).
+- Sourdough Loaf: $1.86 + $4.00 + $0.15 + $0.50 = $6.51,
+  margin at $8 = 18.6% (was $1.86 / 76.8%).
+- Lemon Drizzle: $3.95 + $5.00 + $0.35 + $0.50 = $9.80,
+  margin at $18 = 45.6% (was $3.95 / 78.1%).
+Honest consequence: all three sample recipes fall below their
+targets at baseline (Butter Cake 46.8% vs 60%, Sourdough 18.6%
+vs 70%, Lemon Drizzle 45.6% vs 60%), so the dashboard shows
+3 below target and the alert badge shows 3 at baseline. That
+is the product's pitch, not a bug: the bakery thought its
+margins were around 76%, they are really 19-47%.
+
+1. Waste log (rank 4). New "Waste" view in the More tab.
+Entries: date, recipe, made qty, sold qty; wasted qty is
+automatic (made minus sold, never below zero) and valued at
+the recipe's true cost via costing.js. Summary strip: waste $
+this week, waste as % of purchases on record, worst product
+this week. Weekly trend: hand-rolled bars of waste $ by day.
+Add/Edit/Delete with a live preview line. Sample data: 3
+entries inside the last week (2 Butter Cakes $25.52, 2
+Sourdough $13.02, 1 Lemon Drizzle $9.80), so waste this week
+is $48.34, which is 4.2% of the $1,149.55 of purchases on
+record. No industry statistics are claimed anywhere; the %
+is the demo bakery's own computed figure.
+
+2. Labor + overhead in costing (rank 5). costing.js gained
+trueCost(recipe, prices, hourlyRate) returning {ingredients,
+labor, packaging, overhead, total}; the total is the sum of
+the rounded parts so the breakdown always adds up exactly as
+displayed. recipeCost (ingredient-only) is kept for the
+ingredient part and the existing unit tests. The hourly rate
+is one setting for the whole bakery, editable in the Recipes
+view ("Hourly labor rate ($)", default $12); per-recipe labor
+minutes, packaging and overhead are edited in the recipe
+editor (empty = 0). Recipe cards, recipe detail, the landing
+calculator, the receipt and the dashboard all show the SAME
+true cost with the same breakdown; margins come from true
+cost everywhere.
+
+3. Ingredient inventory with low-stock alerts (rank 6). New
+"Inventory" view in the More tab. One row per ingredient:
+stock in display units (kg, dozen), par level, status
+(OK / Low / Out), expiry date with a "use soon" flag inside
+7 days. Saving an invoice adds its lines to stock (both the
+preview and manual save paths); marking a Bake Day bake done
+deducts its ingredient totals once (base units converted to
+display units on the way, stock clamps at zero); manual +/-
+buttons adjust by 1; par and expiry are edited in place. The
+empty state offers "Build stock from invoices". Low-stock,
+out-of-stock and use-soon/expired alerts join the Alerts feed
+(the alert badge still counts margin alerts only). Sample
+data: Butter 8.5 kg, par 10 kg (Low), expiry +12 days; Eggs
+6 dozen, par 5 dozen (OK), expiry +4 days (use soon); Wheat
+flour 42 kg, par 20 kg (OK), expiry +60 days; Sugar 18 kg,
+par 10 kg (OK), expiry +90 days. Levels cover the sample
+bake day (2 kg butter, 8.8 kg flour, 16 eggs) and sit below
+total purchased (30 dozen eggs, 60 kg butter, 150 kg flour,
+75 kg sugar).
+
+Landing, shorter (v11 design unchanged):
+- Gallery section CUT entirely (6 photos, decorative).
+- FAQ section CUT entirely (4 questions).
+- Story tightened from 3 paragraphs to 2 + the italic line
+  (real specifics kept: Amina Ahsan and Hadi Kashif, Lahore,
+  November 2026, BLS figures).
+- Bento rebuilt from 3 cards to 10, same exact-data style:
+  Orders (wide), Bake Day, Suppliers, Waste log, True cost,
+  Inventory, Invoices, Prices, Recipes, Alerts. New exact
+  figures: waste $48.34 / worst Butter Cake $25.52 / 4.2%;
+  true cost $5.86 + $6.00 + $12.76; butter 8.5 kg below par
+  10 kg, eggs 6 dozen use soon; 3 invoices, latest Millbrook
+  8 Sep 2026, $374.30; 4 ingredients tracked; 3 recipes
+  below target, flour jumped +24% at Millbrook.
+- Every landing figure updated to true cost: recipe cards
+  ("True cost" label, $12.76 / $6.51 / $9.80, margins
+  46.8% / 18.6% / 45.6%, all "Below target"), calculator
+  (new breakdown line under the outputs, "True cost per
+  recipe" label), receipt (LABOR / PACKAGING / OVERHEAD
+  lines, "TRUE COST" total). No ingredient-only figure
+  survives anywhere on the landing except the bento's
+  labelled ingredient component ($5.86).
+- Hero, stamp, marquee, floating product, motion system,
+  pricing, audit and footer untouched. All section IDs and
+  anchors still work; all 8 calculator IDs kept (plus the
+  new calcBreakdown element).
+
+Files changed:
+- costing.js: laborCost + trueCost.
+- sample-data.js: SAMPLE_LABOR_RATE (12), per-recipe labor
+  fields, SAMPLE_WASTE, SAMPLE_INVENTORY, settings/waste/
+  inventory in sampleState() and emptyState().
+- features.js: wastedQty, wasteEntryValue, purchasesTotal,
+  wasteSummary, inventoryStatus, inventoryStatusLabel,
+  expiryStatus, daysToExpiry, inventoryAlerts,
+  addInvoiceToInventory, deductBakeFromInventory,
+  inventoryFromInvoices.
+- store.js: waste, inventory, settings in loadCloudState and
+  saveCloudState (same users/{uid} shape, no new scheme).
+- app.html: Waste + Inventory items in the More menu, Waste
+  + Inventory sections, labor rate row in Recipes, labor /
+  packaging / overhead fields in the recipe editor, true-cost
+  dashboard caption, Alerts lead mentioning low stock.
+- app.js: MORE_VIEWS grows to 5; normalizeState fills the new
+  fields for old saves; laborRate() helper; costingRows uses
+  trueCost; recipe cards show the breakdown line; invoice
+  saves add stock; Bake Day "Mark done" deducts stock once;
+  renderWaste + waste editor + save/delete; renderInventory
+  + adjust/field/remove/rebuild handlers; inventory alerts in
+  renderAlerts; delegated click/change wiring for the new
+  controls.
+- app.css: labor-rate row, recipe breakdown, waste summary
+  boxes + bars, inventory cards + controls.
+- index.html: recipe cards, calculator label + breakdown
+  element, tightened story, 10-card bento, Gallery + FAQ
+  deleted.
+- landing.js: calculator + receipt use trueCost with the
+  sample labor rate; receipt gains the 3 breakdown lines.
+- styles.css: one added line, body.landing .calc-breakdown.
+- Tests: test-costing.mjs gained true-cost tests (laborCost,
+  trueCost parts and totals, margins from true cost);
+  test-features.mjs gained waste + inventory tests;
+  verify-e2e.mjs switched its costingRows to trueCost and
+  pinned the new figures, plus a Step 1c for waste/inventory
+  on the pristine sample state; dom-smoke.mjs updated for
+  the new baseline (3 alerts, $13.23 recosted cake, -3.1%
+  sourdough margin after the spike, badge 4 after the target
+  edit) and gained v12 flow checks (mark bake done, waste
+  add, inventory adjust, reset restores sample waste +
+  inventory). Also fixed one stale smoke expectation
+  unrelated to v12: the AI badge reads "AI: Gemini ready"
+  since the Firebase config was wired on 18 Nov, not "AI:
+  off, local parser".
+
+Proof (19 Nov, headless shell + proof server on port 8932):
+- npm run check clean. npm test: 315 passed, 0 failed
+  (test-costing 80, test-parser 61, test-features 106,
+  verify-e2e 68). npm run smoke: 69 passed, 0 failed.
+- Zero em/en dashes in every touched file.
+- Landing, desktop hero: visually identical to the v11
+  reference frame (same layout, photos, stamp angle,
+  floating tray; headline top row 525 in both). The hero
+  code is byte-identical to the live v11 site: the index
+  diff starts at line 79 (recipes), styles.css has exactly
+  one added line (.calc-breakdown), landing.js hero
+  functions untouched. A raw pixel diff vs the v11 frame
+  is large (animation phase in the float/stamp/marquee
+  plus re-downloaded photo JPEG bytes), so it is not used
+  as the proof; code identity + visual identity is.
+- Landing, phone hero: visually identical to the v11
+  reference frame.
+- Landing bands viewed: recipes (new figures + badges),
+  calculator ($12.76 / 46.8% + breakdown line), receipt
+  via ?receipt=1 (all lines add to $12.76), tightened
+  story, 10-card bento (all figures exact), pricing,
+  audit, footer. Gallery and FAQ gone.
+- Page height: content ends at 7991px in the tall capture,
+  vs 8455px for v11 measured the same way: 464px shorter
+  (the Gallery + FAQ cuts, minus the 7 added bento cards).
+  scrollHeight 7992px desktop, 12159px phone.
+- Overflow: zero at 390px (scrollWidth == clientWidth ==
+  375) and at desktop (1265 == 1265).
+- App views proved with the preview-capture harness
+  (iframe, 2s wait, More-menu clicks): Waste (summary
+  boxes $48.34 / 4.2% / Butter Cake $25.52, trend bars,
+  3 entries), Inventory (4 rows, Butter Low, Eggs use
+  soon, par/expiry controls), Recipes (breakdown lines,
+  labor rate row), Alerts (3 margin alerts + 2 inventory
+  alerts), Dashboard (3 below target, true-cost rows).
+  Phone waste view stacks cleanly.
+- One real defect found by proof and fixed: the waste
+  summary used .total-box/.total-label/.total-value
+  classes that had no CSS, so the strip rendered as bare
+  text; added the box styles and re-proved.
+- Proof artifacts (capture only, not shipped): the More
+  pill's text colour freezes dark in two captures (the
+  known virtual-time transition-freeze artifact from v7),
+  recipe photos show broken in the app captures (the
+  proof server rewrites Unsplash URLs in HTML only, and
+  the app sets photo URLs from JS, so the headless shell
+  cannot fetch them through the VM proxy), and a
+  "Sign-in did not complete" notice shows in every app
+  capture (the Firebase CDN import fails in the sandbox
+  for the same proxy reason). None of these occur on the
+  live site.
+- NOT verified by render (headless limits, code-reviewed
+  + covered by the jsdom smoke test instead): the waste
+  editor save/delete clicks in a real browser, the
+  inventory "Build stock from invoices" button (its
+  function is unit-tested), the calculator slider drag,
+  receipt toggle/Close clicks.
+
+STATUS: NOT DEPLOYED. Nothing pushed to GitHub or Vercel.
+Preview export + showing Amina is the parent's job; push
+waits on her yes.
+
 ## Files
 
 - `index.html`, `styles.css`, `landing.js`: landing page.

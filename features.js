@@ -13,7 +13,7 @@
 //     qty is how many of the recipe to bake that day.
 //   invoice: { supplier, date, lines: [{ ingredient, qty, unit, price }] }
 
-import { priceChangePct, roundTo } from "./costing.js";
+import { priceChangePct, roundTo, trueCost } from "./costing.js";
 
 export function recipeById(recipes, id) {
   for (var i = 0; i < recipes.length; i++) {
@@ -177,4 +177,227 @@ export function supplierComparison(invoices, ingredients) {
 export function isPriceJump(changePct, thresholdPct) {
   var threshold = thresholdPct === undefined ? 5 : thresholdPct;
   return changePct !== null && changePct !== undefined && changePct >= threshold;
+}
+
+/* ---------- waste log (v12) ---------- */
+
+// Waste entry: { id, date, recipeId, made, sold }.
+// date is YYYY-MM-DD. Wasted qty is made minus sold, never below
+// zero (selling more than was made counts as no waste, not negative
+// waste). The value is wasted qty times the recipe's true cost.
+
+// Wasted quantity for one entry.
+export function wastedQty(entry) {
+  var made = Number(entry.made) || 0;
+  var sold = Number(entry.sold) || 0;
+  return Math.max(0, made - sold);
+}
+
+// Waste value in $ for one entry, at the recipe's true cost.
+// prices: { name: { price, factor } }. Returns null when the recipe
+// is missing or has no price.
+export function wasteEntryValue(entry, recipes, prices, laborRate) {
+  var recipe = recipeById(recipes, entry.recipeId);
+  if (!recipe) return null;
+  var cost = trueCost(recipe, prices, laborRate);
+  if (!cost) return null;
+  return roundTo(wastedQty(entry) * cost.total, 2);
+}
+
+// Total value of all purchases on record, from invoice lines.
+export function purchasesTotal(invoices) {
+  var total = 0;
+  invoices.forEach(function (inv) {
+    inv.lines.forEach(function (line) {
+      total += line.qty * line.price;
+    });
+  });
+  return roundTo(total, 2);
+}
+
+// Summary over a list of waste entries (already filtered to the
+// range the caller wants, for example the last 7 days):
+// { totalValue, byDay, worst, pctOfPurchases }.
+// byDay is [{ date, value }] sorted by date, one row per day with
+// an entry. worst is { recipeId, name, value } for the recipe with
+// the most waste value, or null when there is no waste.
+// pctOfPurchases is waste value as a percent of purchasesTotal, or
+// null when purchases total is zero.
+export function wasteSummary(entries, recipes, prices, laborRate, purchases) {
+  var byDayMap = {};
+  var byRecipeMap = {};
+  var total = 0;
+  entries.forEach(function (entry) {
+    var value = wasteEntryValue(entry, recipes, prices, laborRate);
+    if (value === null) return;
+    total += value;
+    byDayMap[entry.date] = roundTo((byDayMap[entry.date] || 0) + value, 2);
+    var recipe = recipeById(recipes, entry.recipeId);
+    var key = entry.recipeId;
+    if (!byRecipeMap[key]) {
+      byRecipeMap[key] = {
+        recipeId: entry.recipeId,
+        name: recipe ? recipe.name : "Recipe removed",
+        value: 0
+      };
+    }
+    byRecipeMap[key].value = roundTo(byRecipeMap[key].value + value, 2);
+  });
+  var byDay = Object.keys(byDayMap).sort().map(function (date) {
+    return { date: date, value: byDayMap[date] };
+  });
+  var worst = null;
+  Object.keys(byRecipeMap).forEach(function (key) {
+    var row = byRecipeMap[key];
+    if (row.value > 0 && (!worst || row.value > worst.value)) worst = row;
+  });
+  return {
+    totalValue: roundTo(total, 2),
+    byDay: byDay,
+    worst: worst,
+    pctOfPurchases: purchases > 0 ? roundTo((total / purchases) * 100, 1) : null
+  };
+}
+
+/* ---------- ingredient inventory (v12) ---------- */
+
+// Inventory row: { ingredient, qty, unit, par, expiry }.
+// qty is in display units (kg, or dozen for eggs), matching the
+// invoice lines. par is the reorder level in the same units.
+// expiry is YYYY-MM-DD or "" when the baker has not set one.
+
+// Stock status: "out" at zero, "low" below par, "ok" otherwise.
+// A par of zero means no reorder level is set, so any stock is ok.
+export function inventoryStatus(row) {
+  var qty = Number(row.qty) || 0;
+  var par = Number(row.par) || 0;
+  if (qty <= 0) return "out";
+  if (par > 0 && qty < par) return "low";
+  return "ok";
+}
+
+export function inventoryStatusLabel(status) {
+  if (status === "out") return "Out";
+  if (status === "low") return "Low";
+  return "OK";
+}
+
+// Expiry status against today's date (YYYY-MM-DD string).
+// "expired": past the date. "soon": within 7 days, today included.
+// "ok": more than 7 days away, or no expiry set.
+export function expiryStatus(row, today) {
+  if (!row.expiry) return "ok";
+  if (row.expiry < today) return "expired";
+  var msPerDay = 24 * 60 * 60 * 1000;
+  var days = Math.round((Date.parse(row.expiry) - Date.parse(today)) / msPerDay);
+  if (days <= 7) return "soon";
+  return "ok";
+}
+
+// Days from today until the expiry date, or null with no expiry.
+export function daysToExpiry(row, today) {
+  if (!row.expiry) return null;
+  var msPerDay = 24 * 60 * 60 * 1000;
+  return Math.round((Date.parse(row.expiry) - Date.parse(today)) / msPerDay);
+}
+
+// Low-stock and expiry alerts for the Alerts feed.
+// Returns [{ kind, ingredient, qty, unit, par, daysLeft }] where
+// kind is "low", "out" or "soon". Rows that are out also count as
+// low, but only one alert is raised per row (out wins).
+export function inventoryAlerts(inventory, today) {
+  var alerts = [];
+  inventory.forEach(function (row) {
+    var status = inventoryStatus(row);
+    if (status === "out") {
+      alerts.push({
+        kind: "out", ingredient: row.ingredient,
+        qty: Number(row.qty) || 0, unit: row.unit,
+        par: Number(row.par) || 0, daysLeft: daysToExpiry(row, today)
+      });
+    } else if (status === "low") {
+      alerts.push({
+        kind: "low", ingredient: row.ingredient,
+        qty: Number(row.qty) || 0, unit: row.unit,
+        par: Number(row.par) || 0, daysLeft: daysToExpiry(row, today)
+      });
+    }
+    if (expiryStatus(row, today) === "soon" || expiryStatus(row, today) === "expired") {
+      alerts.push({
+        kind: "soon", ingredient: row.ingredient,
+        qty: Number(row.qty) || 0, unit: row.unit,
+        par: Number(row.par) || 0, daysLeft: daysToExpiry(row, today)
+      });
+    }
+  });
+  return alerts;
+}
+
+// Add an invoice's lines to stock. Lines are in canonical display
+// units (kg, dozen), the same units inventory rows use, so no
+// conversion is needed. A line for an ingredient with no row yet
+// starts a row with par 0 and no expiry. Returns a new array; the
+// input is not mutated.
+export function addInvoiceToInventory(inventory, lines) {
+  var next = inventory.map(function (row) {
+    return {
+      ingredient: row.ingredient, qty: row.qty, unit: row.unit,
+      par: row.par, expiry: row.expiry, isSample: row.isSample
+    };
+  });
+  lines.forEach(function (line) {
+    var qty = Number(line.qty) || 0;
+    if (!(qty > 0)) return;
+    var found = null;
+    for (var i = 0; i < next.length; i++) {
+      if (next[i].ingredient === line.ingredient) found = next[i];
+    }
+    if (found) {
+      found.qty = roundTo((Number(found.qty) || 0) + qty, 3);
+    } else {
+      next.push({
+        ingredient: line.ingredient, qty: roundTo(qty, 3),
+        unit: line.unit || "kg", par: 0, expiry: ""
+      });
+    }
+  });
+  return next;
+}
+
+// Deduct a bake's ingredient totals from stock. Totals are in base
+// units (kg, or single eggs), so they are converted to display units
+// with the ingredient's factor (eggs: 12 singles to a dozen). Stock
+// never goes below zero: a bake bigger than the stock on hand empties
+// the row. Returns a new array; the input is not mutated.
+export function deductBakeFromInventory(inventory, totals, ingredients) {
+  var factorByName = {};
+  ingredients.forEach(function (ing) {
+    factorByName[ing.name] = ing.factor || 1;
+  });
+  return inventory.map(function (row) {
+    var used = null;
+    for (var i = 0; i < totals.length; i++) {
+      if (totals[i].name === row.ingredient) used = totals[i];
+    }
+    if (!used) return {
+      ingredient: row.ingredient, qty: row.qty, unit: row.unit,
+      par: row.par, expiry: row.expiry, isSample: row.isSample
+    };
+    var factor = factorByName[row.ingredient] || 1;
+    var usedDisplay = used.qty / factor;
+    return {
+      ingredient: row.ingredient,
+      qty: Math.max(0, roundTo((Number(row.qty) || 0) - usedDisplay, 3)),
+      unit: row.unit, par: row.par, expiry: row.expiry, isSample: row.isSample
+    };
+  });
+}
+
+// Build starting stock from all invoices on record: every line adds
+// its quantity. Used by the empty state, so a baker with invoices
+// but no stock rows can start from what they bought.
+export function inventoryFromInvoices(invoices) {
+  return addInvoiceToInventory([], invoices.reduce(function (all, inv) {
+    return all.concat(inv.lines);
+  }, []));
 }

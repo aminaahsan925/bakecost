@@ -1,10 +1,15 @@
-// Node tests for BakeCost v5 features.js: orders, bake-day planner,
-// supplier comparison. Run: node test-features.mjs
+// Node tests for BakeCost v5/v12 features.js: orders, bake-day
+// planner, supplier comparison, waste log, inventory. Run:
+// node test-features.mjs
 
 import {
   recipeById, orderTotal, orderMoney, orderStatus, orderStatusLabel,
   outstandingBalance, aggregateBakeDay, dozensToBuy,
-  supplierComparison, isPriceJump
+  supplierComparison, isPriceJump,
+  wastedQty, wasteEntryValue, purchasesTotal, wasteSummary,
+  inventoryStatus, inventoryStatusLabel, expiryStatus, daysToExpiry,
+  inventoryAlerts, addInvoiceToInventory, deductBakeFromInventory,
+  inventoryFromInvoices
 } from "./features.js";
 
 let passed = 0;
@@ -196,6 +201,120 @@ check("a drop is not a jump", isPriceJump(-35.0), false);
 check("null change is not a jump", isPriceJump(null), false);
 check("custom threshold 10%", isPriceJump(8, 10), false);
 check("custom threshold 10% met", isPriceJump(12, 10), true);
+
+/* Waste log (v12): values come from the true cost, not ingredients
+   alone. Demo figures: $12 an hour, Butter Cake 30 min, Sourdough
+   20 min, Lemon Drizzle 25 min; packaging $0.40/$0.15/$0.35;
+   overhead $0.50 a unit. */
+const newPrices = {
+  "Butter": { price: 6.64, factor: 1 },
+  "Wheat flour": { price: 3.10, factor: 1 },
+  "Eggs": { price: 3.90, factor: 12 },
+  "Sugar": { price: 1.90, factor: 1 }
+};
+const recipesTrue = [
+  { id: "r1", name: "Butter Cake", sellPrice: 24.00, targetPct: 60,
+    laborMinutes: 30, packaging: 0.40, overhead: 0.50,
+    ingredients: recipes[0].ingredients },
+  { id: "r2", name: "Sourdough Loaf", sellPrice: 8.00, targetPct: 70,
+    laborMinutes: 20, packaging: 0.15, overhead: 0.50,
+    ingredients: recipes[1].ingredients },
+  { id: "r3", name: "Lemon Drizzle", sellPrice: 18.00, targetPct: 60,
+    laborMinutes: 25, packaging: 0.35, overhead: 0.50,
+    ingredients: recipes[2].ingredients }
+];
+const wasteWeek = [
+  { id: "w1", date: "2026-11-12", recipeId: "r1", made: 4, sold: 2 },
+  { id: "w2", date: "2026-11-15", recipeId: "r2", made: 12, sold: 10 },
+  { id: "w3", date: "2026-11-17", recipeId: "r3", made: 3, sold: 2 }
+];
+check("wasted qty made 4 sold 2", wastedQty(wasteWeek[0]), 2);
+check("wasted qty never negative", wastedQty({ made: 2, sold: 4 }), 0);
+check("waste value 2 butter cakes", wasteEntryValue(wasteWeek[0], recipesTrue, newPrices, 12), 25.52);
+check("waste value 2 sourdough", wasteEntryValue(wasteWeek[1], recipesTrue, newPrices, 12), 13.02);
+check("waste value 1 lemon drizzle", wasteEntryValue(wasteWeek[2], recipesTrue, newPrices, 12), 9.80);
+check("waste value missing recipe is null",
+  wasteEntryValue({ recipeId: "gone", made: 2, sold: 0 }, recipesTrue, newPrices, 12), null);
+check("purchases total over 3 invoices", purchasesTotal(invoices), 1149.55);
+const weekSummary = wasteSummary(wasteWeek, recipesTrue, newPrices, 12, purchasesTotal(invoices));
+check("waste week total", weekSummary.totalValue, 48.34);
+check("waste week pct of purchases", weekSummary.pctOfPurchases, 4.2, 0.05);
+check("waste week worst product", weekSummary.worst.name, "Butter Cake");
+check("waste week worst value", weekSummary.worst.value, 25.52);
+check("waste week has 3 days", weekSummary.byDay.length, 3);
+check("waste week first day sorted", weekSummary.byDay[0].date, "2026-11-12");
+const emptySummary = wasteSummary([], recipesTrue, newPrices, 12, 1149.55);
+check("waste summary empty total", emptySummary.totalValue, 0);
+check("waste summary empty worst", emptySummary.worst, null);
+check("waste summary no purchases pct is null",
+  wasteSummary(wasteWeek, recipesTrue, newPrices, 12, 0).pctOfPurchases, null);
+
+/* Inventory (v12) */
+check("stock low below par", inventoryStatus({ qty: 8.5, par: 10 }), "low");
+check("stock out at zero", inventoryStatus({ qty: 0, par: 5 }), "out");
+check("stock ok above par", inventoryStatus({ qty: 42, par: 20 }), "ok");
+check("stock ok at par", inventoryStatus({ qty: 5, par: 5 }), "ok");
+check("stock ok with no par set", inventoryStatus({ qty: 5, par: 0 }), "ok");
+check("stock label low", inventoryStatusLabel("low"), "Low");
+check("stock label out", inventoryStatusLabel("out"), "Out");
+check("stock label ok", inventoryStatusLabel("ok"), "OK");
+check("expiry in 4 days is soon", expiryStatus({ expiry: "2026-11-22" }, TODAY), "soon");
+check("expiry today is soon", expiryStatus({ expiry: "2026-11-18" }, TODAY), "soon");
+check("expiry in 7 days is soon", expiryStatus({ expiry: "2026-11-25" }, TODAY), "soon");
+check("expiry in 8 days is ok", expiryStatus({ expiry: "2026-11-26" }, TODAY), "ok");
+check("expiry past is expired", expiryStatus({ expiry: "2026-11-17" }, TODAY), "expired");
+check("no expiry is ok", expiryStatus({ expiry: "" }, TODAY), "ok");
+check("days to expiry 4", daysToExpiry({ expiry: "2026-11-22" }, TODAY), 4);
+check("days to expiry none", daysToExpiry({ expiry: "" }, TODAY), null);
+const invRows = [
+  { ingredient: "Butter", qty: 8.5, unit: "kg", par: 10, expiry: "2026-11-30" },
+  { ingredient: "Eggs", qty: 6, unit: "dozen", par: 5, expiry: "2026-11-22" },
+  { ingredient: "Wheat flour", qty: 42, unit: "kg", par: 20, expiry: "2027-01-17" },
+  { ingredient: "Sugar", qty: 0, unit: "kg", par: 10, expiry: "" }
+];
+const invAlerts = inventoryAlerts(invRows, TODAY);
+check("inventory alerts count", invAlerts.length, 3);
+check("butter low alert", invAlerts.find((a) => a.ingredient === "Butter").kind, "low");
+check("eggs soon alert", invAlerts.find((a) => a.ingredient === "Eggs").kind, "soon");
+check("sugar out alert", invAlerts.find((a) => a.ingredient === "Sugar").kind, "out");
+check("flour has no alert", invAlerts.find((a) => a.ingredient === "Wheat flour"), undefined);
+const invStart = [
+  { ingredient: "Butter", qty: 8.5, unit: "kg", par: 10, expiry: "2026-11-30" }
+];
+const invAdded = addInvoiceToInventory(invStart, [
+  { ingredient: "Butter", qty: 20, unit: "kg" },
+  { ingredient: "Vanilla", qty: 2, unit: "L" }
+]);
+check("invoice adds to existing stock", invAdded.find((r) => r.ingredient === "Butter").qty, 28.5);
+check("invoice starts a row for a new ingredient",
+  invAdded.find((r) => r.ingredient === "Vanilla").qty, 2);
+check("new row has par 0", invAdded.find((r) => r.ingredient === "Vanilla").par, 0);
+check("add invoice does not mutate the input", invStart[0].qty, 8.5);
+const invDeducted = deductBakeFromInventory(
+  [
+    { ingredient: "Butter", qty: 8.5, unit: "kg", par: 10, expiry: "2026-11-30" },
+    { ingredient: "Eggs", qty: 6, unit: "dozen", par: 5, expiry: "2026-11-22" },
+    { ingredient: "Wheat flour", qty: 42, unit: "kg", par: 20, expiry: "2027-01-17" }
+  ],
+  [
+    { name: "Butter", qty: 2 },
+    { name: "Wheat flour", qty: 8.8 },
+    { name: "Eggs", qty: 16 }
+  ],
+  ingredients);
+check("bake deducts butter", invDeducted.find((r) => r.ingredient === "Butter").qty, 6.5);
+check("bake deducts flour", invDeducted.find((r) => r.ingredient === "Wheat flour").qty, 33.2);
+check("bake deducts eggs in dozen", invDeducted.find((r) => r.ingredient === "Eggs").qty, 4.667);
+check("deduct clamps at zero",
+  deductBakeFromInventory(
+    [{ ingredient: "Butter", qty: 1, unit: "kg", par: 10, expiry: "" }],
+    [{ name: "Butter", qty: 2 }],
+    ingredients)[0].qty, 0);
+const invBuilt = inventoryFromInvoices(invoices);
+check("built from invoices butter 60 kg", invBuilt.find((r) => r.ingredient === "Butter").qty, 60);
+check("built from invoices eggs 30 dozen", invBuilt.find((r) => r.ingredient === "Eggs").qty, 30);
+check("built from invoices flour 150 kg", invBuilt.find((r) => r.ingredient === "Wheat flour").qty, 150);
+check("built from invoices sugar 75 kg", invBuilt.find((r) => r.ingredient === "Sugar").qty, 75);
 
 console.log("\n" + passed + " passed, " + failed + " failed.");
 process.exit(failed === 0 ? 0 : 1);

@@ -11,8 +11,8 @@
 // respects prefers-reduced-motion (parallax skipped in JS, the
 // rest killed in CSS).
 
-import { sampleState, SAMPLE_INGREDIENTS } from "./sample-data.js";
-import { recipeCost, margin, marginStatus, statusLabel, money, latestPoint, lineCost } from "./costing.js";
+import { sampleState, SAMPLE_INGREDIENTS, SAMPLE_LABOR_RATE } from "./sample-data.js";
+import { trueCost, margin, marginStatus, statusLabel, money, latestPoint, lineCost } from "./costing.js";
 
 var $ = function (id) { return document.getElementById(id); };
 
@@ -125,7 +125,9 @@ function latestPrices() {
     var latest = latestPoint(points);
     if (latest) prices[ing.name] = { price: latest.price, factor: ing.factor };
   });
-  return { recipes: data.recipes, prices: prices };
+  var laborRate = data.settings && typeof data.settings.laborRate === "number"
+    ? data.settings.laborRate : SAMPLE_LABOR_RATE;
+  return { recipes: data.recipes, prices: prices, laborRate: laborRate };
 }
 
 function displayUnitFor(name) {
@@ -148,7 +150,8 @@ function calcPriceSet() {
 
 function calcRender() {
   var recipe = calcState.recipe;
-  var cost = recipeCost(recipe, calcPriceSet());
+  var parts = trueCost(recipe, calcPriceSet(), calcState.laborRate);
+  var cost = parts === null ? null : parts.total;
   var m = cost === null ? null : margin(cost, recipe.sellPrice);
   var status = m === null ? "unknown" : marginStatus(m.pct, recipe.targetPct);
   var costEl = $("calcCost");
@@ -163,6 +166,17 @@ function calcRender() {
   badgeEl.setAttribute("data-status", status);
   $("calcPriceValue").textContent =
     money(calcState.price) + " " + displayUnitFor(calcState.ingredient);
+  var breakdownEl = $("calcBreakdown");
+  if (breakdownEl) {
+    if (parts === null) {
+      breakdownEl.textContent = "Needs a price for every ingredient.";
+    } else {
+      var laborMinutes = Number(recipe.laborMinutes) || 0;
+      breakdownEl.textContent = "True cost: ingredients " + money(parts.ingredients) +
+        ", labor " + money(parts.labor) + (laborMinutes > 0 ? " (" + laborMinutes + " min)" : "") +
+        ", packaging " + money(parts.packaging) + ", overhead " + money(parts.overhead) + ".";
+    }
+  }
 }
 
 function calcFillIngredients() {
@@ -197,6 +211,7 @@ function initCalculator() {
   calcState = {
     recipes: data.recipes,
     prices: data.prices,
+    laborRate: data.laborRate,
     recipe: data.recipes[0],
     ingredient: null,
     price: 0
@@ -262,7 +277,7 @@ function pricePerLabel(name) {
   return " " + unit;
 }
 
-function buildReceipt(card, recipe, prices, dateLabel) {
+function buildReceipt(card, recipe, prices, laborRate, dateLabel) {
   var lines = [];
   recipe.ingredients.forEach(function (ing) {
     var p = prices[ing.name];
@@ -271,8 +286,11 @@ function buildReceipt(card, recipe, prices, dateLabel) {
     var desc = ing.name + " " + qtyLabel(ing) + " @ " + money(p.price) + pricePerLabel(ing.name);
     lines.push('<div class="receipt-line"><span>' + desc + '</span><span>' + money(cost) + '</span></div>');
   });
-  var cost = recipeCost(recipe, prices);
+  var parts = trueCost(recipe, prices, laborRate);
+  var cost = parts === null ? null : parts.total;
   var m = cost === null ? null : margin(cost, recipe.sellPrice);
+  var laborMinutes = Number(recipe.laborMinutes) || 0;
+  var laborDesc = "LABOR" + (laborMinutes > 0 ? " " + laborMinutes + " MIN @ " + money(laborRate) + "/HR" : "");
   var html =
     '<div class="receipt-inner"><div class="receipt-paper">' +
     '<p class="receipt-head">BAKECOST</p>' +
@@ -282,8 +300,11 @@ function buildReceipt(card, recipe, prices, dateLabel) {
     '<p class="receipt-meta">' + dateLabel + ' · BAKER: BAKECOST DEMO</p>' +
     '<div class="receipt-sep"></div>' +
     lines.join("") +
+    '<div class="receipt-line"><span>' + laborDesc + '</span><span>' + (parts === null ? "n/a" : money(parts.labor)) + '</span></div>' +
+    '<div class="receipt-line"><span>PACKAGING</span><span>' + (parts === null ? "n/a" : money(parts.packaging)) + '</span></div>' +
+    '<div class="receipt-line"><span>OVERHEAD</span><span>' + (parts === null ? "n/a" : money(parts.overhead)) + '</span></div>' +
     '<div class="receipt-sep"></div>' +
-    '<div class="receipt-line total"><span>TOTAL COST</span><span>' + (cost === null ? "n/a" : money(cost)) + '</span></div>' +
+    '<div class="receipt-line total"><span>TRUE COST</span><span>' + (cost === null ? "n/a" : money(cost)) + '</span></div>' +
     '<div class="receipt-line"><span>SELLS AT</span><span>' + money(recipe.sellPrice) + '</span></div>' +
     '<div class="receipt-line"><span>MARGIN</span><span>' + (m === null ? "n/a" : m.pct.toFixed(1) + "%") + '</span></div>' +
     '<div class="receipt-sep"></div>' +
@@ -326,7 +347,7 @@ function initReceipts() {
   cards.forEach(function (card) {
     var recipe = byId[card.getAttribute("data-recipe")];
     if (!recipe) return;
-    buildReceipt(card, recipe, data.prices, dateLabel);
+    buildReceipt(card, recipe, data.prices, data.laborRate, dateLabel);
     var btn = card.querySelector(".receipt-toggle");
     if (btn) {
       btn.addEventListener("click", function () {

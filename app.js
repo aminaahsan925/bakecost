@@ -7,14 +7,18 @@
 //   Gemini extraction via Firebase AI Logic when Firebase is configured.
 
 import {
-  recipeCost, margin, priceChangePct, latestPoint, earliestPoint,
+  trueCost, margin, priceChangePct, latestPoint, earliestPoint,
   previousPoint, marginStatus, statusLabel, biggestMovers, marginAlerts,
   recentMoves, roundTo, money, pct, buildCSV, buildPriceCSV, buildInvoiceCSV
 } from "./costing.js";
 import {
   recipeById, orderTotal, orderMoney, orderStatus, orderStatusLabel,
   outstandingBalance, aggregateBakeDay, dozensToBuy,
-  supplierComparison, isPriceJump
+  supplierComparison, isPriceJump,
+  wastedQty, wasteEntryValue, purchasesTotal, wasteSummary,
+  inventoryStatus, inventoryStatusLabel, expiryStatus, daysToExpiry,
+  inventoryAlerts, addInvoiceToInventory, deductBakeFromInventory,
+  inventoryFromInvoices
 } from "./features.js";
 import {
   parseInvoiceText, matchIngredient, normalizeUnit, convertPrice,
@@ -50,14 +54,15 @@ var cloudSavePending = false;
 var lastAlertCount = null; // for the alert badge pop (null until first render)
 var viewEnterTimer = null; // clears .view-enter after the entrance
 // Views reached through the More menu (the bottom tab bar holds 5 tabs
-// plus More; 8 tabs would not fit on a phone).
-var MORE_VIEWS = ["orders", "bakeday", "suppliers"];
+// plus More; 10 tabs would not fit on a phone).
+var MORE_VIEWS = ["orders", "bakeday", "suppliers", "waste", "inventory"];
 var orderItems = []; // recipe lines in the order editor
 var editingOrderId = null;
 var bakeDate = ""; // date in the bake-day planner
 var bakeItems = []; // recipe lines in the bake-day planner
 var editingBakeDayId = null; // saved bake day loaded in the planner, or null
 var bakePlanReady = false; // the planner loads the latest bake day once
+var editingWasteId = null; // waste entry open in the editor, or null
 
 /* ---------- small helpers ---------- */
 
@@ -144,16 +149,28 @@ function addActivity(text) {
   if (state.activity.length > 50) state.activity.length = 50;
 }
 
-// States saved before v5 have no orders or bake days. Fill the gaps
-// so the new views never meet undefined arrays.
+// States saved before v5 have no orders or bake days, and states
+// saved before v12 have no waste log, inventory or labor rate.
+// Fill the gaps so the new views never meet undefined arrays.
 function normalizeState(loaded) {
   if (!Array.isArray(loaded.orders)) loaded.orders = [];
   if (!Array.isArray(loaded.bakeDays)) loaded.bakeDays = [];
+  if (!Array.isArray(loaded.waste)) loaded.waste = [];
+  if (!Array.isArray(loaded.inventory)) loaded.inventory = [];
+  if (!loaded.settings || typeof loaded.settings.laborRate !== "number") {
+    loaded.settings = { laborRate: 12 };
+  }
   if (!Array.isArray(loaded.ingredients)) loaded.ingredients = [];
   if (!Array.isArray(loaded.invoices)) loaded.invoices = [];
   if (!Array.isArray(loaded.recipes)) loaded.recipes = [];
   if (!Array.isArray(loaded.activity)) loaded.activity = [];
   return loaded;
+}
+
+// The bakery's one hourly labor rate, in $ per hour.
+function laborRate() {
+  return state.settings && typeof state.settings.laborRate === "number"
+    ? state.settings.laborRate : 12;
 }
 
 /* ---------- persistence ---------- */
@@ -217,17 +234,24 @@ function priceSet(which) {
   return set;
 }
 
+// Every cost here is the TRUE cost (ingredients + labor +
+// packaging + overhead) at the earliest and latest prices. The
+// breakdown is the latest-price one, for the recipe cards.
 function costingRows() {
   var thenPrices = priceSet("earliest");
   var nowPrices = priceSet("latest");
+  var rate = laborRate();
   return state.recipes.map(function (recipe) {
-    var costThen = recipeCost(recipe, thenPrices);
-    var costNow = recipeCost(recipe, nowPrices);
+    var thenParts = trueCost(recipe, thenPrices, rate);
+    var nowParts = trueCost(recipe, nowPrices, rate);
+    var costThen = thenParts === null ? null : thenParts.total;
+    var costNow = nowParts === null ? null : nowParts.total;
     var m = costNow === null ? { amount: null, pct: null } : margin(costNow, recipe.sellPrice);
     return {
       recipe: recipe,
       costThen: costThen,
       costNow: costNow,
+      breakdown: nowParts,
       sellPrice: recipe.sellPrice,
       marginAmount: m.amount,
       marginPct: m.pct,
@@ -399,6 +423,8 @@ function renderView(view) {
   else if (view === "orders") renderOrders();
   else if (view === "bakeday") renderBakeDay();
   else if (view === "suppliers") renderSuppliers();
+  else if (view === "waste") renderWaste();
+  else if (view === "inventory") renderInventory();
 }
 
 function renderAll() {
@@ -445,6 +471,10 @@ function showSkeletons(view) {
     $("bakeDayList").innerHTML = skeletonCards(1);
   } else if (view === "suppliers") {
     $("supplierCards").innerHTML = skeletonCards(2);
+  } else if (view === "waste") {
+    $("wasteList").innerHTML = skeletonCards(2);
+  } else if (view === "inventory") {
+    $("inventoryList").innerHTML = skeletonCards(2);
   }
 }
 
@@ -688,13 +718,14 @@ function savePendingInvoice() {
     date: date,
     lines: lines
   });
+  state.inventory = addInvoiceToInventory(state.inventory, lines);
   state.isSample = false;
   addActivity("Invoice added: " + (supplier || "Unknown supplier") + ", " +
     formatDate(date) + " (" + lines.length + " line" + (lines.length === 1 ? "" : "s") + ").");
   closePreview();
   persist();
   renderAll();
-  showNotice("Invoice saved. Price history, recipes and alerts are updated.", "ok");
+  showNotice("Invoice saved. Price history, recipes, alerts and stock are updated.", "ok");
 }
 
 function onParsePaste(useAi) {
@@ -850,6 +881,7 @@ function onManualSave(event) {
     date: date,
     lines: lines
   });
+  state.inventory = addInvoiceToInventory(state.inventory, lines);
   state.isSample = false;
   addActivity("Invoice added by hand: " + (supplier || "Unknown supplier") + ", " +
     formatDate(date) + " (" + lines.length + " line" + (lines.length === 1 ? "" : "s") + ").");
@@ -858,7 +890,7 @@ function onManualSave(event) {
   $("manualDate").value = todayISO();
   persist();
   renderAll();
-  showNotice("Invoice saved. Price history, recipes and alerts are updated.", "ok");
+  showNotice("Invoice saved. Price history, recipes, alerts and stock are updated.", "ok");
 }
 
 /* ---------- rendering: prices ---------- */
@@ -913,6 +945,10 @@ function recipePhoto(name) {
 function renderRecipes() {
   var list = $("recipeList");
   var rows = costingRows();
+  var rateInput = $("laborRateInput");
+  if (rateInput && document.activeElement !== rateInput) {
+    rateInput.value = laborRate();
+  }
   if (rows.length === 0) {
     list.innerHTML = '<p class="small">No recipes yet. Add your first recipe below.</p>';
   } else {
@@ -928,6 +964,14 @@ function renderRecipes() {
       }).join(", ");
       var noteHtml = recipe.note
         ? '<p class="small recipe-note">' + escapeHtml(recipe.note) + "</p>" : "";
+      var breakdownHtml = "";
+      if (r.breakdown) {
+        var b = r.breakdown;
+        var laborMinutes = Number(recipe.laborMinutes) || 0;
+        breakdownHtml = '<p class="small recipe-breakdown">True cost: ingredients ' + money(b.ingredients) +
+          ", labor " + money(b.labor) + (laborMinutes > 0 ? " (" + laborMinutes + " min)" : "") +
+          ", packaging " + money(b.packaging) + ", overhead " + money(b.overhead) + ".</p>";
+      }
       var photo = recipePhoto(recipe.name);
       var photoHtml = photo
         ? '<div class="recipe-photo"><img src="' + photo + '" alt="" loading="lazy"></div>'
@@ -936,9 +980,10 @@ function renderRecipes() {
         '<span class="badge badge-' + r.status + '">' + statusLabel(r.status) + "</span></div>" +
         noteHtml +
         '<p class="recipe-ings">' + escapeHtml(ingText) + "</p>" +
+        breakdownHtml +
         '<div class="recipe-nums">' +
         '<div class="recipe-num"><span class="recipe-num-value">' + costText + '</span>' +
-        '<span class="recipe-num-label">Cost now' + costWas + "</span></div>" +
+        '<span class="recipe-num-label">True cost now' + costWas + "</span></div>" +
         '<div class="recipe-num"><span class="recipe-num-value">' + marginValue + "</span>" +
         '<span class="recipe-num-label">' + marginLabel + "</span></div>" +
         '<div class="recipe-num"><span class="recipe-num-value">' + recipe.targetPct + '%</span>' +
@@ -966,6 +1011,9 @@ function openRecipeEditor(recipeId) {
   $("recipeSellPrice").value = recipe ? recipe.sellPrice : "";
   $("recipeTarget").value = recipe ? recipe.targetPct : 60;
   $("recipeNote").value = recipe ? (recipe.note || "") : "";
+  $("recipeLabor").value = recipe && recipe.laborMinutes ? recipe.laborMinutes : "";
+  $("recipePackaging").value = recipe && recipe.packaging ? recipe.packaging : "";
+  $("recipeOverhead").value = recipe && recipe.overhead ? recipe.overhead : "";
   $("recipeDeleteBtn").hidden = !recipe;
   editorLines = recipe
     ? recipe.ingredients.map(function (ing) {
@@ -1020,8 +1068,15 @@ function onRecipeSave(event) {
   var sellPrice = parseFloat($("recipeSellPrice").value);
   var target = parseFloat($("recipeTarget").value);
   var note = $("recipeNote").value.trim();
+  var laborMinutes = parseFloat($("recipeLabor").value) || 0;
+  var packaging = parseFloat($("recipePackaging").value) || 0;
+  var overhead = parseFloat($("recipeOverhead").value) || 0;
   if (!name) {
     showNotice("Give the recipe a name.", "warn");
+    return;
+  }
+  if (laborMinutes < 0 || packaging < 0 || overhead < 0) {
+    showNotice("Labor, packaging and overhead cannot be below zero.", "warn");
     return;
   }
   if (!(sellPrice > 0)) {
@@ -1056,7 +1111,8 @@ function onRecipeSave(event) {
       if (state.recipes[j].id === editingRecipeId) {
         state.recipes[j] = {
           id: editingRecipeId, name: name, sellPrice: sellPrice,
-          targetPct: target, note: note, ingredients: ingredients
+          targetPct: target, note: note, ingredients: ingredients,
+          laborMinutes: laborMinutes, packaging: packaging, overhead: overhead
         };
       }
     }
@@ -1064,7 +1120,8 @@ function onRecipeSave(event) {
   } else {
     state.recipes.push({
       id: uid(), name: name, sellPrice: sellPrice,
-      targetPct: target, note: note, ingredients: ingredients
+      targetPct: target, note: note, ingredients: ingredients,
+      laborMinutes: laborMinutes, packaging: packaging, overhead: overhead
     });
     addActivity("Recipe added: " + name + ".");
   }
@@ -1080,6 +1137,7 @@ function onRecipeSave(event) {
 function renderAlerts() {
   var alerts = activeAlerts();
   var moves = recentMoves(histories(), MOVE_THRESHOLD);
+  var invAlerts = inventoryAlerts(state.inventory, todayISO());
   var feed = $("alertFeed");
   var items = "";
   var itemIndex = 0;
@@ -1097,10 +1155,27 @@ function renderAlerts() {
       money(m.from) + " to " + money(m.to) + " " + escapeHtml(m.unit) + ", " + formatDate(m.date) + ").</li>";
     itemIndex++;
   });
+  invAlerts.forEach(function (a) {
+    var text = "";
+    if (a.kind === "out") {
+      text = "<strong>" + escapeHtml(a.ingredient) + "</strong> is out of stock.";
+    } else if (a.kind === "low") {
+      text = "<strong>" + escapeHtml(a.ingredient) + "</strong> is low: " + a.qty + " " + escapeHtml(a.unit) +
+        " left, par is " + a.par + " " + escapeHtml(a.unit) + ".";
+    } else if (a.daysLeft !== null && a.daysLeft < 0) {
+      text = "<strong>" + escapeHtml(a.ingredient) + "</strong> expired " + (-a.daysLeft) + " day" + (-a.daysLeft === 1 ? "" : "s") + " ago.";
+    } else if (a.daysLeft === 0) {
+      text = "<strong>" + escapeHtml(a.ingredient) + "</strong> expires today.";
+    } else {
+      text = "<strong>" + escapeHtml(a.ingredient) + "</strong> expires in " + a.daysLeft + " day" + (a.daysLeft === 1 ? "" : "s") + ", use it soon.";
+    }
+    items += '<li class="alert-item stagger-item" style="--i:' + Math.min(itemIndex, 5) + '">' + text + "</li>";
+    itemIndex++;
+  });
   if (!items) {
     feed.innerHTML = '<div class="alert-box ok"><h3>No alerts</h3>' +
-      "<p>No recipe is below its target margin, and no ingredient moved " + MOVE_THRESHOLD +
-      "% or more since the last invoice.</p></div>";
+      "<p>No recipe is below its target margin, no ingredient moved " + MOVE_THRESHOLD +
+      "% or more since the last invoice, and nothing is low or expiring soon.</p></div>";
   } else {
     feed.innerHTML = '<ul class="alert-list">' + items + "</ul>";
   }
@@ -1401,12 +1476,16 @@ function renderBakeDay() {
         return item.qty + " x " + (recipe ? recipe.name : "Recipe removed");
       }).join(", ");
       var inPlanner = day.id === editingBakeDayId;
+      var doneBtn = day.done ? "" :
+        '<button class="btn small" type="button" data-bake-done="' + day.id + '">Mark done</button>';
       return '<div class="bake-card stagger-item" style="--i:' + Math.min(i, 5) + '"><div class="bake-head"><h3>' +
         formatDate(day.date) + "</h3>" +
+        (day.done ? '<span class="badge badge-ok">Done, stock updated</span>' : "") +
         (inPlanner ? '<span class="badge badge-ok">In the planner</span>' : "") +
         (day.isSample ? ' <span class="badge badge-demo">Sample</span>' : "") + "</div>" +
         '<p class="small">' + escapeHtml(summary) + "</p>" +
         '<div class="btn-row"><button class="btn small ghost" type="button" data-bake-load="' + day.id + '">Load</button>' +
+        doneBtn +
         '<button class="btn small ghost danger" type="button" data-bake-delete="' + day.id + '">Delete</button></div></div>';
     }).join("");
   }
@@ -1488,6 +1567,23 @@ function onBakeSave() {
   showNotice("Bake day saved.", "ok");
 }
 
+// Marking a bake done takes its ingredients out of stock. A done
+// bake cannot be marked done twice, so the stock is deducted once.
+function onBakeDone(id) {
+  var day = null;
+  for (var i = 0; i < state.bakeDays.length; i++) {
+    if (state.bakeDays[i].id === id) day = state.bakeDays[i];
+  }
+  if (!day || day.done) return;
+  var totals = aggregateBakeDay(day.items, state.recipes);
+  state.inventory = deductBakeFromInventory(state.inventory, totals, state.ingredients);
+  day.done = true;
+  addActivity("Bake done: " + formatDate(day.date) + ". Stock updated.");
+  persist();
+  renderAll();
+  showNotice("Bake marked done. The ingredients came out of stock.", "ok");
+}
+
 function onBakeDelete(id) {
   var day = null;
   for (var i = 0; i < state.bakeDays.length; i++) {
@@ -1548,6 +1644,248 @@ function renderSuppliers() {
       escapeHtml(entry.name) + ' <span class="small">(' + escapeHtml(entry.unit) + ")</span></h3>" +
       rows + note + "</div>";
   }).join("");
+}
+
+/* ---------- rendering: waste log ---------- */
+
+function weekAgoISO() {
+  var d = new Date();
+  d.setDate(d.getDate() - 6);
+  return d.toISOString().slice(0, 10);
+}
+
+function wasteEntriesThisWeek() {
+  var from = weekAgoISO();
+  return state.waste.filter(function (entry) {
+    return entry.date >= from && entry.date <= todayISO();
+  });
+}
+
+function renderWaste() {
+  var summary = $("wasteSummary");
+  var trend = $("wasteTrend");
+  var list = $("wasteList");
+  var prices = priceSet("latest");
+  var rate = laborRate();
+  var weekEntries = wasteEntriesThisWeek();
+  var week = wasteSummary(weekEntries, state.recipes, prices, rate, purchasesTotal(state.invoices));
+  var worstText = week.worst
+    ? escapeHtml(week.worst.name) + " " + money(week.worst.value)
+    : "No waste recorded";
+  var pctText = week.pctOfPurchases === null ? "n/a" : week.pctOfPurchases.toFixed(1) + "%";
+  summary.innerHTML = '<div class="waste-summary"><div class="total-box"><span class="total-label">Waste this week</span>' +
+    '<span class="total-value">' + money(week.totalValue) + "</span></div>" +
+    '<div class="total-box"><span class="total-label">Of purchases on record</span>' +
+    '<span class="total-value">' + pctText + "</span></div>" +
+    '<div class="total-box"><span class="total-label">Worst product this week</span>' +
+    '<span class="total-value">' + worstText + "</span></div></div>" +
+    '<p class="small">Valued at each recipe\'s true cost. Purchases on record: ' +
+    money(purchasesTotal(state.invoices)) + ".</p>";
+  if (week.byDay.length === 0) {
+    trend.innerHTML = '<p class="small">No waste entries this week.</p>';
+  } else {
+    var max = 0;
+    week.byDay.forEach(function (day) { if (day.value > max) max = day.value; });
+    trend.innerHTML = '<div class="waste-bars">' + week.byDay.map(function (day) {
+      var width = max > 0 ? Math.max(4, Math.round((day.value / max) * 100)) : 0;
+      return '<div class="waste-bar-row"><span class="waste-bar-date">' + formatDate(day.date) + "</span>" +
+        '<span class="waste-bar-track"><span class="waste-bar-fill" style="width:' + width + '%"></span></span>' +
+        '<span class="waste-bar-value">' + money(day.value) + "</span></div>";
+    }).join("") + "</div>";
+  }
+  var entries = state.waste.slice().sort(function (a, b) {
+    return a.date < b.date ? 1 : -1;
+  });
+  if (entries.length === 0) {
+    list.innerHTML = '<p class="small">No waste logged yet. Log a day below, made vs sold.</p>';
+  } else {
+    list.innerHTML = entries.map(function (entry, i) {
+      var recipe = recipeById(state.recipes, entry.recipeId);
+      var name = recipe ? recipe.name : "Recipe removed";
+      var qty = wastedQty(entry);
+      var value = wasteEntryValue(entry, state.recipes, prices, rate);
+      var valueText = value === null ? "n/a" : money(value);
+      return '<div class="bake-card stagger-item" style="--i:' + Math.min(i, 5) + '"><div class="bake-head"><h3>' +
+        formatDate(entry.date) + " · " + escapeHtml(name) + "</h3>" +
+        (entry.isSample ? ' <span class="badge badge-demo">Sample</span>' : "") + "</div>" +
+        '<p class="small">Made ' + entry.made + ", sold " + entry.sold + ", wasted " + qty +
+        " at " + valueText + ".</p>" +
+        '<div class="btn-row"><button class="btn small ghost" type="button" data-waste-edit="' + entry.id + '">Edit</button>' +
+        '<button class="btn small ghost danger" type="button" data-waste-delete="' + entry.id + '">Delete</button></div></div>';
+    }).join("");
+  }
+}
+
+function openWasteEditor(entry) {
+  editingWasteId = entry ? entry.id : null;
+  $("wasteEditorTitle").textContent = entry ? "Edit waste entry" : "Log waste";
+  $("wasteDate").value = entry ? entry.date : todayISO();
+  var select = $("wasteRecipe");
+  select.innerHTML = state.recipes.map(function (r) {
+    return '<option value="' + r.id + '">' + escapeHtml(r.name) + "</option>";
+  }).join("");
+  if (entry) select.value = entry.recipeId;
+  $("wasteMade").value = entry ? entry.made : 0;
+  $("wasteSold").value = entry ? entry.sold : 0;
+  $("wasteDeleteBtn").hidden = !entry;
+  $("wasteEditor").hidden = false;
+  updateWastePreview();
+  $("wasteEditor").scrollIntoView({ behavior: "smooth" });
+}
+
+function closeWasteEditor() {
+  editingWasteId = null;
+  $("wasteEditor").hidden = true;
+}
+
+function updateWastePreview() {
+  var recipeId = $("wasteRecipe").value;
+  var made = parseInt($("wasteMade").value, 10) || 0;
+  var sold = parseInt($("wasteSold").value, 10) || 0;
+  var preview = $("wastePreview");
+  var entry = { date: $("wasteDate").value, recipeId: recipeId, made: made, sold: sold };
+  var value = wasteEntryValue(entry, state.recipes, priceSet("latest"), laborRate());
+  if (wastedQty(entry) === 0) {
+    preview.textContent = "No waste at these numbers.";
+  } else if (value === null) {
+    preview.textContent = "Wasted " + wastedQty(entry) + " units. Value needs a price for every ingredient.";
+  } else {
+    preview.textContent = "Wasted " + wastedQty(entry) + " units, worth " + money(value) + " at true cost.";
+  }
+}
+
+function onWasteSave(e) {
+  e.preventDefault();
+  var date = $("wasteDate").value || todayISO();
+  var recipeId = $("wasteRecipe").value;
+  var made = parseInt($("wasteMade").value, 10) || 0;
+  var sold = parseInt($("wasteSold").value, 10) || 0;
+  if (!recipeId) {
+    showNotice("Add a recipe first, then log its waste.", "warn");
+    return;
+  }
+  if (made < 0 || sold < 0) {
+    showNotice("Made and sold cannot be below zero.", "warn");
+    return;
+  }
+  if (editingWasteId) {
+    for (var i = 0; i < state.waste.length; i++) {
+      if (state.waste[i].id === editingWasteId) {
+        state.waste[i] = {
+          id: editingWasteId, date: date, recipeId: recipeId, made: made, sold: sold
+        };
+      }
+    }
+    addActivity("Waste entry updated: " + formatDate(date) + ".");
+  } else {
+    state.waste.push({
+      id: uid(), date: date, recipeId: recipeId, made: made, sold: sold
+    });
+    addActivity("Waste logged: " + formatDate(date) + ".");
+  }
+  state.isSample = false;
+  closeWasteEditor();
+  persist();
+  renderAll();
+  showNotice("Waste entry saved.", "ok");
+}
+
+function onWasteDelete(id) {
+  var entry = null;
+  for (var i = 0; i < state.waste.length; i++) {
+    if (state.waste[i].id === id) entry = state.waste[i];
+  }
+  if (!entry) return;
+  state.waste = state.waste.filter(function (w) { return w.id !== id; });
+  addActivity("Waste entry deleted: " + formatDate(entry.date) + ".");
+  persist();
+  renderAll();
+  showNotice("Waste entry deleted.", "ok");
+}
+
+/* ---------- rendering: inventory ---------- */
+
+function renderInventory() {
+  var list = $("inventoryList");
+  if (state.inventory.length === 0) {
+    var rebuildBtn = state.invoices.length > 0
+      ? '<div class="btn-row"><button class="btn small" type="button" id="rebuildInventoryBtn">Build stock from invoices</button></div>'
+      : "";
+    list.innerHTML = "<p class=\"small\">No stock on record yet. Stock appears here when you save an invoice" +
+      (state.invoices.length > 0 ? ", or you can build it from the invoices you already have." : ".") +
+      "</p>" + rebuildBtn;
+    return;
+  }
+  var today = todayISO();
+  list.innerHTML = state.inventory.map(function (row, i) {
+    var status = inventoryStatus(row);
+    var statusCls = status === "ok" ? "badge-ok" : (status === "low" ? "badge-watch" : "badge-alert");
+    var exp = expiryStatus(row, today);
+    var expText = "";
+    if (row.expiry) {
+      var days = daysToExpiry(row, today);
+      if (exp === "expired") expText = ' <span class="badge badge-alert">Expired</span>';
+      else if (exp === "soon") expText = ' <span class="badge badge-watch">Use soon, ' + (days === 0 ? "today" : days + " days") + "</span>";
+    }
+    return '<div class="inv-card stagger-item" style="--i:' + Math.min(i, 5) + '"><div class="inv-head"><h3>' +
+      escapeHtml(row.ingredient) + "</h3>" +
+      '<span class="badge ' + statusCls + '">' + inventoryStatusLabel(status) + "</span>" + expText +
+      (row.isSample ? ' <span class="badge badge-demo">Sample</span>' : "") + "</div>" +
+      '<div class="inv-qty"><span class="inv-qty-value">' + row.qty + " " + escapeHtml(row.unit) + "</span>" +
+      '<span class="inv-qty-label">Par ' + row.par + " " + escapeHtml(row.unit) + "</span></div>" +
+      '<div class="inv-controls">' +
+      '<button class="btn small ghost" type="button" data-inv-dec="' + escapeHtml(row.ingredient) + '">-</button>' +
+      '<button class="btn small ghost" type="button" data-inv-inc="' + escapeHtml(row.ingredient) + '">+</button>' +
+      '<label class="inv-field">Par <input type="number" min="0" step="0.5" value="' + row.par + '" data-inv-par="' + escapeHtml(row.ingredient) + '"></label>' +
+      '<label class="inv-field">Expires <input type="date" value="' + (row.expiry || "") + '" data-inv-expiry="' + escapeHtml(row.ingredient) + '"></label>' +
+      '<button class="btn small ghost danger" type="button" data-inv-remove="' + escapeHtml(row.ingredient) + '">Remove</button>' +
+      "</div></div>";
+  }).join("");
+}
+
+function onInventoryAdjust(ingredient, delta) {
+  for (var i = 0; i < state.inventory.length; i++) {
+    if (state.inventory[i].ingredient === ingredient) {
+      var next = roundTo((Number(state.inventory[i].qty) || 0) + delta, 3);
+      state.inventory[i].qty = Math.max(0, next);
+      state.inventory[i].isSample = false;
+    }
+  }
+  state.isSample = false;
+  persist();
+  renderAll();
+}
+
+function onInventoryField(ingredient, field, value) {
+  for (var i = 0; i < state.inventory.length; i++) {
+    if (state.inventory[i].ingredient === ingredient) {
+      if (field === "par") state.inventory[i].par = Math.max(0, parseFloat(value) || 0);
+      if (field === "expiry") state.inventory[i].expiry = value;
+      state.inventory[i].isSample = false;
+    }
+  }
+  state.isSample = false;
+  persist();
+  renderAll();
+}
+
+function onInventoryRemove(ingredient) {
+  state.inventory = state.inventory.filter(function (row) {
+    return row.ingredient !== ingredient;
+  });
+  addActivity("Inventory row removed: " + ingredient + ".");
+  persist();
+  renderAll();
+  showNotice("Removed " + ingredient + " from stock.", "ok");
+}
+
+function onRebuildInventory() {
+  state.inventory = inventoryFromInvoices(state.invoices);
+  state.isSample = false;
+  addActivity("Stock built from " + state.invoices.length + " invoices.");
+  persist();
+  renderAll();
+  showNotice("Stock built from your invoices. Set par levels and expiry dates to get alerts.", "ok");
 }
 
 /* ---------- sample data controls ---------- */
@@ -1792,6 +2130,45 @@ function init() {
     if (bakeRemove) {
       bakeItems.splice(parseInt(bakeRemove.getAttribute("data-bake-remove"), 10), 1);
       renderBakeDay();
+      return;
+    }
+    var bakeDone = event.target.closest("[data-bake-done]");
+    if (bakeDone) {
+      onBakeDone(bakeDone.getAttribute("data-bake-done"));
+      return;
+    }
+    var wasteEdit = event.target.closest("[data-waste-edit]");
+    if (wasteEdit) {
+      for (var wi = 0; wi < state.waste.length; wi++) {
+        if (state.waste[wi].id === wasteEdit.getAttribute("data-waste-edit")) {
+          openWasteEditor(state.waste[wi]);
+        }
+      }
+      return;
+    }
+    var wasteDelete = event.target.closest("[data-waste-delete]");
+    if (wasteDelete) {
+      onWasteDelete(wasteDelete.getAttribute("data-waste-delete"));
+      return;
+    }
+    var invInc = event.target.closest("[data-inv-inc]");
+    if (invInc) {
+      onInventoryAdjust(invInc.getAttribute("data-inv-inc"), 1);
+      return;
+    }
+    var invDec = event.target.closest("[data-inv-dec]");
+    if (invDec) {
+      onInventoryAdjust(invDec.getAttribute("data-inv-dec"), -1);
+      return;
+    }
+    var invRemove = event.target.closest("[data-inv-remove]");
+    if (invRemove) {
+      onInventoryRemove(invRemove.getAttribute("data-inv-remove"));
+      return;
+    }
+    if (event.target.closest("#rebuildInventoryBtn")) {
+      onRebuildInventory();
+      return;
     }
   });
 
@@ -1857,6 +2234,16 @@ function init() {
       if (!bline) return;
       bline[bfield] = el.value;
       renderBakeTotals();
+      return;
+    }
+    var invPar = el.getAttribute("data-inv-par");
+    if (invPar) {
+      onInventoryField(invPar, "par", el.value);
+      return;
+    }
+    var invExpiry = el.getAttribute("data-inv-expiry");
+    if (invExpiry) {
+      onInventoryField(invExpiry, "expiry", el.value);
       return;
     }
     if (el.hasAttribute("data-shop-check")) {
@@ -1937,6 +2324,30 @@ function init() {
   $("recipeCancelBtn").addEventListener("click", closeRecipeEditor);
   $("recipeDeleteBtn").addEventListener("click", function () {
     if (editingRecipeId) onDeleteRecipe(editingRecipeId);
+  });
+  $("laborRateInput").addEventListener("change", function () {
+    var rate = parseFloat($("laborRateInput").value);
+    if (!(rate >= 0)) {
+      showNotice("The labor rate cannot be below zero.", "warn");
+      $("laborRateInput").value = laborRate();
+      return;
+    }
+    state.settings.laborRate = rate;
+    state.isSample = false;
+    persist();
+    renderAll();
+  });
+
+  // Waste log.
+  $("addWasteBtn").addEventListener("click", function () { openWasteEditor(null); });
+  $("wasteForm").addEventListener("submit", onWasteSave);
+  $("wasteCancelBtn").addEventListener("click", closeWasteEditor);
+  $("wasteDeleteBtn").addEventListener("click", function () {
+    if (editingWasteId) onWasteDelete(editingWasteId);
+  });
+  ["wasteRecipe", "wasteMade", "wasteSold"].forEach(function (id) {
+    $(id).addEventListener("input", updateWastePreview);
+    $(id).addEventListener("change", updateWastePreview);
   });
 
   // Exports.

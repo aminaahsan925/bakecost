@@ -5,7 +5,7 @@
 // price from $17.00 (about 71%) to $18.14 (about 76%).
 
 import {
-  pricePerBaseUnit, lineCost, recipeCost, margin, priceChangePct,
+  pricePerBaseUnit, lineCost, recipeCost, trueCost, laborCost, margin, priceChangePct,
   latestPoint, earliestPoint, previousPoint, marginStatus, statusLabel,
   biggestMovers, marginAlerts, recentMoves, roundTo, money, pct,
   buildCSV, buildPriceCSV, buildInvoiceCSV
@@ -76,6 +76,47 @@ check("sourdough cost, old prices", recipeCost(sourdough, oldPrices), 1.50);
 check("sourdough cost, new prices", recipeCost(sourdough, newPrices), 1.86);
 check("lemon drizzle cost, old prices", recipeCost(lemonDrizzle, oldPrices), 4.61);
 check("lemon drizzle cost, new prices", recipeCost(lemonDrizzle, newPrices), 3.945);
+
+/* True cost: ingredients + labor + packaging + overhead (v12).
+   Demo figures: $12 an hour, Butter Cake 30 min, Sourdough 20 min,
+   Lemon Drizzle 25 min; packaging $0.40/$0.15/$0.35; overhead $0.50
+   a unit. These are the numbers the landing page and the app show. */
+check("labor cost 30 min at $12/hr", laborCost(30, 12), 6.00);
+check("labor cost 20 min at $12/hr", laborCost(20, 12), 4.00);
+check("labor cost 25 min at $12/hr", laborCost(25, 12), 5.00);
+check("labor cost zero minutes", laborCost(0, 12), 0);
+check("labor cost zero rate", laborCost(30, 0), 0);
+check("labor cost missing minutes", laborCost(undefined, 12), 0);
+const butterCakeTrue = {
+  name: "Butter Cake", sellPrice: 24.00, targetPct: 60,
+  laborMinutes: 30, packaging: 0.40, overhead: 0.50,
+  ingredients: butterCake.ingredients
+};
+const sourdoughTrue = {
+  name: "Sourdough Loaf", sellPrice: 8.00, targetPct: 70,
+  laborMinutes: 20, packaging: 0.15, overhead: 0.50,
+  ingredients: sourdough.ingredients
+};
+const lemonDrizzleTrue = {
+  name: "Lemon Drizzle", sellPrice: 18.00, targetPct: 60,
+  laborMinutes: 25, packaging: 0.35, overhead: 0.50,
+  ingredients: lemonDrizzle.ingredients
+};
+const tcCake = trueCost(butterCakeTrue, newPrices, 12);
+check("true cost cake ingredients", tcCake.ingredients, 5.86);
+check("true cost cake labor", tcCake.labor, 6.00);
+check("true cost cake packaging", tcCake.packaging, 0.40);
+check("true cost cake overhead", tcCake.overhead, 0.50);
+check("true cost cake total", tcCake.total, 12.76);
+check("true cost sourdough total", trueCost(sourdoughTrue, newPrices, 12).total, 6.51);
+check("true cost lemon total", trueCost(lemonDrizzleTrue, newPrices, 12).total, 9.80);
+check("true cost cake at old prices", trueCost(butterCakeTrue, oldPrices, 12).total, 13.90);
+check("true cost with no labor fields is ingredients only",
+  trueCost(butterCake, newPrices, 12).total, 5.86);
+check("true cost with missing price", trueCost(butterCakeTrue, {}, 12), null);
+check("true cost margin cake %", margin(12.76, 24.00).pct, 46.833, 0.01);
+check("true cost margin sourdough %", margin(6.51, 8.00).pct, 18.625, 0.01);
+check("true cost margin lemon %", margin(9.80, 18.00).pct, 45.556, 0.01);
 
 /* Margins at selling price */
 const mOld = margin(7.00, 24.00);

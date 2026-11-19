@@ -54,14 +54,25 @@ export var SAMPLE_INVOICES = [
   }
 ];
 
+// One hourly labor rate for the demo bakery, used by every recipe's
+// true cost. The baker edits it in one place (Recipes view).
+export var SAMPLE_LABOR_RATE = 12;
+
 // Quantities are in base units (kg, or single eggs). targetPct is the
-// margin target for that recipe, in percent.
+// margin target for that recipe, in percent. laborMinutes is hands-on
+// time per unit, packaging is the box or bag per unit, overhead is
+// the fixed share per unit (power, rent, cleaning). True cost at the
+// latest prices: Butter Cake $12.76 (margin 46.8%), Sourdough $6.51
+// (margin 18.6%), Lemon Drizzle $9.80 (margin 45.6%).
 export var SAMPLE_RECIPES = [
   {
     id: "sample-r1",
     name: "Butter Cake",
     sellPrice: 24.00,
     targetPct: 60,
+    laborMinutes: 30,
+    packaging: 0.40,
+    overhead: 0.50,
     note: "500g butter, 400g flour, 4 eggs.",
     ingredients: [
       { name: "Butter", qty: 0.5 },
@@ -74,6 +85,9 @@ export var SAMPLE_RECIPES = [
     name: "Sourdough Loaf",
     sellPrice: 8.00,
     targetPct: 70,
+    laborMinutes: 20,
+    packaging: 0.15,
+    overhead: 0.50,
     note: "600g flour. Salt and water not costed.",
     ingredients: [
       { name: "Wheat flour", qty: 0.6 }
@@ -84,6 +98,9 @@ export var SAMPLE_RECIPES = [
     name: "Lemon Drizzle",
     sellPrice: 18.00,
     targetPct: 60,
+    laborMinutes: 25,
+    packaging: 0.35,
+    overhead: 0.50,
     note: "300g flour, 250g butter, 3 eggs, 200g sugar.",
     ingredients: [
       { name: "Wheat flour", qty: 0.3 },
@@ -92,6 +109,53 @@ export var SAMPLE_RECIPES = [
       { name: "Sugar", qty: 0.2 }
     ]
   }
+];
+
+// Sample waste log (v12): three days inside the last week, one entry
+// per day. Wasted quantities and values are computed, never typed:
+// 2 Butter Cakes ($25.52), 2 Sourdough Loaves ($13.02), 1 Lemon
+// Drizzle ($9.80), so waste this week is $48.34, which is 4.2% of the
+// $1,149.55 of purchases on record. dateInDays is days from today;
+// sampleState() turns it into a date.
+export var SAMPLE_WASTE = [
+  {
+    id: "sample-w1",
+    dateInDays: -6,
+    recipeId: "sample-r1",
+    made: 4,
+    sold: 2,
+    isSample: true
+  },
+  {
+    id: "sample-w2",
+    dateInDays: -3,
+    recipeId: "sample-r2",
+    made: 12,
+    sold: 10,
+    isSample: true
+  },
+  {
+    id: "sample-w3",
+    dateInDays: -1,
+    recipeId: "sample-r3",
+    made: 3,
+    sold: 2,
+    isSample: true
+  }
+];
+
+// Sample inventory (v12): stock in display units (kg, or dozen for
+// eggs), a par level per ingredient, and an expiry date. Levels are
+// consistent with the sample invoices (30 dozen eggs, 60 kg butter,
+// 150 kg flour and 75 kg sugar bought in total) and cover the sample
+// bake day (2 kg butter, 8.8 kg flour, 16 eggs). Butter sits below
+// its par (Low) and the eggs expire inside 7 days (use soon).
+// expiryInDays is days from today; sampleState() turns it into a date.
+export var SAMPLE_INVENTORY = [
+  { ingredient: "Butter", qty: 8.5, unit: "kg", par: 10, expiryInDays: 12, isSample: true },
+  { ingredient: "Eggs", qty: 6, unit: "dozen", par: 5, expiryInDays: 4, isSample: true },
+  { ingredient: "Wheat flour", qty: 42, unit: "kg", par: 20, expiryInDays: 60, isSample: true },
+  { ingredient: "Sugar", qty: 18, unit: "kg", par: 10, expiryInDays: 90, isSample: true }
 ];
 
 // Sample orders (v5). Due dates are relative to today, so the demo
@@ -191,6 +255,27 @@ export function sampleState() {
         isSample: true
       };
     }),
+    waste: SAMPLE_WASTE.map(function (w) {
+      return {
+        id: w.id,
+        date: daysFromToday(w.dateInDays),
+        recipeId: w.recipeId,
+        made: w.made,
+        sold: w.sold,
+        isSample: true
+      };
+    }),
+    inventory: SAMPLE_INVENTORY.map(function (row) {
+      return {
+        ingredient: row.ingredient,
+        qty: row.qty,
+        unit: row.unit,
+        par: row.par,
+        expiry: daysFromToday(row.expiryInDays),
+        isSample: true
+      };
+    }),
+    settings: { laborRate: SAMPLE_LABOR_RATE },
     activity: [
       {
         id: "sample-a1",
@@ -219,6 +304,9 @@ export function emptyState() {
     recipes: [],
     orders: [],
     bakeDays: [],
+    waste: [],
+    inventory: [],
+    settings: { laborRate: SAMPLE_LABOR_RATE },
     activity: [],
     isSample: false
   };

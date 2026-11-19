@@ -69,6 +69,14 @@
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l2-5h14l2 5"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>
           <span>Suppliers</span>
         </button>
+        <button class="more-item" type="button" data-view="waste">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></svg>
+          <span>Waste</span>
+        </button>
+        <button class="more-item" type="button" data-view="inventory">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5v10l-9 5-9-5z"/><path d="M3 9l9 5 9-5"/><path d="M12 14v10"/></svg>
+          <span>Inventory</span>
+        </button>
       </div>
     </div>
   </nav>
@@ -141,7 +149,7 @@
   </div>
 
   <h2 class="mt-lg">Recipes at the latest prices</h2>
-  <p class="small">Ingredient cost only.</p>
+  <p class="small">True cost: ingredients, labor, packaging and overhead.</p>
   <div id="dashRecipes">
     <div class="sk-row"><div class="sk sk-line w40" style="flex:1"></div><div class="sk sk-line w40" style="width:64px"></div><div class="sk sk-line w40" style="width:64px"></div></div>
     <div class="sk-row"><div class="sk sk-line w40" style="flex:1"></div><div class="sk sk-line w40" style="width:64px"></div><div class="sk sk-line w40" style="width:64px"></div></div>
@@ -265,6 +273,11 @@
     <button class="btn small" id="addRecipeBtn" type="button">Add a recipe</button>
     <button class="btn small ghost" id="exportRecipesBtn" type="button">Export recipes CSV</button>
   </div>
+  <div class="labor-rate-row mt-md">
+    <label for="laborRateInput">Hourly labor rate ($)</label>
+    <input id="laborRateInput" type="number" min="0" step="0.50" value="12">
+    <span class="small">One rate for the whole bakery. Every recipe's true cost uses it.</span>
+  </div>
   <div id="recipeList" class="mt-md">
     <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-line w80"></div><div class="sk sk-line w60"></div></div>
     <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-line w80"></div><div class="sk sk-line w60"></div></div>
@@ -292,6 +305,21 @@
         <label for="recipeNote">Note (optional)</label>
         <input id="recipeNote" type="text" placeholder="e.g. 500g butter, 400g flour, 4 eggs.">
       </div>
+      <p class="small">True cost, per unit. Labor is charged at the hourly rate above; leave a field empty for zero.</p>
+      <div class="form-row">
+        <div class="field">
+          <label for="recipeLabor">Hands-on labor (minutes)</label>
+          <input id="recipeLabor" type="number" min="0" step="1" placeholder="e.g. 30">
+        </div>
+        <div class="field">
+          <label for="recipePackaging">Packaging per unit ($)</label>
+          <input id="recipePackaging" type="number" min="0" step="0.01" placeholder="e.g. 0.40">
+        </div>
+        <div class="field">
+          <label for="recipeOverhead">Overhead per unit ($)</label>
+          <input id="recipeOverhead" type="number" min="0" step="0.01" placeholder="e.g. 0.50">
+        </div>
+      </div>
       <p class="small">Quantities in base units: kg, or single eggs. Pick New ingredient to add one with no price yet.</p>
       <div id="recipeLines"></div>
       <div class="btn-row">
@@ -307,7 +335,7 @@
 <!-- ================= Alerts ================= -->
 <section class="view" id="view-alerts" hidden>
   <h1>Alerts</h1>
-  <p class="lead">Recipes below target, and ingredients that moved 5% or more since the last invoice.</p>
+  <p class="lead">Recipes below target, ingredients that moved 5% or more since the last invoice, and stock running low or expiring soon.</p>
   <div id="alertFeed">
     <div class="sk-card"><div class="sk sk-line w60"></div><div class="sk sk-line w80"></div></div>
     <div class="sk-card"><div class="sk sk-line w60"></div><div class="sk sk-line w80"></div></div>
@@ -416,6 +444,68 @@
     <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-num"></div><div class="sk sk-line w80"></div></div>
     <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-num"></div><div class="sk sk-line w80"></div></div>
   </div>
+</section>
+
+<!-- ================= Waste ================= -->
+<section class="view" id="view-waste" hidden>
+  <h1>Waste log</h1>
+  <p class="lead">Made vs sold, every day. Waste is valued at the recipe's true cost, so you see what it really cost you.</p>
+  <div class="btn-row">
+    <button class="btn small" id="addWasteBtn" type="button">Log waste</button>
+  </div>
+  <div id="wasteSummary" class="mt-md"></div>
+  <h2 class="mt-lg">This week, by day</h2>
+  <div id="wasteTrend" class="mt-md">
+    <div class="sk-card"><div class="sk sk-line w80"></div><div class="sk sk-line w60"></div></div>
+  </div>
+  <h2 class="mt-lg">Entries</h2>
+  <div id="wasteList" class="mt-md">
+    <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-line w80"></div></div>
+    <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-line w80"></div></div>
+  </div>
+
+  <div class="editor-panel" id="wasteEditor" hidden>
+    <h2 id="wasteEditorTitle">Log waste</h2>
+    <form id="wasteForm">
+      <div class="form-row">
+        <div class="field">
+          <label for="wasteDate">Date</label>
+          <input id="wasteDate" type="date">
+        </div>
+        <div class="field">
+          <label for="wasteRecipe">Recipe</label>
+          <select id="wasteRecipe"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="wasteMade">Made</label>
+          <input id="wasteMade" type="number" min="0" step="1" value="0">
+        </div>
+        <div class="field">
+          <label for="wasteSold">Sold</label>
+          <input id="wasteSold" type="number" min="0" step="1" value="0">
+        </div>
+      </div>
+      <p class="small" id="wastePreview"></p>
+      <div class="btn-row">
+        <button class="btn small" type="submit">Save entry</button>
+        <button class="btn small ghost" id="wasteCancelBtn" type="button">Cancel</button>
+        <button class="btn small ghost danger" id="wasteDeleteBtn" type="button" hidden>Delete entry</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ================= Inventory ================= -->
+<section class="view" id="view-inventory" hidden>
+  <h1>Inventory</h1>
+  <p class="lead">What is on the shelf. Saving an invoice adds stock, marking a bake done takes it out.</p>
+  <div id="inventoryList" class="mt-md">
+    <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-num"></div><div class="sk sk-line w80"></div></div>
+    <div class="sk-card"><div class="sk sk-line w40"></div><div class="sk sk-num"></div><div class="sk sk-line w80"></div></div>
+  </div>
+  <p class="small">Set a par level to get a low-stock alert. Set an expiry date to get a use-soon alert inside 7 days.</p>
 </section>
 
 </main>

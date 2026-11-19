@@ -78,14 +78,16 @@ function click(el) {
 }
 
 check("mode badge is Guest demo", document.getElementById("modeBadge").textContent, "Guest demo");
-check("AI badge is local parser", document.getElementById("aiBadge").textContent, "AI: off, local parser");
+check("AI badge is Gemini ready (Firebase is configured)",
+  document.getElementById("aiBadge").textContent, "AI: Gemini ready");
 check("sample banner visible", document.getElementById("sampleBanner").hidden, false);
 const cardText = document.getElementById("dashCards").textContent;
 checkContains("dashboard shows ingredients label", cardText, "Ingredients tracked");
-check("dashboard shows 0 alerts at baseline",
-  document.querySelectorAll("#dashCards .stat-card")[2].textContent.includes("0"), true);
+check("dashboard shows 3 alerts at baseline (true cost below target)",
+  document.querySelectorAll("#dashCards .stat-card")[2].textContent.includes("3"), true);
 checkContains("dashboard biggest move is eggs -35%", cardText, "-35.0%");
-check("alert badge hidden at baseline", document.getElementById("alertCountBadge").hidden, true);
+check("alert badge shows 3 at baseline", document.getElementById("alertCountBadge").textContent, "3");
+check("alert badge visible at baseline", document.getElementById("alertCountBadge").hidden, false);
 
 // Go to Invoices, paste the sample invoice, parse it.
 click(document.querySelector('[data-view="invoices"]'));
@@ -128,8 +130,10 @@ checkContains("flour card shows latest price 3.45",
 click(document.querySelector('[data-view="recipes"]'));
 check("recipes view shows 3 recipes",
   document.querySelectorAll("#recipeList .recipe-card").length, 3);
-checkContains("butter cake shows recosted price",
-  document.getElementById("recipeList").textContent, "$6.33");
+checkContains("butter cake shows recosted true cost",
+  document.getElementById("recipeList").textContent, "$13.23");
+checkContains("butter cake shows the cost breakdown",
+  document.getElementById("recipeList").textContent, "True cost: ingredients $6.33, labor $6.00");
 
 // Manual invoice with a flour spike, to fire a real alert.
 click(document.querySelector('[data-view="invoices"]'));
@@ -140,15 +144,15 @@ setValue(document.querySelector('#manualLines select[data-manual-field="ingredie
 setValue(document.querySelector('#manualLines input[data-manual-field="qty"]'), "50");
 setValue(document.querySelector('#manualLines input[data-manual-field="price"]'), "6.00");
 document.getElementById("manualForm").dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
-check("alert badge appears after flour spike",
-  document.getElementById("alertCountBadge").textContent, "1");
+check("alert badge still shows 3 after flour spike",
+  document.getElementById("alertCountBadge").textContent, "3");
 
 // Alerts view names the recipe below target.
 click(document.querySelector('[data-view="alerts"]'));
 checkContains("alert feed names Sourdough Loaf",
   document.getElementById("alertFeed").textContent, "Sourdough Loaf");
-checkContains("alert feed shows margin 55.0%",
-  document.getElementById("alertFeed").textContent, "55.0%");
+checkContains("alert feed shows sourdough margin -3.1%",
+  document.getElementById("alertFeed").textContent, "-3.1%");
 
 // Export works (download runs against Node's Blob/URL, notice confirms).
 click(document.querySelector('[data-view="recipes"]'));
@@ -186,8 +190,8 @@ const editButtons = document.querySelectorAll("#recipeList [data-edit-recipe]");
 click(editButtons[editButtons.length - 1]);
 document.getElementById("recipeTarget").value = "90";
 document.getElementById("recipeForm").dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
-check("alert badge shows 2 after target edit",
-  document.getElementById("alertCountBadge").textContent, "2");
+check("alert badge shows 4 after target edit",
+  document.getElementById("alertCountBadge").textContent, "4");
 
 // v5: the More menu opens and closes, and the three new views work.
 click(document.getElementById("moreBtn"));
@@ -240,6 +244,11 @@ checkContains("bake day shopping list shows 16 eggs",
 check("one saved bake day listed",
   document.querySelectorAll("#bakeDayList .bake-card").length, 1);
 
+// v12: marking the bake done updates stock (checked in Inventory below).
+click(document.querySelector("#bakeDayList [data-bake-done]"));
+checkContains("bake day shows done after mark done",
+  document.getElementById("bakeDayList").textContent, "Done, stock updated");
+
 // Suppliers: City Mills appears and the cheapest price is highlighted.
 click(document.querySelector('[data-view="suppliers"]'));
 checkContains("suppliers view names City Mills",
@@ -248,6 +257,46 @@ checkContains("suppliers view highlights the cheapest price",
   document.getElementById("supplierCards").textContent, "Cheapest");
 checkContains("suppliers view flags the flour jump",
   document.getElementById("supplierCards").textContent, "Jumped");
+
+// v12: Waste view shows the 3 sample entries and the weekly summary.
+click(document.querySelector('[data-view="waste"]'));
+check("waste view shows 3 sample entries",
+  document.querySelectorAll("#wasteList .bake-card").length, 3);
+checkContains("waste summary shows the week label",
+  document.getElementById("wasteSummary").textContent, "Waste this week");
+checkContains("waste trend shows 3 days",
+  document.getElementById("wasteTrend").textContent, "$");
+
+// Add a waste entry: 2 Sourdough made, 1 sold, so 1 wasted at $8.25
+// (true cost at the spiked flour price: $3.60 ingredients + $4.65).
+click(document.getElementById("addWasteBtn"));
+check("waste editor opens", document.getElementById("wasteEditor").hidden, false);
+setValue(document.getElementById("wasteRecipe"), "sample-r2");
+setValue(document.getElementById("wasteMade"), "2");
+setValue(document.getElementById("wasteSold"), "1");
+checkContains("waste preview values the waste at $8.25",
+  document.getElementById("wastePreview").textContent, "$8.25");
+document.getElementById("wasteForm").dispatchEvent(new window.Event("submit", { bubbles: true, cancelable: true }));
+check("waste view now shows 4 entries",
+  document.querySelectorAll("#wasteList .bake-card").length, 4);
+checkContains("new waste entry shows 1 wasted at $8.25",
+  document.getElementById("wasteList").textContent, "wasted 1 at $8.25");
+
+// v12: Inventory view. The pasted invoice added 20 kg butter to the
+// 8.5 kg sample stock, and marking the bake done took 2 kg back out,
+// so butter reads 26.5 kg. Eggs still expire in 4 days: use soon.
+click(document.querySelector('[data-view="inventory"]'));
+check("inventory view shows 4 rows",
+  document.querySelectorAll("#inventoryList .inv-card").length, 4);
+checkContains("butter stock is 26.5 kg after invoice and bake",
+  document.getElementById("inventoryList").textContent, "26.5 kg");
+checkContains("eggs flagged use soon",
+  document.getElementById("inventoryList").textContent, "Use soon");
+
+// Manual adjust: one tap of minus takes butter to 25.5 kg.
+click(document.querySelector('#inventoryList [data-inv-dec="Butter"]'));
+checkContains("butter stock drops to 25.5 kg after minus",
+  document.getElementById("inventoryList").textContent, "25.5 kg");
 
 // Sample data controls: start empty, then reset the sample data.
 click(document.getElementById("startEmptyBtn"));
@@ -259,6 +308,18 @@ click(document.querySelector('[data-view="invoices"]'));
 check("invoice list back to 3 after reset",
   document.querySelectorAll("#invoiceList .invoice-card").length, 3);
 check("sample banner visible again", document.getElementById("sampleBanner").hidden, false);
+
+// v12: reset restores the sample waste and inventory too.
+click(document.querySelector('[data-view="waste"]'));
+check("waste view back to 3 entries after reset",
+  document.querySelectorAll("#wasteList .bake-card").length, 3);
+checkContains("waste week total back to $48.34 after reset",
+  document.getElementById("wasteSummary").textContent, "$48.34");
+click(document.querySelector('[data-view="inventory"]'));
+checkContains("butter back to 8.5 kg and low after reset",
+  document.getElementById("inventoryList").textContent, "8.5 kg");
+checkContains("butter low flag back after reset",
+  document.getElementById("inventoryList").textContent, "Low");
 
 console.log("\n" + passed + " passed, " + failed + " failed.");
 process.exit(failed === 0 ? 0 : 1);

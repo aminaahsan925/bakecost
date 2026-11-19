@@ -157,6 +157,9 @@ export async function loadCloudState(user) {
     recipes: data.recipes || [],
     orders: data.orders || [],
     bakeDays: data.bakeDays || [],
+    waste: data.waste || [],
+    inventory: data.inventory || [],
+    settings: data.settings || { laborRate: 12 },
     activity: data.activity || [],
     isSample: false
   };
@@ -170,6 +173,9 @@ export async function saveCloudState(user, state) {
     recipes: state.recipes,
     orders: state.orders || [],
     bakeDays: state.bakeDays || [],
+    waste: state.waste || [],
+    inventory: state.inventory || [],
+    settings: state.settings || { laborRate: 12 },
     activity: state.activity,
     updatedAt: parts.mod.serverTimestamp()
   });

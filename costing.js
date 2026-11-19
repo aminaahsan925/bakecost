@@ -38,6 +38,37 @@ export function recipeCost(recipe, prices) {
   return total;
 }
 
+// Labor cost for a recipe: minutes of hands-on time at an hourly
+// rate. Minutes and rate default to zero when missing, so a recipe
+// with no labor recorded costs its ingredients only.
+export function laborCost(laborMinutes, hourlyRate) {
+  var minutes = Number(laborMinutes) || 0;
+  var rate = Number(hourlyRate) || 0;
+  if (minutes <= 0 || rate <= 0) return 0;
+  return (minutes / 60) * rate;
+}
+
+// True cost of one unit of a recipe: ingredients + labor +
+// packaging + overhead. Recipe fields laborMinutes, packaging and
+// overhead are per unit; the hourly rate is one rate for the whole
+// bakery, passed in. Returns null if any ingredient has no price,
+// else { ingredients, labor, packaging, overhead, total }, each
+// rounded to cents. The total is the sum of the rounded parts, so
+// the breakdown always adds up exactly as displayed.
+export function trueCost(recipe, prices, hourlyRate) {
+  var ingredients = recipeCost(recipe, prices);
+  if (ingredients === null) return null;
+  var parts = {
+    ingredients: roundTo(ingredients, 2),
+    labor: roundTo(laborCost(recipe.laborMinutes, hourlyRate), 2),
+    packaging: roundTo(Number(recipe.packaging) || 0, 2),
+    overhead: roundTo(Number(recipe.overhead) || 0, 2)
+  };
+  parts.total = roundTo(
+    parts.ingredients + parts.labor + parts.packaging + parts.overhead, 2);
+  return parts;
+}
+
 // Margin in money and percent at a selling price. Returns { amount, pct }.
 export function margin(cost, sellPrice) {
   var amount = sellPrice - cost;

@@ -76,7 +76,7 @@
   <div class="wrap">
     <p class="section-label reveal">Fresh picks</p>
     <h2 class="reveal">Real recipes. Real margins.</h2>
-    <p class="lead reveal">Sample recipes from the demo data, costed at the latest invoice prices.</p>
+    <p class="lead reveal">Sample recipes from the demo data, costed at the latest invoice prices. True cost means ingredients, labor, packaging and overhead, not ingredients alone.</p>
     <div class="product-grid">
       <article class="product-card reveal" data-recipe="sample-r1">
         <div class="product-photo">
@@ -87,9 +87,9 @@
           <p class="product-category">Cake</p>
           <h3>Butter Cake</h3>
           <p class="product-sensory">Half a kilo of butter in every cake.</p>
-          <div class="product-row"><span>Ingredient cost</span><strong>$5.86</strong></div>
+          <div class="product-row"><span>True cost</span><strong>$12.76</strong></div>
           <div class="product-row"><span>Sells at</span><strong class="product-sell">$24.00</strong></div>
-          <div class="product-row"><span>Margin</span><span class="product-margin"><strong>75.6%</strong><span class="badge ok">On target</span></span></div>
+          <div class="product-row"><span>Margin</span><span class="product-margin"><strong>46.8%</strong><span class="badge alert">Below target</span></span></div>
           <button class="btn small receipt-toggle" type="button" aria-expanded="false" aria-controls="receipt-r1">Reveal the cost</button>
           <div class="receipt" id="receipt-r1"></div>
           <a class="product-cta" href="app.html">See it in the app <span aria-hidden="true">&#8594;</span></a>
@@ -104,9 +104,9 @@
           <p class="product-category">Bread</p>
           <h3>Sourdough Loaf</h3>
           <p class="product-sensory">Six hundred grams of flour, salt and water.</p>
-          <div class="product-row"><span>Ingredient cost</span><strong>$1.86</strong></div>
+          <div class="product-row"><span>True cost</span><strong>$6.51</strong></div>
           <div class="product-row"><span>Sells at</span><strong class="product-sell">$8.00</strong></div>
-          <div class="product-row"><span>Margin</span><span class="product-margin"><strong>76.8%</strong><span class="badge ok">On target</span></span></div>
+          <div class="product-row"><span>Margin</span><span class="product-margin"><strong>18.6%</strong><span class="badge alert">Below target</span></span></div>
           <button class="btn small receipt-toggle" type="button" aria-expanded="false" aria-controls="receipt-r2">Reveal the cost</button>
           <div class="receipt" id="receipt-r2"></div>
           <a class="product-cta" href="app.html">See it in the app <span aria-hidden="true">&#8594;</span></a>
@@ -121,9 +121,9 @@
           <p class="product-category">Tart</p>
           <h3>Lemon Drizzle</h3>
           <p class="product-sensory">Flour, butter, eggs and sugar in every slice.</p>
-          <div class="product-row"><span>Ingredient cost</span><strong>$3.95</strong></div>
+          <div class="product-row"><span>True cost</span><strong>$9.80</strong></div>
           <div class="product-row"><span>Sells at</span><strong class="product-sell">$18.00</strong></div>
-          <div class="product-row"><span>Margin</span><span class="product-margin"><strong>78.1%</strong><span class="badge ok">On target</span></span></div>
+          <div class="product-row"><span>Margin</span><span class="product-margin"><strong>45.6%</strong><span class="badge alert">Below target</span></span></div>
           <button class="btn small receipt-toggle" type="button" aria-expanded="false" aria-controls="receipt-r3">Reveal the cost</button>
           <div class="receipt" id="receipt-r3"></div>
           <a class="product-cta" href="app.html">See it in the app <span aria-hidden="true">&#8594;</span></a>
@@ -159,16 +159,17 @@
       <div class="calc-outputs">
         <div class="calc-out">
           <div class="calc-out-num" id="calcCost" data-value="0"></div>
-          <div class="calc-out-label">Cost per recipe</div>
+          <div class="calc-out-label">True cost per recipe</div>
         </div>
         <div class="calc-out">
           <div class="calc-out-num" id="calcMargin" data-value="0"></div>
           <div class="calc-out-label">Margin at selling price</div>
         </div>
       </div>
+      <p class="calc-breakdown small" id="calcBreakdown"></p>
       <div class="calc-status">
         <span class="badge ok" id="calcBadge" data-status="ok">On target</span>
-        <span class="small">Sample prices from the demo data.</span>
+        <span class="small">Sample prices from the demo data. Labor at $12 an hour.</span>
       </div>
     </div>
     <div class="btn-row reveal">
@@ -186,8 +187,7 @@
       <p class="section-label reveal">Why BakeCost exists</p>
       <h2 class="reveal">Bakers price from memory. Prices do not sit still.</h2>
       <p class="reveal">In one year, flour rose 24%, eggs fell 35% and butter fell 17%. Those are US Bureau of Labor Statistics figures, September 2026. A recipe priced last year is a guess today.</p>
-      <p class="reveal">BakeCost was built in Lahore in November 2026 by Amina Ahsan and Hadi Kashif, two students who kept seeing small bakeries do their costing by hand, in notebooks and spreadsheets, while their ingredient prices moved underneath them.</p>
-      <p class="reveal">The app reads the invoices you already get, builds a price history for every ingredient, and recosts every recipe. No typing prices in by hand.</p>
+      <p class="reveal">BakeCost was built in Lahore in November 2026 by Amina Ahsan and Hadi Kashif. It reads the invoices you already get, builds a price history for every ingredient, and recosts every recipe. No typing prices in by hand.</p>
       <p class="story-italic reveal">The numbers move. The recipes should move with them.</p>
     </div>
   </div>
@@ -224,22 +224,72 @@
           <div class="bento-visual-row"><span><strong>Flour</strong> <span class="muted">Millbrook</span></span><span>$3.10/kg <span class="badge alert">Jumped +24%</span></span></div>
         </div>
       </article>
+      <article class="bento-card reveal">
+        <h3>Waste log</h3>
+        <p>Made vs sold, every day, valued at true cost.</p>
+        <div class="bento-visual">
+          <div class="bento-visual-row"><span><strong>This week</strong></span><span>$48.34</span></div>
+          <div class="bento-visual-row"><span><strong>Worst</strong></span><span>Butter Cake $25.52</span></div>
+          <div class="bento-visual-row"><span><strong>Of purchases</strong></span><span>4.2%</span></div>
+        </div>
+      </article>
+      <article class="bento-card reveal">
+        <h3>True cost</h3>
+        <p>Ingredients, labor, packaging and overhead in one number.</p>
+        <div class="bento-visual">
+          <div class="bento-visual-row"><span><strong>Butter Cake</strong> <span class="muted">ingredients</span></span><span>$5.86</span></div>
+          <div class="bento-visual-row"><span><strong>Labor</strong> <span class="muted">30 min</span></span><span>$6.00</span></div>
+          <div class="bento-visual-row"><span><strong>True cost</strong></span><span>$12.76</span></div>
+        </div>
+      </article>
+      <article class="bento-card reveal">
+        <h3>Inventory</h3>
+        <p>What is on the shelf, with par levels and expiry dates.</p>
+        <div class="bento-visual">
+          <div class="bento-visual-row"><span><strong>Butter</strong></span><span>8.5 kg <span class="badge watch">Low</span></span></div>
+          <div class="bento-visual-row"><span><strong>Eggs</strong></span><span>6 dozen <span class="badge watch">Use soon</span></span></div>
+          <div class="bento-visual-row"><span><strong>Flour</strong></span><span>42 kg <span class="badge ok">OK</span></span></div>
+        </div>
+      </article>
+      <article class="bento-card reveal">
+        <h3>Invoices</h3>
+        <p>Paste, upload or type them in. Prices are read for you.</p>
+        <div class="bento-visual">
+          <div class="bento-visual-row"><span><strong>On record</strong></span><span>3 invoices</span></div>
+          <div class="bento-visual-row"><span><strong>Latest</strong></span><span>Millbrook, 8 Sep 2026</span></div>
+          <div class="bento-visual-row"><span><strong>Latest total</strong></span><span>$374.30</span></div>
+        </div>
+      </article>
+      <article class="bento-card reveal">
+        <h3>Prices</h3>
+        <p>A price history for every ingredient you buy.</p>
+        <div class="bento-visual">
+          <div class="bento-visual-row"><span><strong>Tracked</strong></span><span>4 ingredients</span></div>
+          <div class="bento-visual-row"><span><strong>Butter</strong></span><span>Down 17%</span></div>
+          <div class="bento-visual-row"><span><strong>Flour</strong></span><span>Up 24%</span></div>
+        </div>
+      </article>
+      <article class="bento-card reveal">
+        <h3>Recipes</h3>
+        <p>Every recipe costed at the latest prices, with targets.</p>
+        <div class="bento-visual">
+          <div class="bento-visual-row"><span><strong>Costed</strong></span><span>3 recipes</span></div>
+          <div class="bento-visual-row"><span><strong>Butter Cake</strong></span><span>True cost $12.76</span></div>
+          <div class="bento-visual-row"><span><strong>Sourdough</strong></span><span>True cost $6.51</span></div>
+        </div>
+      </article>
+      <article class="bento-card reveal">
+        <h3>Alerts</h3>
+        <p>Margins below target, price jumps, low stock.</p>
+        <div class="bento-visual">
+          <div class="bento-visual-row"><span><strong>Below target</strong></span><span>3 recipes</span></div>
+          <div class="bento-visual-row"><span><strong>Flour</strong></span><span>Jumped +24% at Millbrook</span></div>
+          <div class="bento-visual-row"><span><strong>Butter</strong></span><span>Low stock</span></div>
+        </div>
+      </article>
     </div>
     <div class="btn-row reveal">
       <a class="btn" href="app.html">Open the app, free</a>
-    </div>
-  </div>
-</section>
-
-<section class="gallery-section" id="gallery" aria-label="From the bakery">
-  <div class="wrap">
-    <div class="gallery">
-      <figure class="reveal"><img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Seeded rustic bread loaves with wheat stalks on a wooden table" loading="lazy" decoding="async"></figure>
-      <figure class="reveal"><img src="https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="A colourful layered cake with a slice cut, on a cake stand" loading="lazy" decoding="async"></figure>
-      <figure class="gallery-overlap"><img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Chocolate chip cookies in a bowl lined with baking paper" loading="lazy" decoding="async"></figure>
-      <figure class="reveal"><img src="https://images.unsplash.com/photo-1550617931-e17a7b70dce2?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Chocolate cupcakes with swirled frosting" loading="lazy" decoding="async"></figure>
-      <figure class="reveal"><img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Strawberry desserts in small glass jars" loading="lazy" decoding="async"></figure>
-      <figure class="reveal"><img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Golden croissants fresh from the oven" loading="lazy" decoding="async"></figure>
     </div>
   </div>
 </section>
@@ -298,31 +348,6 @@
       <a class="btn primary" href="mailto:ah.systemsss@gmail.com?subject=Free%20ingredient%20cost%20audit">Send your invoices</a>
     </div>
     <p class="small reveal">ah.systemsss@gmail.com. Photos or PDFs are fine.</p>
-  </div>
-</section>
-
-<section class="section" id="faq">
-  <div class="wrap">
-    <p class="section-label reveal">Questions</p>
-    <h2 class="reveal">Common questions.</h2>
-    <div class="faq">
-      <details class="reveal">
-        <summary>What do you need from me for the free audit?</summary>
-        <p>Your last 3 months of supplier invoices, as photos or PDFs. We read them by hand and send back every price move and what it did to your best sellers, within a day.</p>
-      </details>
-      <details class="reveal">
-        <summary>Do I need to sign up to try the app?</summary>
-        <p>No. The demo opens with sample recipes and invoices, no account needed. Sign in only saves your own data.</p>
-      </details>
-      <details class="reveal">
-        <summary>Which ingredients and suppliers does it work with?</summary>
-        <p>Any ingredient with a price per unit, from any supplier invoice. The demo uses butter, flour, eggs and sugar from two suppliers, Millbrook and City Mills.</p>
-      </details>
-      <details class="reveal">
-        <summary>What does it cost after the free audit?</summary>
-        <p>The app is $19 a month for up to 15 recipes, or $29 a month for up to 50 recipes. A full audit of 3 months of invoices is $49, one time.</p>
-      </details>
-    </div>
   </div>
 </section>
 
