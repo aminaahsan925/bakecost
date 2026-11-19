@@ -769,6 +769,695 @@ pricing, audit, CTA, footer, dashboard, recipes), zero overflow at
 390px. Tests: npm run check clean, npm test 53 passed, zero
 em/en dashes. Brief: BakeCost-Design-Direction-v7-Bakery.md.
 
+## v8 "Tartufo" redesign (19 Nov ~00:30 PKT, NOT DEPLOYED)
+
+Amina, 00:24 PKT 19 Nov: pick a design from the Awwwards nominees
+page and replicate it exactly, show it to her BEFORE deploying,
+responsive for PC and phones. Three food/product nominees were
+compared from their submission screenshots: Chef Masa (a
+drag-to-explore memoir wall, no headline or CTA, wrong fit) and
+Patike Webshop (a purple product carousel, not a landing structure)
+were rejected. PICKED: Le Delizie Del Tartufo, an Italian truffle
+brand. Its structure maps 1:1 onto BakeCost: full-bleed photo hero,
+giant serif headline, floating product card with a price.
+
+Only the DESIGN LANGUAGE was replicated (layout, typography,
+colour treatment, the floating card, minimal chrome), with
+BakeCost's own content, copy, photos and logo. None of their text,
+logo, product images or brand assets were copied.
+
+Landing rebuild: full-bleed croissant photo hero with a dark
+gradient rising from the bottom; giant Cormorant Garamond headline
+low over it in blush cream ("Know what every recipe / really
+costs.", "really" italic); floating white Butter Cake card
+bottom-right on desktop (name, description, cake photo on a
+burgundy-black square, $5.86 cost, "See it in the app" dark sharp
+button), full-width below the headline on phones; rotating stamp
+as the circular badge top-right; transparent header over the
+photo. Sharp corners everywhere on the landing (0px), flat cards
+with hairlines, Cormorant display type throughout, dark editorial
+sections in burgundy-black with huge cream headlines. The v6
+app-preview section was dropped (Tartufo has no equivalent).
+The $3.94/$3.95 Lemon Drizzle rounding nit is fixed ($3.95).
+
+Cormorant Garamond is self-hosted (fonts/cormorant.woff2 and
+fonts/cormorant-italic.woff2, variable fonts, weight axis 300-700;
+Google serves one file per style for all weights) so proof frames
+and the live site render the same Didone. The landing is scoped
+under body.landing in styles.css so the app keeps its v7 look
+untouched: shared rules (buttons, badges, tables, forms,
+skeletons) are unchanged, and --display stays Fraunces for the
+app. app.html/app.js/app.css were NOT touched.
+
+Proof: all sections verified from rendered frames at 390px, 768px
+and 1280px (hero, recipes, calculator, bento, gallery, pricing,
+audit, CTA, footer), zero overflow at 390px. Two defects caught
+by proof and fixed: the hero-card price rule was accidentally
+deleted in an edit (price and label ran together), and the card
+foot button overflowed the card on phones (foot now stacks on
+phones, row on desktop). The hero-enter translucency in early
+frames was a headless-shell virtual-time artifact, not a site
+bug (proven by re-shooting with the animation disabled in the
+proof server only). Tests: npm run check clean, npm test 53
+passed, zero em/en dashes. Brief:
+BakeCost-Design-Direction-v8-Tartufo.md. STATUS: awaiting
+Amina's yes after seeing the screenshots; nothing pushed.
+
+## v8 motion match (19 Nov ~01:00 PKT, NOT DEPLOYED)
+
+Trigger: Amina 00:43 PKT 19 Nov asked for a Muse test link and
+said the motion, scrolling effects and animations must match the
+Tartufo sample exactly or she will reject it. Two deliverables:
+match the motion, then a Muse-hosted test link.
+
+Tartufo motion study. Source (curl of their homepage): Webflow
+site, GSAP 3.15.0 + SplitText + ScrollTrigger, a first-visit
+loader script, a hero product slider. No Lenis or Locomotive in
+the source. Live observation (browser task, homepage top to
+bottom twice): first-visit full-screen loader (blush ground,
+logo parts fading in staggered, exits sliding DOWN, first visit
+only); hero photo parallax at about 0.85x scroll speed while the
+headline moves 1:1, hero not pinned, photo does not scale or
+fade; section headlines rise line by line inside overflow-hidden
+masks (under 1s, fade plus short upward slide); images fade/slide
+in with no scale-up and no clip wipe, collage images at different
+parallax rates; header not sticky, fades away within the first
+300px and returns only at the very top; buttons share one hover,
+a light fill wiping left to right; hero product card auto-rotates
+every 15-25s, new card in from the right, old out to the left;
+no marquee, no pinned section, no counters, no floating cards,
+circular badge STATIC. Scroll feel smooth and inertial.
+
+Implemented in vanilla JS and CSS (no GSAP; the effects are what
+matters, not the library), landing only, app untouched:
+loader (cream overlay, AH logo, BakeCost, tagline fading in at
+0s/0.45s/0.9s, curtain drops at 1.6s, 1s slide down, first visit
+only via localStorage, 5s hard fallback, reduced motion skips
+it); hero parallax (photo 118% tall, translates at 12% of
+scroll); masked line reveals (splitLines measures real rendered
+lines after fonts.ready, preserves the h1 <br> and italic,
+re-splits on resize from stored original HTML so a rotated phone
+never clips; hero lines rise in order after the loader, section
+lines on IntersectionObserver, one way); header fades out over
+0-300px scroll (opacity plus 8px rise, hidden at the end);
+button wipe (background gradient growing 0 to 100% width behind
+the text, text colour flips with it, per variant); hero card
+rotator (three sample recipes, 8s interval, slide in from right
+and out to left, pauses on hover, off-screen, or hidden tab,
+stage height follows the active card); gallery differential
+parallax (0.03/0.06/0.09 by column); stamp rotation REMOVED
+(their badge is static); card lift and image zoom REMOVED on
+the landing; button press scale REMOVED on the landing.
+Everything no-ops under prefers-reduced-motion.
+
+Proof: headless frames (proof server 8932, virtual-time
+budgets). 400ms: loader overlay up (part fades frozen at start
+by the virtual-time artifact, as expected). 5000ms: loader gone,
+hero lines in, Butter Cake card, desktop and phone both clean.
+15000ms: card rotated to Sourdough Loaf ($1.86, $8.00, 76.8%),
+proving the rotator. Checks: npm run check clean, npm test 53
+passed, zero em/en dashes. Proof-server injection extended to
+kill .line-inner and .hero-card transitions (final-state frames
+only; shipped CSS untouched).
+
+Preview link: single-file export (196,895 bytes) built by
+inlining styles.css (fonts embedded as base64 data URIs), a
+bundled classic script (motion + sample-data + costing +
+landing, import/export stripped, node --check clean), logo and
+app links pointed at the live Vercel site (logo.png curl 200;
+app.html 308s to /app, 200). Rendered identically in the
+headless shell (logo broken there only, proxy artifact).
+Uploaded to Muse storage:
+https://muse.ai/files/1410730908793121/2367028930725162/oscehjrq684fan438hcspf7i/bakecost-v8-preview.html
+expires 2026-11-20T20:00:44Z (21 Nov 01:00 PKT). Anyone with
+the link can open it. Cloud-browser verification of the live
+motion was BLOCKED: the cloud browser refuses muse.ai/files
+URLs (organisation policy), so the real-time motion check is
+Amina's own test on the link. On this preview, Google sign-in
+and AI invoice reading do not work (Firebase only allows the
+Vercel domain); guest demo works, and app links open the live
+app. STATUS: NOT PUSHED to GitHub or Vercel; push waits on her
+yes after testing the preview.
+
+## v9 "Flaky's" redesign (19 Nov, NOT DEPLOYED)
+
+Trigger: Amina rejected the live (v7) site again on 19 Nov
+11:13 PKT and sent the Flaky's Dribbble shot
+(dribbble.com/shots/25939557, Maria Maximova: giant bubbly
+pink letters on a dark maroon card floating over a blue sky
+with falling croissants) as the new direction. v8 is
+superseded. Brief:
+`~/workspace/goals/500-per-week-from-technical-services/hidden_files/BakeCost-Design-Direction-v9-Flakys.md`;
+reference at `hidden_files/flakys-reference.png`. Design
+language only is replicated, with BakeCost's own copy, photos,
+prices and logo; never their brand name, text, logo or product
+images.
+
+Mapping. Palette: maroon-black #1a0302 (hero card), burgundy
+#6d1a2d (secondary), bubbly pink #ff6ccf (headlines on dark,
+accents), warm white #fdf8f0 (canvas), deep indigo #2b2d9e
+(hero CTA). Display font: Fredoka (Google Fonts, rounded
+bubbly sans), self-hosted as `fonts/fredoka.woff2` (29,732
+bytes; fontTools verified variable font, wght axis 300-700,
+230 glyphs); Inter stays for body; Cormorant files stay in
+the repo, unused by v9. Corners ROUNDED everywhere (the
+opposite of v8's sharp corners): 20-24px cards, pill buttons,
+pill nav, pill SAMPLE chips.
+
+Hero. Sky photo backdrop, full-bleed. Dark maroon rounded
+card floats over it with a thick pale cream frame (10-12px,
+28-32px radius), inset from the viewport edges. Four
+blob-masked floating croissant photos peek from behind the
+card's corners (two small ones on phones). Pill nav INSIDE
+the hero card: translucent lighter-maroon pill, pink Fredoka
+"BakeCost" wordmark left, centre links (Recipes, Calculator,
+Features, Pricing), Sign in + pink pill "Try free" right; the
+old sticky header is gone (footer carries the links below the
+hero). Headline, centred, two lines, Fredoka Bold, uppercase,
+pink: "EVERY RECIPE / COSTED!". One large glossy diagonal
+croissant photo, point-down, centred, OVERLAPPING the
+headline (blob mask, -8deg rotation, drop shadow). Indigo
+pill CTA "Get the free audit" (short "Free audit" on phones)
+centred over the photo, links to the audit section. Bottom
+strip inside the card: tagline bottom-left ("Prices move.
+Your recipes should keep up."), centre RECIPE CAROUSEL (pink
+square arrows; Butter Cake $5.86, Sourdough Loaf $1.86,
+Lemon Drizzle $3.95, real sample figures; middle selected),
+right three rounded-square thumbnails (active on a pink
+tile). Switching (arrows, thumbnails, auto-rotate every 8s)
+changes the central photo, the selected name/price and the
+active thumbnail.
+
+Below the hero, the same sections as v8 restyled: sections
+alternate cream canvas and dark maroon; headings Fredoka
+bubbly (pink on dark, maroon-black on cream); big rounded
+corners; pink pill buttons; small-caps pink section labels;
+SAMPLE chips kept. The app-preview section stays dropped
+(it never returned after v8).
+
+Motion (v8 system adapted, not rebuilt): first-visit loader
+RECOLOURED (maroon bg, pink Fredoka name, curtain slides
+down, first visit only, same localStorage key); masked line
+reveals for the bubbly headline and section headings
+(splitLines, real rendered lines, re-splits on resize);
+floating croissants drift on slow float keyframes plus scroll
+parallax in the same rAF loop (sky photo parallaxes at 12%);
+carousel slides between selections (new in from right, old
+out to left, 650ms); button hover is a playful pop (scale
+1.04 + shadow grow), not the Tartufo wipe; recipe card hover
+is a gentle lift + photo zoom. Everything no-ops under
+prefers-reduced-motion. The v8 header-fade code is gone
+(no header element); the v8 card rotator is replaced by
+initRecipeCarousel (landing.js). App files untouched;
+body.landing scoping stays; all JS hooks preserved.
+
+Photos (all curl-verified HTTP 200 and VIEWED before use).
+Sky: photo-1513002749550-c59d786b8e6c (vivid blue sky, wispy
+clouds top, fluffy cloud sea bottom). The brief's candidate
+photo-1534088568595 was REJECTED (dark storm clouds, not
+bright blue sky). Central croissant: photo-1555507036 (two
+glossy golden-brown croissants on dark slate; no true
+single-croissant photo surfaced among 8 candidates tested).
+Floating croissants: photo-1623334044303 (top-down grid,
+three different crops, one per floater) + photo-1530610476181
+(basket). Recipe and gallery photos unchanged from v6/v7.
+Note: the three grid-crop floaters replaced two dark-slate
+floaters mid-proof, because the visible corner chunks of the
+dark-slate photo showed dark background, not pastry (the
+frame aspect ratio leaves no vertical overflow for
+object-position to shift).
+
+Proof defects found and fixed (frames in /tmp/v9-proof/).
+(1) Floaters covered content on all viewports (z-index above
+the card): moved behind the card (z-index 1) to peek from
+its corners, four corners on tablet/desktop, two on phones.
+(2) Phone card overflowed the viewport: the carousel row
+(~428px) set the card's min-content width above the 366px
+available and the flex-item card refused to shrink
+(min-width: auto). Fixed with min-width: 0 on the card,
+strip and carousel, plus a selected-item-only carousel on
+phones (thumbnails below still show all three recipes).
+(3) Phone "COSTED!" hidden behind the central photo: photo
+shrunk to 130px and moved to top 62% of the stage, CTA
+shrunk to 14px on phones; the overlap is softer on phones
+for readability, a deliberate responsive trade-off.
+(4) The tall-proof pin (.hero 560px) did not hold: the card
+carries its own min-height calc(100svh - 112px), so the
+proof server now pins .hero-card too in tall mode.
+(5) Audit small note touched its button: #audit .small now
+has margin-top 18px. The virtual-time artifact applied as
+in v8 (loader parts frozen at opacity 0 at 400ms); a
+?loaderfinal=1 proof param shows the loader content at full
+opacity.
+
+Post-build fixes (parent review, 19 Nov 11:41 PKT, frames
+d-hero-fix1.png and m-hero-fix1.png in /tmp/v9-proof/).
+(6) Phone hero: the absolute overlap hid the second headline
+line behind the CTA pill and the pill covered the 130px
+photo almost entirely. Below 700px the stage is now a column
+in flow (headline, then a 216px photo with the CTA on it),
+with phone-specific entrance keyframes (the desktop ones
+carry a translate(-50%) centring that would shift a relative
+element). Re-proven at 390x844: headline fully visible,
+pastry close-up visible around the pill.
+(7) Intro photo: the source frame is half dark background,
+so the blob showed dark slate, not pastry. The Unsplash URL
+now requests a bottom-anchored 800x320 crop
+(w=800&h=320&fit=crop&crop=bottom); the proof copy in
+/tmp/unsplash-check/ was cropped to the same bottom half
+(original kept as photo-1555507036-orig.jpg). Re-proven at
+1280x800: the blob is now almost entirely golden croissant.
+The preview export was patched with both fixes and
+re-verified against the source: desktop pixel-identical
+(max diff 0), phone near-identical (max diff 21, nav text
+anti-aliasing only, zero pixels over 30).
+
+(8) Colour swap (Amina, 19 Nov 11:47 PKT: "no its not
+looking good pink color parrot would be good more"): the
+Flaky's pink is gone everywhere. Tokens renamed --pink to
+--parrot: #7ed321 (vivid parrot green), --parrot-soft
+#a3e635, --parrot-dim rgba(163, 230, 53, 0.72), plus new
+--parrot-deep #4d7c0f for the small section labels on cream,
+where the bright green is too light to read. Button and nav
+shadows/borders re-tinted to rgba(126, 211, 33). The indigo
+CTA, maroon card, sky and photos are unchanged. Re-proven
+at 1280x800, 390x844 and in full-page bands (recipes label
+readable in deep green, featured $29 price and MOST BAKERIES
+tag in bright parrot on maroon). Export rebuilt from the new
+CSS with the same font data URIs and re-verified
+pixel-identical at desktop and phone (max diff 0).
+
+Proof results. Heroes verified at 1280x800, 768x1024 and
+390x844 (nav complete, headline fits and is centred, photo
+overlaps the headline, CTA pill on the photo, strip complete,
+floaters peeking at corners, sky frame visible around the
+card). Loader proven twice: overlay up at 400ms, and content
+(AH logo, pink Fredoka BakeCost, tagline) via ?loaderfinal=1.
+Rotator proven at 15000ms: Lemon Drizzle selected (pink),
+drizzle thumb active (pink tile), central photo is the lemon
+tart. Full-page bands viewed at all three widths: recipes
+(3 cards, exact sample figures, Lemon Drizzle $3.95),
+calculator (working: Butter Cake, Butter $6.64/kg, $5.86,
+75.6%, On target), bento (exact sample data), gallery (all
+6 photos, 3-col desktop/tablet, 2-col phone), pricing
+($49/$19/$29, Bakery featured maroon with pink price),
+audit, CTA, footer (real AH logo, Product/Company columns).
+Zero horizontal overflow at 390px (pixel scan: card maroon
+spans x 22..367 of 390). Checks: npm run check clean, npm
+test 53 passed, 0 em/en dashes in index.html, styles.css,
+landing.js, 8/8 calculator IDs present, 101 classes used in
+index.html, all defined in CSS.
+
+Screenshots: `~/workspace/bakecost-v9-preview/`
+(v9-desktop-hero.png, v9-phone-hero.png,
+v9-desktop-recipes.png). Single-file preview export:
+`~/workspace/bakecost-v9-preview/bakecost-v9-preview.html`
+(same technique as v8: styles.css inlined with fonts as
+base64 data URIs; motion.js + sample-data.js + costing.js +
+landing.js bundled as one classic script, import/export
+stripped, node --check clean; logo and app links point at
+the live Vercel site). STATUS: NOT PUSHED to GitHub or
+Vercel; push waits on Amina's yes after she sees the
+screenshots and the preview link.
+
+## v10 "Real Bakery" redesign (19 Nov, NOT DEPLOYED)
+
+Trigger: 19 Nov 13:07 PKT, Amina rejected v9 (both the pink
+and the parrot-green versions) as looking AI-generated and
+ordered a rebuild based on real bakery websites: "DEEPLY
+INSPECT THE REAL WEBSITES HOW THEY LOOK THEM BMAD IT". She
+was right. Flaky's was a Dribbble concept shot: bubbly type,
+neon colour, blob photos, a floating card over a sky. It looks
+generated because it is a concept, not a real shop.
+
+Research (19 Nov 13:07-13:11 PKT): a browser task visited and
+scrolled the full homepages of Tartine (tartinebakery.com),
+Levain (levainbakery.com), Magnolia Bakery
+(magnoliabakery.com), Milk Bar (milkbarstore.com), GAIL'S
+(gailsbakery.com) and Poilane (poilane.com). CAVEAT:
+gailsbakery.com is NOT the UK Gail's chain (that is
+gailsbread.co.uk); it is a small Wix home-baker site with
+template placeholders still in it, used only as a cautionary
+example. The design model comes from the other five. What
+they share: one restrained palette (cream/white + near-black
++ ONE accent, the food supplies the colour), real photography
+in quantity, named places/dates/people, a plainly stated
+ordering model with real constraints, story before selling,
+muted functional typography with one display voice, sharp-ish
+cards, a plain useful footer, seasonal dated content. Full
+brief:
+`~/workspace/goals/500-per-week-from-technical-services/hidden_files/BakeCost-Design-Direction-v10-RealBakery.md`.
+
+Design language. Palette: warm cream #F7F3EC ground, white
+cards, near-black #1A1A1A text, ONE deep bottle green accent
+#0B3D2E (Magnolia's green). This keeps Amina's green
+direction in the real-bakery register: deep and restrained,
+not neon parrot. No pink, no parrot green, no burgundy, no
+indigo on the landing (burgundy stays in the app UI only).
+Type: Cormorant Garamond serif headlines (self-hosted since
+v8, weight 500, sentence case, one italic word max) + Inter
+body. Radii: buttons 4px, cards 8px max, everything else
+sharp. No pills, no blobs, no neon.
+
+Structure (landing only, all scoped under body.landing).
+Announcement bar (deep green, one real line: the free audit
+for the first 20 bakeries). White sticky header with hairline,
+Cormorant "BakeCost" wordmark, small uppercase nav (Recipes,
+Calculator, How it works, Pricing), Sign in text link + one
+solid deep green Try free button. Hero: the Tartine pattern,
+full-bleed bakery-interior photo (photo-1517433670267, about
+70vh desktop, shorter on phones) with the headline BELOW it,
+never overlaid: "Know what every recipe really costs." +
+one plain sentence + ONE deep green button + a "See how it
+works" text link + one dated line (butter down 17%, flour up
+24% since last September, US Bureau of Labor Statistics,
+September 2026). Sections in order: Recipes ("From the demo
+kitchen", 3 sample cards, square photos, exact figures,
+SAMPLE chips, "See it in the app" as a plain text link, not a
+button); Calculator (fully interactive, all 8 calculator IDs
+intact, plain inputs, deep green slider and button); Story
+("Why BakeCost exists", bread-loaves photo beside plain text:
+built by Amina Ahsan and Hadi Kashif in Lahore, November
+2026; flour up 24%, eggs down 35%, butter down 17% in a year,
+BLS September 2026); How it works (v5 bento content, exact
+sample data unchanged, white cards, hairlines, sharp
+corners); Gallery (the 6 verified photos, sharp corners,
+static masonry); Pricing (3 plain cards; featured Bakery
+$29/mo is deep green with white text and a plain "Most
+bakeries" tag; Audit $49 one time, Home Baker $19/mo); Free
+audit (deep green section, one button, one note line); FAQ
+(new, 4 questions, all answers grounded in real facts:
+audit input, no sign-up demo, any ingredient/supplier, real
+prices); Footer (deep green, real email
+ah.systemsss@gmail.com, "Lahore, Pakistan", "Built by Amina
+Ahsan and Hadi Kashif, A&H Systems", "© 2026 BakeCost"). No
+invented testimonials, quotes, stats, addresses, or hours.
+Zero em dashes and zero en dashes in every touched file.
+
+Motion: almost none. REMOVED: the loader (markup and code),
+the hero carousel rotator, the hero parallax, the masked line
+reveals, the sky background, the blob-masked photos, the
+count-ups, the badge spring pop, the card hover lift and the
+photo zoom. The ONLY motion is one subtle scroll fade
+(opacity + 8px rise, 0.6s ease, IntersectionObserver) and a
+button hover that darkens slightly. All no-op under
+prefers-reduced-motion. landing.js shrank from 560 lines to
+about 200: initReveals + the calculator only (calcRender now
+sets values directly instead of animating them). motion.js
+untouched (the app still uses it). The calculator wiring is
+otherwise identical to v9.
+
+Technical notes. Section IDs renamed to the brief's list
+(recipes, calculator, story, features, gallery, pricing,
+audit, faq) so the nav anchors work; the v9 IDs (examples,
+tryit, new) are gone. The app (app.html, app.js, app.css)
+and all app JS (costing, sample-data, invoice-parser,
+charts, features, store, firebase files) are untouched.
+Fredoka stays in the repo unused. The proof server
+(/tmp/proof-server.mjs) was updated for v10: the proof-only
+CSS now forces .reveal elements visible (the 0.6s fade
+freezes near its start value under --virtual-time-budget, so
+proof frames would otherwise show blank sections), ?tall=1
+pins .hero-photo to 560px instead of the removed hero card,
+and a probe script records scrollWidth/clientWidth as data
+attributes so --dump-dom can verify overflow.
+
+Proof (frames in /tmp/v10-proof/). Desktop hero 1280x800,
+tablet 768x1024, phone hero 390x844, all viewed: photo-first
+hero, headline below, no overlay type, no bubbles, no neon.
+Full-page desktop bands viewed: recipes exact figures
+($5.86/$24.00/75.6%, $1.86/$8.00/76.8%, $3.95/$18.00/78.1%),
+calculator working ($5.86 / 75.6% / On target, slider at
+$6.64 per kg), story block, bento exact data (Maya $20
+balance due, Lena $54 overdue, Noor paid; 2 kg butter, 8.8 kg
+flour, 16 eggs; Millbrook flour jumped +24%), gallery all 6
+photos, pricing $49/$19/$29 with deep green featured card,
+audit, FAQ (all 4 questions), footer. Tablet 768px: two
+column recipe grid confirmed. Phone: single column cards,
+story stacked, logo + Try free only in the header.
+Horizontal overflow: scrollWidth equals clientWidth at 390px
+(375/375), 768px (753/753) and 1280px (1265/1265). npm run
+check clean, npm test 53 passed, 0 failed. 0 em/en dashes in
+index.html, styles.css, landing.js, BUILD-REPORT.md.
+
+Not verified: slider/recipe-change interaction in a live
+browser (the headless shell cannot click; jsdom 31 does not
+execute ES module scripts, so a scripted interaction test was
+impossible with the available harness). The initial render
+proves initCalculator and calcRender run correctly in real
+Chromium, and the event wiring is unchanged from v9, whose
+calculator was proven working. The parent should click-test
+the slider on the preview link before showing Amina.
+
+Parent verification (19 Nov ~13:20 PKT): the parent viewed fresh
+frames with its own eyes (desktop/tablet/phone heroes, recipes,
+calculator, story, pricing, audit, FAQ, footer) and confirmed the
+build: deep green footer (the dormant v9 --maroon/--parrot base
+rules are overridden under body.landing; the audit section and
+footer both render #0B3D2E), calculator rendering $5.86 / 75.6% /
+On target. The slider wiring was read in full: change/input
+listeners on calcRecipe, calcIngredient and calcSlider all call
+calcRender, the same pattern as v9, whose calculator was proven
+working; a live click-test of the preview link is not possible
+(the cloud browser refuses muse.ai/files URLs and cannot reach
+the local proof server), so the code read plus the live initial
+render stands as the verification. Single-file preview export
+built (styles.css inlined with the same font data URIs; bundle is
+sample-data.js + costing.js + landing.js only, no motion.js,
+node --check clean; 8 app links rewritten to the live Vercel app)
+and verified pixel-identical to the source at desktop and phone
+(max diff 0). NOTE: /tmp was wiped by a VM restart at ~13:19 PKT
+mid-verification (proof frames, the proof server and the Unsplash
+cache all lost); the proof server was rebuilt from scratch and a
+durable copy saved at ~/workspace/bakecost-proof/proof-server.mjs
+so the next rebuild starts from the file, not from memory.
+
+STATUS: NOT DEPLOYED. Nothing pushed to GitHub or Vercel.
+Preview link sent to Amina 19 Nov ~13:30 PKT; push waits on her
+yes.
+
+## v11 "Aesthetic Motion" redesign (19 Nov, NOT DEPLOYED)
+
+Trigger: Amina rejected v10 at 13:32 PKT as still not good
+enough (too plain) and ordered the Pinterest/Dribbble aesthetic
+with motion UI. Dribbble research done 13:33-13:38 PKT (7 shots;
+Pinterest was blocked by a login wall, so the direction comes
+from Dribbble only). Brief:
+`~/workspace/goals/500-per-week-from-technical-services/hidden_files/BakeCost-Design-Direction-v11-AestheticMotion.md`.
+Design language only from the shots, never their brand, text,
+logo or product images; all copy, photos, prices and figures are
+BakeCost's own.
+
+Palette (exact): cream ground #FCF0C9, warm paper #FFF6E0,
+butter panel #FFEBB1, ink (near-black brown) #110704, dark
+panel #230F08, caramel #AC491F, copper #C88F63, ONE loud accent
+burnt orange #F95202 (all primary CTAs + the one "Most
+bakeries" sticker), pistachio #B8D871 only for positive
+price-move tags, olive #5B5329 for small labels on cream. No
+pink, no neon, no gradients, no parrot green as a headline
+colour. Type: Anton (heavy condensed uppercase display,
+self-hosted, see below) + Cormorant italic accent (one
+emotional line per section) + Inter body. Grain: a very subtle
+SVG feTurbulence data URI overlay on dark sections only.
+
+Anton: `fonts/anton.woff2`, 18,612 bytes, downloaded from the
+Google Fonts latin subset and verified with fontTools (woff2,
+family Anton, Regular, weight 400, 283 glyphs, unitsPerEm
+2048). Fredoka (v9) stays in the repo unused.
+
+Hero (Loafly + Koko, dark #110704): full-width overhead photo
+across the top third (top-down croissant grid
+photo-1623334044303, viewed before use); centred huge Anton
+headline "KNOW WHAT EVERY RECIPE COSTS" (two lines, "costs" in
+Cormorant italic copper as the one emotional accent word); one
+plain sentence in cream; ONE burnt-orange pill CTA "Get the
+free audit" + one ghost text link "See how it works"; ONE giant
+floating product (tray of croissants photo-1530610476181 in a
+large rounded card, bobs slowly, soft shadow moves with it);
+rotating circular stamp "BAKED FRESH, COSTED RIGHT" around a
+small wheat mark (15s per revolution, pauses on hover, wheat
+stays static); pill nav centred under the photo; directly under
+the hero a slow marquee strip with the REAL BLS price moves
+("BUTTER DOWN 17% / FLOUR UP 24% / EGGS DOWN 35% /" repeating,
+25s loop, down moves pistachio, up moves copper); a second
+identical marquee sits above the footer.
+
+Sections in order: hero + marquee; Recipes ("FRESH PICKS",
+cream): 3 sample recipes as warm paper cards, 28px radii,
+SAMPLE chips rotated -2deg, sensory lines, exact figures
+(Butter Cake $5.86/$24.00/75.6%, Sourdough Loaf
+$1.86/$8.00/76.8%, Lemon Drizzle $3.95/$18.00/78.1%), no star
+ratings; Calculator ("TRY IT YOURSELF", butter panel): fully
+interactive, all 8 calculator IDs intact; Story ("WHY BAKECOST
+EXISTS", dark panel): loaves photo beside real specifics only
+(Amina Ahsan and Hadi Kashif, Lahore, November 2026; flour up
+24%, eggs down 35%, butter down 17%, BLS September 2026), one
+Cormorant italic line; How it works / features (cream): v5
+bento restyled, exact sample data unchanged; Gallery (dark):
+6 verified photos, large radii, one photo overlapping the
+section edge (see the multicol note below); Pricing (cream):
+Audit $49 one time, Home Baker $19/mo, Bakery $29/mo featured
+dark card with a burnt-orange "Most bakeries" sticker rotated
+-2deg; Free audit (dark): Anton headline, one Cormorant italic
+line, one burnt-orange pill button; FAQ (cream); Footer (dark):
+real email, "Lahore, Pakistan", "Built by Amina Ahsan and Hadi
+Kashif, A&H Systems", "© 2026 BakeCost".
+
+Signature interaction (built last): "Reveal the cost" on each
+recipe card slides in a vintage receipt with that recipe's REAL
+ingredient cost breakdown, built by landing.js from
+sample-data.js + costing.js (latest prices: Butter $6.64/kg,
+Wheat flour $3.10/kg, Eggs $3.90/dozen, Sugar $1.90/kg; latest
+invoice date 2026-09-08, shown as "8 SEP 2026"). Receipt:
+mono type, dashed separators, slightly rotated, torn zigzag
+bottom edge (clip-path), "BAKER: BAKECOST DEMO", "SAMPLE DATA,
+NOT A REAL SALE", Close link; click again (or Close) hides it.
+Receipt math verified by hand before building: Butter Cake
+$3.32 + $1.24 + $1.30 = $5.86; Sourdough $1.86; Lemon Drizzle
+$0.93 + $1.66 + $0.98 + $0.38 = $3.95. `?receipt=1|2|3|<recipe
+id>` opens one receipt on load (the proof hook, since the
+headless shell cannot click).
+
+Motion, in priority order: (1) hero staggered entrance
+(headline words rise with 90ms stagger, 700ms ease-out; hero
+photo scales 1.05 to 1.0 over 1200ms); (2) floating hero
+product (5s loop, a few pixels, shadow breathes with it);
+(3) hover: card lift 6px + photo scale 1.04, 300ms ease-out;
+pill buttons lift 2px; (4) marquee 25s loop; (5) scroll
+reveals (fade + 24px rise, 0.7s) + gentle parallax on the hero
+photo (0.3x, capped 48px) and the wheat doodle; (6) rotating
+stamp 15s; (7) receipt slide-in (grid-rows 0fr to 1fr + fade).
+No loader, no rotator, no masked line reveals (the v8/v9
+systems stay removed). Reduced motion: float, marquee,
+parallax and stamp rotation disabled; entrance forced visible;
+only fades remain. JS off: everything visible, calculator keeps
+its server-rendered state.
+
+TWO DEVIATIONS from the brief, decided with reasons: (1) The
+floating product uses photo-1530610476181 (tray of croissants,
+a v9-verified photo) instead of the brief's photo-1555507036
+with a bottom-anchored URL crop, because the proof server
+ignores URL query params and serves the full frame, so a URL
+crop cannot be proven, and the 1555507036 full frame is half
+dark background; the tray photo shows pastry with
+object-position bottom and proof matches production exactly.
+(2) The italic "costs" accent word uses copper #C88F63 instead
+of caramel #AC491F: caramel on dark #110704 is about 2.9:1
+contrast and reads muddy; copper is the same warm family at
+about 5:1 and reads golden. Caramel is still used on cream
+(prices, labels).
+
+Gallery overlap, multicol lesson: the first attempt used
+margin-top: -120px on the cookies figure (first item in the
+middle multicol column). A geometry probe proved Chrome
+computes the margin but ignores it there (fig3 top stayed
+5036, level with the other columns). The working form is
+transform: translateY(-120px) rotate(-1.5deg) plus a matching
+margin-bottom: -120px to close the hole the transform leaves
+below it. The figure is NOT a .reveal (the reveal system owns
+transform on .reveal elements and would fight it); the other
+five figures still reveal. Re-probed after the fix: fig3 top
+4912 (124px above the other columns), transform matrix shows
+-120px translate and -1.5deg rotate, fig4 pulled up to 5333.
+Scoped to min-width 700px only; on phones the two-column flow
+has no overlap.
+
+Files changed (landing only): index.html rewritten (dark hero
+with overhead photo + stamp SVG + floating product + pill nav
++ wheat doodle + two marquees; recipe cards with sensory lines,
+receipt toggle buttons and receipt divs; story/audit italic
+lines; all section IDs and all 8 calculator IDs kept);
+styles.css gained Anton @font-face, v11 tokens, and the full
+v11 system appended (hero, stamp, float, marquee, recipes +
+receipt, calculator, story, bento, gallery, pricing, FAQ,
+footer, reveals, reduced motion, 700px/900px scale-up), all
+scoped under body.landing; landing.js rewritten (calculator
+code identical to v10; added initHeroEntrance, initParallax,
+initReceipts; initReveals unchanged). fonts/anton.woff2 added.
+App files untouched (app.html/app.js/app.css, costing.js,
+sample-data.js and all app JS verified by mtime). Dormant v9
+tokens (--parrot/--maroon) and v10 tokens remain in styles.css,
+overridden under body.landing; the rendered page shows none of
+them.
+
+Proof (rendered frames, proof server on port 8932, durable
+copy at ~/workspace/bakecost-proof/proof-server.mjs): heroes
+viewed at 1280x800, 768x1024, 390x844, plus a 1280x1150 full
+hero; entrance start (headline/lead/CTA/pillnav invisible),
+half (55% opacity, 14px rise left) and settled frames viewed;
+float at two loop points (42,302 differing px between animt 0
+and 6250), marquee at two positions (12,232 differing px,
+viewed: strip shifted a quarter loop), stamp rotated 150
+degrees between frames (viewed: "COSTED RIGHT" moved to the
+top, wheat mark static); one scroll reveal mid-state viewed
+(?revealhalf=1, recipes band at 50% opacity); receipt revealed
+via ?receipt=1 (only the Butter Cake receipt open, correct
+breakdown, zigzag edge, Close link; all three receipts'
+contents verified in an earlier capture); full-page desktop
+bands viewed (recipes exact figures, calculator $5.86/75.6%/On
+target, story, bento exact data, gallery all 6 photos with the
+overlap, pricing $49/$19/$29 with dark featured card, audit
+with orange pill, FAQ, footer); phone bands viewed (recipes
+single column, pricing single column, gallery 2 columns, all 6
+photos); tablet recipes viewed (2-column grid). Zero
+horizontal overflow at 390/768/1280 (scrollWidth ==
+clientWidth in all three probes). npm run check clean, npm
+test 53 passed, 0 em/en dashes in index.html, styles.css,
+landing.js and this report. 106 classes used in index.html,
+all defined (the `primary` class is a marker with no rule of
+its own; the plain .btn IS the primary button, noted in the
+CSS).
+
+Proof fixes made along the way (proof server only, shipped
+files untouched): (1) lazy images below the fold came out
+blank in tall captures, so the server now rewrites
+loading="lazy" to loading="eager" in served HTML. (2) That
+alone was not enough: images decode in document order and the
+virtual-time budget expired mid-decode (butter cake loaded,
+sourdough/lemon/story/gallery blank). Fixed by raising tall
+captures to --virtual-time-budget=60000 (120000 for the
+12000px phone capture) and downscaling the local proof copies
+in /tmp/unsplash-check/ to 800px wide (hero kept at 1600px);
+all 12 photos then render. (3) The first receipt-forcing
+injection opened ALL receipts; scoped to .receipt-open.
+(4) Added a ?geom=1 probe (gallery figure offsets + computed
+styles + overflow numbers, readable via --dump-dom).
+
+NOT verified by render (headless shell limits, code-reviewed
+only): hover lift/photo scale (no hover in the headless
+shell); scroll parallax (no scrolling); the receipt toggle and
+Close clicks and the calculator slider drag (no clicking; the
+?receipt param proves the open state through the same
+setReceiptOpen code path, and the initial calculator render
+proves initCalculator/calcRender run in real Chromium).
+
+STATUS: NOT DEPLOYED. Nothing pushed to GitHub or Vercel.
+Preview export + showing Amina is the parent's job; push waits
+on her yes.
+
+Post-build fix (parent, 19 Nov ~14:05 PKT, after Amina's verdict
+"YES THATS GOOD BUT WE HAVE ONLY DONET"): she approved v11 but
+pointed out the hero only showed one item, croissants twice
+(hero band + floating tray), which she called a donut. Fixed in
+index.html only: hero band is now rustic bread loaves
+(photo-1509440159596), the floating product is a real
+chocolate-glazed donut stack (photo-1551024601-bec78aea704b,
+curl-verified HTTP 200 and viewed), and the story photo moved
+to the bakery interior (photo-1517433670267) so the loaves do
+not repeat three times. One croissant photo remains, in the
+gallery only. Re-proven by the parent: desktop + phone heroes
+viewed, npm run check clean, npm test 53 passed, 0 dashes.
+Second preview export:
+~/workspace/bakecost-v11-donut-preview/bakecost-v11-donut-preview.html
+(verified against source: only 583 pixels differ, all in the
+animated float/stamp regions, i.e. animation phase only).
+REVERTED the same day (19 Nov ~14:05 PKT): Amina said "NO THE
+PREVIOUS ONE IS GOOD", so the donut fix was undone and the
+original v11 croissant hero was restored and re-verified
+(reverted hero matches the original v11 hero except for
+animation phase). The donut version is dead; the ORIGINAL v11
+is the approved one being deployed.
+
 ## Files
 
 - `index.html`, `styles.css`, `landing.js`: landing page.

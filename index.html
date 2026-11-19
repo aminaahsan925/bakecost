@@ -7,21 +7,23 @@
 <meta name="description" content="BakeCost reads your supplier invoices, tracks ingredient prices, and recosts your recipes. When a margin drops, you know first. Try the app free, no sign-up.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600;1,9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="landing">
+
+<div class="announce">Free ingredient audit for the first 20 bakeries. No card needed.</div>
 
 <header class="site-header">
   <div class="header-inner">
-    <a class="brand" href="index.html">
-      <img src="logo.png" alt="A&amp;H Systems logo">
-      <span class="brand-name">BakeCost</span>
-    </a>
+    <a class="brand" href="index.html"><span class="brand-name">BakeCost</span></a>
     <nav class="site-nav">
+      <a href="#recipes">Recipes</a>
+      <a href="#calculator">Calculator</a>
+      <a href="#features">How it works</a>
       <a href="#pricing">Pricing</a>
-      <a href="#audit">Free audit</a>
-      <a class="btn small" href="app.html">Open the app</a>
+      <a href="app.html">Sign in</a>
+      <a class="btn small" href="app.html">Try free</a>
     </nav>
   </div>
 </header>
@@ -29,67 +31,54 @@
 <main>
 
 <section class="hero">
-  <div class="wrap hero-inner">
-    <div class="hero-copy">
-      <span class="hero-eyebrow hero-enter" style="--i:0">For small bakeries</span>
-      <h1 class="hero-enter" style="--i:1">Know what every recipe <em>really</em> costs.</h1>
-      <p class="lead hero-enter" style="--i:2">BakeCost reads your supplier invoices, tracks ingredient prices, and recosts your recipes. When a margin drops, you know first.</p>
-      <div class="btn-row hero-enter" style="--i:3">
-        <a class="btn" href="app.html">Open the app, free</a>
-      </div>
-      <p class="hero-note hero-enter" style="--i:4">No sign-up. Sample data included.</p>
+  <div class="hero-photo">
+    <div class="hero-photo-inner">
+      <img src="https://images.unsplash.com/photo-1623334044303-241021148842?w=1600&amp;q=80&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1623334044303-241021148842?w=800&amp;q=80&amp;auto=format&amp;fit=crop 800w, https://images.unsplash.com/photo-1623334044303-241021148842?w=1600&amp;q=80&amp;auto=format&amp;fit=crop 1600w" sizes="100vw" alt="Overhead view of golden croissants on baking paper" fetchpriority="high">
     </div>
-    <div class="hero-banner-wrap hero-enter" style="--i:5">
-      <div class="hero-banner">
-        <div class="hero-banner-main">
-          <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1600&amp;q=80&amp;auto=format&amp;fit=crop" srcset="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&amp;q=80&amp;auto=format&amp;fit=crop 800w, https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1600&amp;q=80&amp;auto=format&amp;fit=crop 1600w" sizes="100vw" alt="Seeded rustic bread loaves with wheat stalks on a wooden table" fetchpriority="high">
-        </div>
-        <div class="hero-banner-side">
-          <img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Chocolate chip cookies in a bowl lined with baking paper" loading="lazy" decoding="async">
-        </div>
-        <div class="hero-banner-side">
-          <img src="https://images.unsplash.com/photo-1550617931-e17a7b70dce2?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Chocolate cupcakes with swirled frosting" loading="lazy" decoding="async">
-        </div>
-      </div>
-      <div class="hero-stamp" aria-hidden="true">
-        <svg viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="58" fill="none" stroke="rgba(201,168,106,0.55)" stroke-width="1"></circle>
-          <circle cx="60" cy="60" r="33" fill="none" stroke="rgba(201,168,106,0.4)" stroke-width="1"></circle>
-          <defs><path id="stamp-circle" d="M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0"></path></defs>
-          <text class="stamp-text"><textPath href="#stamp-circle" textLength="288" lengthAdjust="spacingAndGlyphs">Baked fresh • Costed right •</textPath></text>
-        </svg>
-        <span class="stamp-center">B</span>
+  </div>
+  <div class="hero-stamp" aria-hidden="true">
+    <svg class="stamp-ring" viewBox="0 0 120 120">
+      <defs><path id="stamp-circle" d="M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0"/></defs>
+      <text class="stamp-text"><textPath href="#stamp-circle" textLength="288" lengthAdjust="spacingAndGlyphs">BAKED FRESH • COSTED RIGHT • </textPath></text>
+    </svg>
+    <svg class="stamp-mark" viewBox="0 0 40 40" aria-hidden="true"><g stroke="#C88F63" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M20 36 V12"/><path d="M20 14 L13 6"/><path d="M20 14 L27 6"/><path d="M20 22 L12 14"/><path d="M20 22 L28 14"/><path d="M20 30 L13 22"/><path d="M20 30 L27 22"/></g></svg>
+  </div>
+  <div class="hero-float">
+    <img src="https://images.unsplash.com/photo-1530610476181-d83430b64dcd?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="A silver tray piled with golden croissants" fetchpriority="high">
+  </div>
+  <div class="hero-band">
+    <div class="wrap">
+      <nav class="hero-pillnav" aria-label="Page sections">
+        <a href="#recipes">Recipes</a>
+        <a href="#calculator">Calculator</a>
+        <a href="#features">How it works</a>
+        <a href="#pricing">Pricing</a>
+      </nav>
+      <h1><span class="hw" style="--d:0ms">KNOW</span> <span class="hw" style="--d:90ms">WHAT</span><br><span class="hw" style="--d:180ms">EVERY</span> <span class="hw" style="--d:270ms">RECIPE</span> <span class="hw hw-it" style="--d:360ms">costs</span></h1>
+      <p class="hero-lead">BakeCost reads your supplier invoices, tracks what each ingredient costs, and recosts every recipe. When a margin drops, you know first.</p>
+      <div class="btn-row">
+        <a class="btn" href="#audit">Get the free audit</a>
+        <a class="hero-link" href="#features">See how it works <span aria-hidden="true">&#8594;</span></a>
       </div>
     </div>
   </div>
+  <svg class="hero-wheat" viewBox="0 0 40 40" aria-hidden="true"><g stroke="#C88F63" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M20 36 V12"/><path d="M20 14 L13 6"/><path d="M20 14 L27 6"/><path d="M20 22 L12 14"/><path d="M20 22 L28 14"/><path d="M20 30 L13 22"/><path d="M20 30 L27 22"/></g></svg>
 </section>
 
-<section class="app-preview" aria-label="The BakeCost app">
-  <div class="wrap">
-    <div class="app-frame-wrap reveal">
-      <div class="app-frame">
-        <div class="app-frame-bar">
-          <span class="mock-dots" aria-hidden="true"><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span></span>
-          <span class="app-frame-url">bakecost-sigma.vercel.app/app.html</span>
-        </div>
-        <img src="app-preview.png" width="1280" height="900" alt="The BakeCost dashboard: ingredients tracked, recipes, biggest price moves, and recent activity" decoding="async">
-      </div>
-      <div class="app-float" aria-hidden="true">
-        <div class="float-label">Price alert</div>
-        <div class="float-main">Wheat flour jumped 24%</div>
-        <div class="float-sub">Millbrook Supplies · 8 Sep 2026</div>
-      </div>
-    </div>
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <div class="marquee-group"><span class="mv-down">Butter down 17%</span><span class="mv-up">Flour up 24%</span><span class="mv-down">Eggs down 35%</span><span class="mv-down">Butter down 17%</span><span class="mv-up">Flour up 24%</span><span class="mv-down">Eggs down 35%</span><span class="mv-down">Butter down 17%</span><span class="mv-up">Flour up 24%</span><span class="mv-down">Eggs down 35%</span></div>
+    <div class="marquee-group"><span class="mv-down">Butter down 17%</span><span class="mv-up">Flour up 24%</span><span class="mv-down">Eggs down 35%</span><span class="mv-down">Butter down 17%</span><span class="mv-up">Flour up 24%</span><span class="mv-down">Eggs down 35%</span><span class="mv-down">Butter down 17%</span><span class="mv-up">Flour up 24%</span><span class="mv-down">Eggs down 35%</span></div>
   </div>
-</section>
+</div>
 
-<section class="section" id="examples">
+<section class="section" id="recipes">
   <div class="wrap">
-    <p class="section-label reveal">01 · Recipes</p>
-    <h2 class="reveal">Real recipes, real margins.</h2>
+    <p class="section-label reveal">Fresh picks</p>
+    <h2 class="reveal">Real recipes. Real margins.</h2>
     <p class="lead reveal">Sample recipes from the demo data, costed at the latest invoice prices.</p>
     <div class="product-grid">
-      <article class="product-card reveal" style="--i:0">
+      <article class="product-card reveal" data-recipe="sample-r1">
         <div class="product-photo">
           <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="A chocolate layer cake on a cake stand" loading="lazy" decoding="async">
           <span class="product-sample">Sample</span>
@@ -97,13 +86,16 @@
         <div class="product-body">
           <p class="product-category">Cake</p>
           <h3>Butter Cake</h3>
+          <p class="product-sensory">Half a kilo of butter in every cake.</p>
           <div class="product-row"><span>Ingredient cost</span><strong>$5.86</strong></div>
           <div class="product-row"><span>Sells at</span><strong class="product-sell">$24.00</strong></div>
           <div class="product-row"><span>Margin</span><span class="product-margin"><strong>75.6%</strong><span class="badge ok">On target</span></span></div>
-          <a class="btn ghost small product-cta" href="app.html">See it in the app</a>
+          <button class="btn small receipt-toggle" type="button" aria-expanded="false" aria-controls="receipt-r1">Reveal the cost</button>
+          <div class="receipt" id="receipt-r1"></div>
+          <a class="product-cta" href="app.html">See it in the app <span aria-hidden="true">&#8594;</span></a>
         </div>
       </article>
-      <article class="product-card reveal" style="--i:1">
+      <article class="product-card reveal" data-recipe="sample-r2">
         <div class="product-photo">
           <img src="https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="A sliced rustic loaf of bread on a wooden board" loading="lazy" decoding="async">
           <span class="product-sample">Sample</span>
@@ -111,13 +103,16 @@
         <div class="product-body">
           <p class="product-category">Bread</p>
           <h3>Sourdough Loaf</h3>
+          <p class="product-sensory">Six hundred grams of flour, salt and water.</p>
           <div class="product-row"><span>Ingredient cost</span><strong>$1.86</strong></div>
           <div class="product-row"><span>Sells at</span><strong class="product-sell">$8.00</strong></div>
           <div class="product-row"><span>Margin</span><span class="product-margin"><strong>76.8%</strong><span class="badge ok">On target</span></span></div>
-          <a class="btn ghost small product-cta" href="app.html">See it in the app</a>
+          <button class="btn small receipt-toggle" type="button" aria-expanded="false" aria-controls="receipt-r2">Reveal the cost</button>
+          <div class="receipt" id="receipt-r2"></div>
+          <a class="product-cta" href="app.html">See it in the app <span aria-hidden="true">&#8594;</span></a>
         </div>
       </article>
-      <article class="product-card reveal" style="--i:2">
+      <article class="product-card reveal" data-recipe="sample-r3">
         <div class="product-photo">
           <img src="https://images.unsplash.com/photo-1519915028121-7d3463d20b13?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="A lemon meringue tart with a slice cut" loading="lazy" decoding="async">
           <span class="product-sample">Sample</span>
@@ -125,19 +120,22 @@
         <div class="product-body">
           <p class="product-category">Tart</p>
           <h3>Lemon Drizzle</h3>
-          <div class="product-row"><span>Ingredient cost</span><strong>$3.94</strong></div>
+          <p class="product-sensory">Flour, butter, eggs and sugar in every slice.</p>
+          <div class="product-row"><span>Ingredient cost</span><strong>$3.95</strong></div>
           <div class="product-row"><span>Sells at</span><strong class="product-sell">$18.00</strong></div>
           <div class="product-row"><span>Margin</span><span class="product-margin"><strong>78.1%</strong><span class="badge ok">On target</span></span></div>
-          <a class="btn ghost small product-cta" href="app.html">See it in the app</a>
+          <button class="btn small receipt-toggle" type="button" aria-expanded="false" aria-controls="receipt-r3">Reveal the cost</button>
+          <div class="receipt" id="receipt-r3"></div>
+          <a class="product-cta" href="app.html">See it in the app <span aria-hidden="true">&#8594;</span></a>
         </div>
       </article>
     </div>
   </div>
 </section>
 
-<section class="section alt" id="tryit">
+<section class="section alt" id="calculator">
   <div class="wrap">
-    <p class="section-label reveal">02 · Try it yourself</p>
+    <p class="section-label reveal">Try it yourself</p>
     <h2 class="reveal">Try it yourself.</h2>
     <p class="lead reveal">Pick a recipe, move one price, watch the margin move.</p>
     <div class="calc-card reveal" id="calc">
@@ -173,15 +171,34 @@
         <span class="small">Sample prices from the demo data.</span>
       </div>
     </div>
+    <div class="btn-row reveal">
+      <a class="btn" href="app.html">Open the app, free</a>
+    </div>
   </div>
 </section>
 
-<section class="section" id="new">
+<section class="section dark" id="story">
+  <div class="wrap story-grid">
+    <div class="story-photo reveal">
+      <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Seeded rustic bread loaves with wheat stalks on a wooden table" loading="lazy" decoding="async">
+    </div>
+    <div class="story-text">
+      <p class="section-label reveal">Why BakeCost exists</p>
+      <h2 class="reveal">Bakers price from memory. Prices do not sit still.</h2>
+      <p class="reveal">In one year, flour rose 24%, eggs fell 35% and butter fell 17%. Those are US Bureau of Labor Statistics figures, September 2026. A recipe priced last year is a guess today.</p>
+      <p class="reveal">BakeCost was built in Lahore in November 2026 by Amina Ahsan and Hadi Kashif, two students who kept seeing small bakeries do their costing by hand, in notebooks and spreadsheets, while their ingredient prices moved underneath them.</p>
+      <p class="reveal">The app reads the invoices you already get, builds a price history for every ingredient, and recosts every recipe. No typing prices in by hand.</p>
+      <p class="story-italic reveal">The numbers move. The recipes should move with them.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section alt" id="features">
   <div class="wrap">
-    <p class="section-label reveal">03 · New in the app</p>
+    <p class="section-label reveal">How it works</p>
     <h2 class="reveal">More than costing.</h2>
     <div class="bento">
-      <article class="bento-card wide reveal" style="--i:0">
+      <article class="bento-card wide reveal">
         <h3>Orders</h3>
         <p>Every order, deposit, and balance due in one place.</p>
         <div class="bento-visual">
@@ -190,7 +207,7 @@
           <div class="bento-visual-row"><span><strong>Noor</strong> <span class="muted">1 loaf</span></span><span class="badge ok">Paid</span></div>
         </div>
       </article>
-      <article class="bento-card reveal" style="--i:1">
+      <article class="bento-card reveal">
         <h3>Bake Day</h3>
         <p>Plan the day's bake and get the shopping list.</p>
         <div class="bento-visual">
@@ -199,7 +216,7 @@
           <div class="bento-visual-row"><span><strong>Eggs</strong></span><span>16 (buy 2 dozen)</span></div>
         </div>
       </article>
-      <article class="bento-card reveal" style="--i:2">
+      <article class="bento-card reveal">
         <h3>Suppliers</h3>
         <p>Compare prices across suppliers and catch jumps.</p>
         <div class="bento-visual">
@@ -217,23 +234,23 @@
 <section class="gallery-section" id="gallery" aria-label="From the bakery">
   <div class="wrap">
     <div class="gallery">
-      <figure><img src="https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Inside a bakery, shelves and a counter full of fresh bread" loading="lazy" decoding="async"></figure>
-      <figure><img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Seeded rustic bread loaves with wheat stalks on a wooden table" loading="lazy" decoding="async"></figure>
-      <figure><img src="https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="A colourful layered cake with a slice cut, on a cake stand" loading="lazy" decoding="async"></figure>
-      <figure><img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Chocolate chip cookies in a bowl lined with baking paper" loading="lazy" decoding="async"></figure>
-      <figure><img src="https://images.unsplash.com/photo-1550617931-e17a7b70dce2?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Chocolate cupcakes with swirled frosting" loading="lazy" decoding="async"></figure>
-      <figure><img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Strawberry desserts in small glass jars" loading="lazy" decoding="async"></figure>
+      <figure class="reveal"><img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Seeded rustic bread loaves with wheat stalks on a wooden table" loading="lazy" decoding="async"></figure>
+      <figure class="reveal"><img src="https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="A colourful layered cake with a slice cut, on a cake stand" loading="lazy" decoding="async"></figure>
+      <figure class="gallery-overlap"><img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Chocolate chip cookies in a bowl lined with baking paper" loading="lazy" decoding="async"></figure>
+      <figure class="reveal"><img src="https://images.unsplash.com/photo-1550617931-e17a7b70dce2?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Chocolate cupcakes with swirled frosting" loading="lazy" decoding="async"></figure>
+      <figure class="reveal"><img src="https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Strawberry desserts in small glass jars" loading="lazy" decoding="async"></figure>
+      <figure class="reveal"><img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&amp;q=80&amp;auto=format&amp;fit=crop" alt="Golden croissants fresh from the oven" loading="lazy" decoding="async"></figure>
     </div>
   </div>
 </section>
 
 <section class="section alt" id="pricing">
   <div class="wrap">
-    <p class="section-label reveal">04 · Pricing</p>
-    <h2 class="reveal">Pricing</h2>
+    <p class="section-label reveal">Pricing</p>
+    <h2 class="reveal">Simple pricing.</h2>
     <p class="lead reveal">Start free. Pay only if the numbers help.</p>
     <div class="pricing">
-      <div class="plan reveal" style="--i:0">
+      <div class="plan reveal">
         <h3>Audit</h3>
         <div class="price">$49</div>
         <div class="price-note">one time</div>
@@ -244,7 +261,7 @@
         </ul>
         <a class="btn ghost" href="mailto:ah.systemsss@gmail.com?subject=Ingredient%20cost%20audit%20%2449">Book an audit</a>
       </div>
-      <div class="plan reveal" style="--i:1">
+      <div class="plan reveal">
         <h3>Home Baker</h3>
         <div class="price">$19</div>
         <div class="price-note">per month</div>
@@ -255,7 +272,7 @@
         </ul>
         <a class="btn ghost" href="mailto:ah.systemsss@gmail.com?subject=BakeCost%20Home%20Baker%20plan">Ask about this plan</a>
       </div>
-      <div class="plan featured reveal" style="--i:2">
+      <div class="plan featured reveal">
         <span class="plan-tag">Most bakeries</span>
         <h3>Bakery</h3>
         <div class="price">$29</div>
@@ -265,7 +282,7 @@
           <li>Price history and charts</li>
           <li>Margin alerts, CSV export, monthly what-changed report</li>
         </ul>
-        <a class="btn" href="mailto:ah.systemsss@gmail.com?subject=BakeCost%20Bakery%20plan">Ask about this plan</a>
+        <a class="btn light" href="mailto:ah.systemsss@gmail.com?subject=BakeCost%20Bakery%20plan">Ask about this plan</a>
       </div>
     </div>
   </div>
@@ -273,34 +290,57 @@
 
 <section class="section dark" id="audit">
   <div class="wrap">
-    <p class="section-label reveal">05 · Free audit</p>
-    <h2 class="reveal">Free audit</h2>
+    <p class="section-label reveal">Free audit</p>
+    <h2 class="reveal">Get the free audit.</h2>
     <p class="lead reveal">Send your last 3 months of supplier invoices. In a day, you get every price move and what it did to your best sellers.</p>
+    <p class="audit-italic reveal">Three months of invoices. One day. Every price move.</p>
     <div class="btn-row reveal">
-      <a class="btn light" href="mailto:ah.systemsss@gmail.com?subject=Free%20ingredient%20cost%20audit">Send your invoices</a>
+      <a class="btn primary" href="mailto:ah.systemsss@gmail.com?subject=Free%20ingredient%20cost%20audit">Send your invoices</a>
     </div>
     <p class="small reveal">ah.systemsss@gmail.com. Photos or PDFs are fine.</p>
   </div>
 </section>
 
-<section class="section dark">
-  <div class="wrap center">
-    <h2 class="reveal">See what your recipes really cost.</h2>
-    <div class="btn-row reveal" style="justify-content:center;">
-      <a class="btn light" href="app.html">Open the app, free</a>
+<section class="section" id="faq">
+  <div class="wrap">
+    <p class="section-label reveal">Questions</p>
+    <h2 class="reveal">Common questions.</h2>
+    <div class="faq">
+      <details class="reveal">
+        <summary>What do you need from me for the free audit?</summary>
+        <p>Your last 3 months of supplier invoices, as photos or PDFs. We read them by hand and send back every price move and what it did to your best sellers, within a day.</p>
+      </details>
+      <details class="reveal">
+        <summary>Do I need to sign up to try the app?</summary>
+        <p>No. The demo opens with sample recipes and invoices, no account needed. Sign in only saves your own data.</p>
+      </details>
+      <details class="reveal">
+        <summary>Which ingredients and suppliers does it work with?</summary>
+        <p>Any ingredient with a price per unit, from any supplier invoice. The demo uses butter, flour, eggs and sugar from two suppliers, Millbrook and City Mills.</p>
+      </details>
+      <details class="reveal">
+        <summary>What does it cost after the free audit?</summary>
+        <p>The app is $19 a month for up to 15 recipes, or $29 a month for up to 50 recipes. A full audit of 3 months of invoices is $49, one time.</p>
+      </details>
     </div>
   </div>
 </section>
 
 </main>
 
+<div class="marquee marquee-foot" aria-hidden="true">
+  <div class="marquee-track">
+    <div class="marquee-group"><span class="mv-down">Butter down 17%</span><span class="mv-up">Flour up 24%</span><span class="mv-down">Eggs down 35%</span><span class="mv-down">Butter down 17%</span><span class="mv-up">Flour up 24%</span><span class="mv-down">Eggs down 35%</span><span class="mv-down">Butter down 17%</span><span class="mv-up">Flour up 24%</span><span class="mv-down">Eggs down 35%</span></div>
+    <div class="marquee-group"><span class="mv-down">Butter down 17%</span><span class="mv-up">Flour up 24%</span><span class="mv-down">Eggs down 35%</span><span class="mv-down">Butter down 17%</span><span class="mv-up">Flour up 24%</span><span class="mv-down">Eggs down 35%</span><span class="mv-down">Butter down 17%</span><span class="mv-up">Flour up 24%</span><span class="mv-down">Eggs down 35%</span></div>
+  </div>
+</div>
+
 <footer class="site-footer">
   <div class="footer-inner">
     <div class="footer-brand">
-      <img src="logo.png" alt="A&amp;H Systems logo">
       <div>
-        <div class="name">A&amp;H Systems</div>
-        <div class="slogan">Less Manual Work. More Business.</div>
+        <div class="name">BakeCost</div>
+        <div class="slogan">Know what every recipe really costs.</div>
       </div>
     </div>
     <div class="footer-cols">
@@ -311,12 +351,13 @@
         <a href="#audit">Free audit</a>
       </div>
       <div class="footer-col">
-        <h4>Company</h4>
-        <a href="index.html">Home</a>
+        <h4>Contact</h4>
         <a href="mailto:ah.systemsss@gmail.com">ah.systemsss@gmail.com</a>
+        <span class="footer-line">Lahore, Pakistan</span>
       </div>
     </div>
   </div>
+  <p class="footer-bottom">© 2026 BakeCost. Built by Amina Ahsan and Hadi Kashif, A&amp;H Systems.</p>
   <p class="photo-credit">Photography via Unsplash.</p>
 </footer>
 
